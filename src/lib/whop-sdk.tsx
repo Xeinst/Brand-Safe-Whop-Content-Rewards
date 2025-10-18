@@ -1,4 +1,5 @@
 // Whop SDK implementation for brand-safe content approval app
+import React, { createContext, useContext } from 'react'
 import { WhopSDK as OfficialWhopSDK } from '@whop-apps/sdk'
 
 export interface WhopUser {
@@ -113,7 +114,6 @@ export class MockWhopSDK implements WhopSDK {
 }
 
 // Context for React components
-import { createContext, useContext } from 'react'
 
 interface WhopContextType {
   sdk: WhopSDK | null

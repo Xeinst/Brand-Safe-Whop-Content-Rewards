@@ -147,9 +147,9 @@ export function ContentSubmissionView() {
       {/* Header */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Content Submission</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Earn Rewards</h1>
           <p className="text-gray-600">
-            Submit your content for brand-safe approval and earn CPM rewards
+            Create and submit content to earn rewards and build your community
           </p>
         </div>
       </div>

@@ -1,7 +1,7 @@
 {
-  "name": "brand-safe-content-approval",
+  "name": "content-rewards",
   "version": "1.0.0",
-  "description": "A comprehensive Whop app for brand-safe content approval and CPM-based rewards",
+  "description": "Content Rewards - A comprehensive Whop app for brand-safe content approval and CPM-based rewards",
   "private": true,
   "type": "module",
   "keywords": ["whop", "brand-safety", "content-moderation", "cpm", "rewards", "approval"],

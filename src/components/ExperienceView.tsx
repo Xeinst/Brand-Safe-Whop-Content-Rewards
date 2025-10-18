@@ -28,8 +28,8 @@ export function ExperienceView() {
       const mockRewards: Reward[] = [
         {
           id: '1',
-          title: 'Share Brand-Safe Content',
-          description: 'Share content that aligns with brand values and community guidelines',
+          title: 'Create Quality Content',
+          description: 'Share engaging content that adds value to the community',
           points: 50,
           category: 'content',
           isCompleted: false,
@@ -45,8 +45,8 @@ export function ExperienceView() {
         },
         {
           id: '3',
-          title: 'Report Inappropriate Content',
-          description: 'Help maintain a safe community by reporting content that violates guidelines',
+          title: 'Help Community Growth',
+          description: 'Invite friends and help grow the community',
           points: 25,
           category: 'community',
           isCompleted: false,
@@ -54,8 +54,8 @@ export function ExperienceView() {
         },
         {
           id: '4',
-          title: 'Create Original Content',
-          description: 'Share your own brand-safe content that adds value to the community',
+          title: 'Post Daily Content',
+          description: 'Maintain consistent posting schedule to build audience',
           points: 100,
           category: 'content',
           isCompleted: false,
@@ -121,7 +121,7 @@ export function ExperienceView() {
                 Welcome back, {user?.username || 'User'}!
               </h1>
               <p className="text-gray-600">
-                Earn rewards by contributing to brand-safe content in {company?.name || 'your community'}
+                Earn rewards by creating and sharing content in {company?.name || 'your community'}
               </p>
             </div>
           </div>
