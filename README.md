@@ -1,6 +1,8 @@
-# Brand Safe Content Approval - Whop App
+# 🎯 Brand Safe Content Approval - **Whop App**
 
-A comprehensive Whop application for brand-safe content approval and CPM-based rewards. This app allows content creators to submit clips for brand approval before posting, ensuring big brands can maintain their reputation while creators earn CPM rewards for approved content.
+A comprehensive **Whop-native application** for brand-safe content approval and CPM-based rewards. Built specifically for **Whop's ecosystem**, this app allows content creators to submit clips for brand approval before posting, ensuring big brands can maintain their reputation while creators earn CPM rewards for approved content.
+
+> **🚀 Built for Whop**: This app is specifically designed and optimized for Whop's platform, using the official Whop SDK and following Whop's app development standards.
 
 ## 🎯 What This App Does
 
@@ -41,13 +43,16 @@ This app solves the problem of brand safety for big brands working with content 
 - **Whop Integration**: Official Whop SDK for authentication and API access
 - **Icons**: Lucide React for consistent iconography
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Whop-Specific)
 
 ### Prerequisites
 
 - Node.js 18+ installed on your machine
-- A Whop developer account
+- **A Whop developer account** (required)
+- **Access to Whop Dashboard** for app creation
 - Basic knowledge of React and TypeScript
+
+> **📋 Whop Setup First**: You must create a Whop app in the Whop Dashboard before running this locally.
 
 ### Step 1: Install Dependencies
 
@@ -56,23 +61,28 @@ cd "Brand Safe Content Rewards"
 npm install
 ```
 
-### Step 2: Set Up Whop App
+### Step 2: Set Up Your Whop App (REQUIRED)
+
+> **🎯 This app is built specifically for Whop - you must create a Whop app first!**
 
 1. **Create a Whop App**
    - Go to [Whop Dashboard](https://whop.com/dashboard) → Developer → Apps
    - Click "Create app"
-   - Name it "Brand Safe Content Approval" (or your preferred name)
+   - Name it "Brand Safe Content Approval"
+   - Select category: "Community" or "Marketing"
 
-2. **Get Your Environment Variables**
-   - In your app settings, copy the "Environment variables"
+2. **Get Your Whop Environment Variables**
+   - In your Whop app settings, copy the "Environment variables"
    - Create a `.env.local` file in your project root
-   - Paste the environment variables into `.env.local`
+   - Paste the Whop environment variables into `.env.local`
 
-3. **Configure App URLs**
+3. **Configure Whop App URLs**
    - Set Base URL to `http://localhost:3000` for development
    - Set Experience URL to `/` (main user interface)
    - Set Discover URL to `/discover` (public marketing page)
    - Set Dashboard URL to `/dashboard` (admin interface)
+
+> **📖 For detailed Whop setup**: See `WHOP_SPECIFIC_SETUP.md` for complete Whop configuration guide.
 
 ### Step 3: Start Development
 
