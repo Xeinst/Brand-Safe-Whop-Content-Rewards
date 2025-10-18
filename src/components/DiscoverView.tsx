@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useWhopSDK } from '../lib/whop-sdk'
 import { Star, Users, Shield, Award, TrendingUp, CheckCircle } from 'lucide-react'
 
 interface Feature {

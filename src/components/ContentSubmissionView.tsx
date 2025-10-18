@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react'
-import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   Upload, 
   Video, 

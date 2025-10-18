@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -37,13 +36,6 @@ interface ContentAnalytics {
   creator: string
 }
 
-interface TimeSeriesData {
-  date: string
-  submissions: number
-  approvals: number
-  earnings: number
-  views: number
-}
 
 export function AnalyticsView() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
