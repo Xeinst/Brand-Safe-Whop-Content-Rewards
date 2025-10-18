@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   DollarSign, 
-  TrendingUp, 
-  Calendar, 
   CheckCircle, 
   Clock, 
   AlertCircle,
-  BarChart3,
-  Target,
-  Users,
   Eye,
-  ThumbsUp,
-  Share2
+  ThumbsUp
 } from 'lucide-react'
 
 interface CPMPayout {
@@ -42,7 +36,7 @@ interface ContentPerformance {
 }
 
 export function CPMPayoutView() {
-  const { user, company } = useWhopSDK()
+  const { company } = useWhopSDK()
   const [payouts, setPayouts] = useState<CPMPayout[]>([])
   const [performance, setPerformance] = useState<ContentPerformance[]>([])
   const [totalEarnings, setTotalEarnings] = useState(0)

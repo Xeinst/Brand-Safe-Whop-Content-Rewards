@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   CheckCircle, 
@@ -13,7 +13,6 @@ import {
   FileText,
   Video,
   Image,
-  MessageSquare
 } from 'lucide-react'
 
 interface ContentSubmission {
@@ -47,7 +46,7 @@ interface ModerationStats {
 }
 
 export function BrandModerationView() {
-  const { user, company } = useWhopSDK()
+  const { company } = useWhopSDK()
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([])
   const [selectedSubmission, setSelectedSubmission] = useState<ContentSubmission | null>(null)
   const [reviewNotes, setReviewNotes] = useState('')

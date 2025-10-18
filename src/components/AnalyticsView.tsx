@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   BarChart3, 
   TrendingUp, 
-  TrendingDown,
-  Users, 
   Eye, 
   DollarSign, 
   CheckCircle, 
-  Clock,
   Target,
-  Calendar,
   Filter
 } from 'lucide-react'
 
@@ -50,10 +46,9 @@ interface TimeSeriesData {
 }
 
 export function AnalyticsView() {
-  const { user, company } = useWhopSDK()
+  const { company } = useWhopSDK()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [contentData, setContentData] = useState<ContentAnalytics[]>([])
-  const [timeSeriesData, setTimeSeriesData] = useState<TimeSeriesData[]>([])
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
   const [loading, setLoading] = useState(true)
 
@@ -129,7 +124,6 @@ export function AnalyticsView() {
 
       setAnalytics(mockAnalytics)
       setContentData(mockContentData)
-      setTimeSeriesData(mockTimeSeriesData)
       setLoading(false)
     }
 

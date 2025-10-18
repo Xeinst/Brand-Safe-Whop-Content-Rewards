@@ -1,6 +1,5 @@
 // Whop SDK implementation for brand-safe content approval app
 import React, { createContext, useContext } from 'react'
-import { WhopSDK as OfficialWhopSDK } from '@whop-apps/sdk'
 
 export interface WhopUser {
   id: string
@@ -25,43 +24,12 @@ export interface WhopSDK {
 }
 
 export class WhopSDKWrapper implements WhopSDK {
-  private sdk: OfficialWhopSDK | null = null
   user: WhopUser | null = null
   company: WhopCompany | null = null
 
   async init(): Promise<void> {
     try {
-      // Initialize the official Whop SDK
-      this.sdk = new OfficialWhopSDK({
-        appId: import.meta.env.VITE_WHOP_APP_ID || 'your_app_id_here',
-        appSecret: import.meta.env.VITE_WHOP_APP_SECRET || 'your_app_secret_here',
-        environment: import.meta.env.VITE_WHOP_APP_ENV || 'development'
-      })
-
-      await this.sdk.init()
-      
-      // Get user and company data
-      const userData = await this.sdk.getUser()
-      const companyData = await this.sdk.getCompany()
-      
-      this.user = userData ? {
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        avatar: userData.avatar_url,
-        display_name: userData.display_name
-      } : null
-      
-      this.company = companyData ? {
-        id: companyData.id,
-        name: companyData.name,
-        description: companyData.description,
-        logo: companyData.logo_url
-      } : null
-      
-    } catch (error) {
-      console.error('Failed to initialize Whop SDK:', error)
-      // Fallback to mock data for development
+      // For now, use mock data until Whop SDK is properly configured
       this.user = {
         id: 'mock-user-1',
         username: 'demo_user',
@@ -75,11 +43,13 @@ export class WhopSDKWrapper implements WhopSDK {
         name: 'Demo Brand Community',
         description: 'A sample community for testing brand-safe content approval'
       }
+    } catch (error) {
+      console.error('Failed to initialize Whop SDK:', error)
     }
   }
 
   isAuthenticated(): boolean {
-    return this.sdk?.isAuthenticated() || false
+    return true // Mock authentication
   }
 }
 

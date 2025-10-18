@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { Star, Award, Users, TrendingUp, Shield, Target } from 'lucide-react'
 

@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   Bell, 
   CheckCircle, 
   XCircle, 
-  AlertCircle, 
   Info,
   Clock,
   DollarSign,
-  Eye,
   X
 } from 'lucide-react'
 
@@ -24,7 +22,6 @@ interface Notification {
 }
 
 export function NotificationSystem() {
-  const { user } = useWhopSDK()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -121,22 +118,6 @@ export function NotificationSystem() {
     }
   }
 
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case 'approval':
-        return 'bg-green-50 border-green-200'
-      case 'rejection':
-        return 'bg-red-50 border-red-200'
-      case 'payment':
-        return 'bg-blue-50 border-blue-200'
-      case 'reminder':
-        return 'bg-yellow-50 border-yellow-200'
-      case 'info':
-        return 'bg-gray-50 border-gray-200'
-      default:
-        return 'bg-gray-50 border-gray-200'
-    }
-  }
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date()

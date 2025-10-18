@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'

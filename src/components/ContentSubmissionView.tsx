@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   Upload, 
@@ -29,7 +29,7 @@ interface ContentSubmission {
 }
 
 export function ContentSubmissionView() {
-  const { user, company } = useWhopSDK()
+  const { company } = useWhopSDK()
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([])
   const [currentSubmission, setCurrentSubmission] = useState<Partial<ContentSubmission>>({
     title: '',

@@ -31,7 +31,7 @@ interface RecentActivity {
 }
 
 export function DashboardView() {
-  const { company, user } = useWhopSDK()
+  const { company } = useWhopSDK()
   const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'reports' | 'rewards'>('overview')
 
   const metrics: DashboardMetric[] = [
