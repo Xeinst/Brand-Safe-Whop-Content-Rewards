@@ -36,7 +36,6 @@ interface ContentPerformance {
 }
 
 export function CPMPayoutView() {
-  const { company } = useWhopSDK()
   const [payouts, setPayouts] = useState<CPMPayout[]>([])
   const [performance, setPerformance] = useState<ContentPerformance[]>([])
   const [totalEarnings, setTotalEarnings] = useState(0)

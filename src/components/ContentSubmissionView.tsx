@@ -29,7 +29,6 @@ interface ContentSubmission {
 }
 
 export function ContentSubmissionView() {
-  const { company } = useWhopSDK()
   const [submissions, setSubmissions] = useState<ContentSubmission[]>([])
   const [currentSubmission, setCurrentSubmission] = useState<Partial<ContentSubmission>>({
     title: '',

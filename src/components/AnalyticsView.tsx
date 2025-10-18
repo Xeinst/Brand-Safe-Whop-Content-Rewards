@@ -46,7 +46,6 @@ interface TimeSeriesData {
 }
 
 export function AnalyticsView() {
-  const { company } = useWhopSDK()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [contentData, setContentData] = useState<ContentAnalytics[]>([])
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
@@ -112,15 +111,6 @@ export function AnalyticsView() {
         }
       ]
 
-      const mockTimeSeriesData: TimeSeriesData[] = [
-        { date: '2024-01-01', submissions: 12, approvals: 8, earnings: 245.50, views: 12500 },
-        { date: '2024-01-02', submissions: 15, approvals: 11, earnings: 312.75, views: 18900 },
-        { date: '2024-01-03', submissions: 8, approvals: 6, earnings: 198.25, views: 11200 },
-        { date: '2024-01-04', submissions: 20, approvals: 14, earnings: 456.80, views: 25600 },
-        { date: '2024-01-05', submissions: 18, approvals: 12, earnings: 389.40, views: 22300 },
-        { date: '2024-01-06', submissions: 14, approvals: 9, earnings: 298.60, views: 18700 },
-        { date: '2024-01-07', submissions: 16, approvals: 13, earnings: 367.20, views: 21400 }
-      ]
 
       setAnalytics(mockAnalytics)
       setContentData(mockContentData)

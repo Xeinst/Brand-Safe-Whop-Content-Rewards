@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useWhopSDK } from '../lib/whop-sdk'
 import { 
   Bell, 
   CheckCircle, 

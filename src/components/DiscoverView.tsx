@@ -15,7 +15,6 @@ interface Stat {
 }
 
 export function DiscoverView() {
-  const { company } = useWhopSDK()
   const [stats] = useState<Stat[]>([
     {
       label: 'Active Users',
