@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
 import { RoleSelector, UserRole } from './components/RoleSelector'
-import { CreatorDashboard } from './components/CreatorDashboard'
-import { BrandDashboard } from './components/BrandDashboard'
+import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
+import { ContentCreatorView } from './components/ContentCreatorView'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
@@ -99,9 +99,9 @@ function AppRouter() {
 
       {/* Render Appropriate Dashboard */}
       {userRole === 'creator' ? (
-        <CreatorDashboard />
+        <ContentCreatorView />
       ) : (
-        <BrandDashboard />
+        <ContentRewardsDashboard />
       )}
       
       {/* Toast Notifications */}

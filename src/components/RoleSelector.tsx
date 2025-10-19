@@ -14,14 +14,14 @@ export function RoleSelector({ onRoleSelect }: RoleSelectorProps) {
     {
       id: 'creator' as UserRole,
       title: 'Content Creator',
-      description: 'Upload clips, earn CPM rewards, and build your audience',
+      description: 'Submit content for approval and earn CPM rewards when published',
       icon: Users,
       features: [
-        'Upload and monetize content',
-        'Real-time CPM tracking',
+        'Submit content for brand approval',
+        'Earn CPM rewards when published',
+        'Track submission status',
         'Whop payment integration',
-        'Brand-safe content approval',
-        'Analytics and insights'
+        'Brand-safe content workflow'
       ],
       color: 'from-blue-500 to-purple-600',
       bgColor: 'bg-blue-50',
@@ -30,14 +30,14 @@ export function RoleSelector({ onRoleSelect }: RoleSelectorProps) {
     {
       id: 'brand' as UserRole,
       title: 'Brand Manager',
-      description: 'Review content, manage campaigns, and ensure brand safety',
+      description: 'Create content rewards, review submissions, and approve content before publishing',
       icon: Building2,
       features: [
-        'Content moderation tools',
-        'Campaign management',
+        'Create content reward campaigns',
+        'Review and approve submissions',
         'Brand safety controls',
-        'Payment processing',
-        'Creator analytics'
+        'Payment processing via Whop',
+        'Analytics and performance tracking'
       ],
       color: 'from-green-500 to-teal-600',
       bgColor: 'bg-green-50',
