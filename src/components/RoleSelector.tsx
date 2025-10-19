@@ -14,13 +14,13 @@ export function RoleSelector({ onRoleSelect }: RoleSelectorProps) {
     {
       id: 'creator' as UserRole,
       title: 'Content Creator',
-      description: 'Submit content for approval and earn CPM rewards when published',
+      description: 'Submit private video links for approval, then make public for CPM tracking',
       icon: Users,
       features: [
-        'Submit content for brand approval',
-        'Earn CPM rewards when published',
-        'Track submission status',
-        'Whop payment integration',
+        'Submit private video links for approval',
+        'Make videos public after approval',
+        'Earn CPM rewards based on tracked views',
+        'Automatic view tracking integration',
         'Brand-safe content workflow'
       ],
       color: 'from-blue-500 to-purple-600',

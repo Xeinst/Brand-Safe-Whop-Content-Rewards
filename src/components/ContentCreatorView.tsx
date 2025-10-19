@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, Video, FileText, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Video, FileText, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 interface ContentReward {
   id: string
@@ -15,11 +15,14 @@ interface Submission {
   rewardId: string
   title: string
   description: string
-  file: File | null
+  privateVideoLink: string
+  publicVideoLink: string | null
   thumbnail: string
   status: 'draft' | 'submitted' | 'pending_approval' | 'approved' | 'rejected' | 'published'
   submittedAt: Date | null
+  publishedAt: Date | null
   estimatedEarnings: number
+  actualViews: number
 }
 
 export function ContentCreatorView() {
@@ -29,7 +32,8 @@ export function ContentCreatorView() {
   const [currentSubmission, setCurrentSubmission] = useState<Partial<Submission>>({
     title: '',
     description: '',
-    file: null,
+    privateVideoLink: '',
+    publicVideoLink: null,
     thumbnail: ''
   })
 
@@ -65,20 +69,18 @@ export function ContentCreatorView() {
     ])
   }, [])
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setCurrentSubmission(prev => ({
-        ...prev,
-        file,
-        thumbnail: URL.createObjectURL(file)
-      }))
-    }
+  const handleLinkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const link = event.target.value
+    setCurrentSubmission(prev => ({
+      ...prev,
+      privateVideoLink: link,
+      thumbnail: link // For now, use link as thumbnail placeholder
+    }))
   }
 
   const handleSubmit = () => {
-    if (!selectedReward || !currentSubmission.title || !currentSubmission.file) {
-      alert('Please fill in all required fields and upload a file')
+    if (!selectedReward || !currentSubmission.title || !currentSubmission.privateVideoLink) {
+      alert('Please fill in all required fields and provide a private video link')
       return
     }
 
@@ -90,11 +92,14 @@ export function ContentCreatorView() {
       rewardId: selectedReward,
       title: currentSubmission.title!,
       description: currentSubmission.description || '',
-      file: currentSubmission.file!,
+      privateVideoLink: currentSubmission.privateVideoLink!,
+      publicVideoLink: null,
       thumbnail: currentSubmission.thumbnail || '',
       status: 'submitted',
       submittedAt: new Date(),
-      estimatedEarnings: reward.cpm * 1000 // Assuming 1000 views for estimation
+      publishedAt: null,
+      estimatedEarnings: reward.cpm * 1000, // Assuming 1000 views for estimation
+      actualViews: 0
     }
 
     setSubmissions(prev => [newSubmission, ...prev])
@@ -103,12 +108,13 @@ export function ContentCreatorView() {
     setCurrentSubmission({
       title: '',
       description: '',
-      file: null,
+      privateVideoLink: '',
+      publicVideoLink: null,
       thumbnail: ''
     })
     setSelectedReward('')
 
-    alert('Submission sent for approval! You will be notified once it\'s reviewed.')
+    alert('Private video link submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
   }
 
   const getStatusIcon = (status: string) => {
@@ -239,37 +245,18 @@ export function ContentCreatorView() {
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Upload Content *
+                      Private Video Link *
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                      <input
-                        type="file"
-                        accept="video/*,image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        {currentSubmission.file ? (
-                          <div className="space-y-2">
-                            <div className="w-16 h-16 bg-gray-100 rounded-lg mx-auto flex items-center justify-center">
-                              <Video className="w-8 h-8 text-gray-400" />
-                            </div>
-                            <p className="text-sm text-gray-600">{currentSubmission.file.name}</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-2">
-                            <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                            <p className="text-sm text-gray-600">
-                              Click to upload or drag and drop
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              MP4, MOV, AVI up to 100MB
-                            </p>
-                          </div>
-                        )}
-                      </label>
-                    </div>
+                    <input
+                      type="url"
+                      value={currentSubmission.privateVideoLink || ''}
+                      onChange={handleLinkChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
+                    </p>
                   </div>
                   
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -278,8 +265,7 @@ export function ContentCreatorView() {
                       <span className="text-sm font-medium text-blue-900">Approval Process</span>
                     </div>
                     <p className="text-sm text-blue-800">
-                      Your content will be reviewed for brand safety and quality before being published. 
-                      You'll be notified once it's approved and can start earning CPM rewards.
+                      Your private video will be reviewed for brand safety and quality. Once approved, make your video public and we'll automatically track views and calculate your CPM earnings.
                     </p>
                   </div>
                   
@@ -287,7 +273,7 @@ export function ContentCreatorView() {
                     onClick={handleSubmit}
                     className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Submit for Approval
+                    Submit Private Video Link
                   </button>
                 </div>
               </div>

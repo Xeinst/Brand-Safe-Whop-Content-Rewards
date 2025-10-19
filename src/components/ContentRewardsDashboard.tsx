@@ -22,8 +22,11 @@ interface Submission {
   views: number
   likes: number
   submissionDate: Date
+  publishedDate: Date | null
   content: {
     title: string
+    privateVideoLink: string
+    publicVideoLink: string | null
     thumbnail: string
     platform: string
   }
@@ -298,31 +301,46 @@ function SubmissionsView({
         ) : (
           <div className="space-y-4">
             {submissions.map((submission) => (
-              <div key={submission.id} className="grid grid-cols-5 gap-4 py-4 border-b border-gray-700">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-600 rounded-full mr-3"></div>
-                  <span>{submission.user}</span>
+              <div key={submission.id} className="border-b border-gray-700 py-4">
+                <div className="grid grid-cols-5 gap-4 items-center">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-600 rounded-full mr-3"></div>
+                    <span>{submission.user}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      submission.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
+                      submission.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {submission.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className={submission.paid ? 'text-green-400' : 'text-gray-400'}>
+                      {submission.paid ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    {submission.views.toLocaleString()}
+                  </div>
+                  <div className="flex items-center">
+                    {submission.likes.toLocaleString()}
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    submission.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
-                    submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
-                    {submission.status.replace('_', ' ')}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className={submission.paid ? 'text-green-400' : 'text-gray-400'}>
-                    {submission.paid ? 'Yes' : 'No'}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  {submission.views.toLocaleString()}
-                </div>
-                <div className="flex items-center">
-                  {submission.likes.toLocaleString()}
+                <div className="mt-2 text-sm text-gray-400">
+                  <div className="flex items-center space-x-4">
+                    <span><strong>Private Link:</strong> {submission.content.privateVideoLink}</span>
+                    {submission.content.publicVideoLink && (
+                      <span><strong>Public Link:</strong> {submission.content.publicVideoLink}</span>
+                    )}
+                  </div>
+                  {submission.status === 'approved' && !submission.content.publicVideoLink && (
+                    <div className="text-yellow-500 mt-1">
+                      ⚠️ Creator needs to make video public to start tracking views
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
