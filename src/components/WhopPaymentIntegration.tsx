@@ -22,7 +22,7 @@ interface PayoutSummary {
 }
 
 export function WhopPaymentIntegration() {
-  const { user, company } = useWhopSDK()
+  const { user } = useWhopSDK()
   const [payments, setPayments] = useState<PaymentData[]>([])
   const [payoutSummary, setPayoutSummary] = useState<PayoutSummary | null>(null)
   const [loading, setLoading] = useState(true)

@@ -3,7 +3,7 @@ import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
 import { RoleSelector, UserRole } from './components/RoleSelector'
 import { CreatorDashboard } from './components/CreatorDashboard'
 import { BrandDashboard } from './components/BrandDashboard'
-import { NotificationSystem, ToastNotification } from './components/NotificationSystem'
+import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
 function App() {

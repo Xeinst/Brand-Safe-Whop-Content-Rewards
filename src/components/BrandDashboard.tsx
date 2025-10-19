@@ -4,16 +4,12 @@ import {
   CheckCircle, 
   XCircle, 
   Clock, 
-  Eye, 
   DollarSign, 
-  Users, 
   BarChart3,
   Shield,
   Play,
-  Calendar,
   Target,
   TrendingUp,
-  Filter,
   Search
 } from 'lucide-react'
 
