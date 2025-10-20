@@ -1,5 +1,4 @@
 // Vercel Serverless Function: Fetch YouTube metadata securely
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 function extractYouTubeVideoId(url: string): string | null {
   try {
@@ -15,7 +14,7 @@ function extractYouTubeVideoId(url: string): string | null {
   return null
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   const { url } = req.query
   const inputUrl = Array.isArray(url) ? url[0] : url
   if (!inputUrl) {
