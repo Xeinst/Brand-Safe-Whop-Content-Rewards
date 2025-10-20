@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { extractYouTubeVideoId } from '../lib/youtube'
 import { Video, FileText, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react'
 
 interface ContentReward {
@@ -36,6 +37,8 @@ export function ContentCreatorView() {
     publicVideoLink: null,
     thumbnail: ''
   })
+  const [ytPreview, setYtPreview] = useState<{ title: string; thumbnail: string } | null>(null)
+  const [ytError, setYtError] = useState<string | null>(null)
 
   useEffect(() => {
     // Mock data - replace with real API calls
@@ -69,18 +72,45 @@ export function ContentCreatorView() {
     ])
   }, [])
 
-  const handleLinkChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLinkChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const link = event.target.value
-    setCurrentSubmission(prev => ({
-      ...prev,
-      privateVideoLink: link,
-      thumbnail: link // For now, use link as thumbnail placeholder
-    }))
+    setCurrentSubmission(prev => ({ ...prev, privateVideoLink: link }))
+
+    setYtPreview(null)
+    setYtError(null)
+
+    const videoId = extractYouTubeVideoId(link)
+    if (!videoId) {
+      setYtError('Enter a valid YouTube link (watch, shorts, or youtu.be)')
+      return
+    }
+
+    // Call secure serverless function
+    const resp = await fetch(`/api/youtube-meta?url=${encodeURIComponent(link)}`)
+    if (!resp.ok) {
+      setYtError('Could not fetch video details. Check the link or quota.')
+      return
+    }
+
+    const meta = await resp.json()
+    if (meta.privacyStatus && meta.privacyStatus !== 'private' && meta.privacyStatus !== 'unlisted') {
+      // For approval we expect private/unlisted initially
+    }
+
+    setYtPreview({ title: meta.title, thumbnail: meta.thumbnailUrl })
+    setCurrentSubmission(prev => ({ ...prev, thumbnail: meta.thumbnailUrl }))
   }
 
   const handleSubmit = () => {
     if (!selectedReward || !currentSubmission.title || !currentSubmission.privateVideoLink) {
       alert('Please fill in all required fields and provide a private video link')
+      return
+    }
+
+    // Block submit if link invalid
+    const videoId = extractYouTubeVideoId(currentSubmission.privateVideoLink)
+    if (!videoId) {
+      alert('Please provide a valid YouTube link before submitting')
       return
     }
 
@@ -254,6 +284,15 @@ export function ContentCreatorView() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
                     />
+                  {ytError && (
+                    <p className="text-xs text-red-600 mt-1">{ytError}</p>
+                  )}
+                  {ytPreview && (
+                    <div className="flex items-center space-x-3 mt-2">
+                      <img src={ytPreview.thumbnail} alt={ytPreview.title} className="w-16 h-9 rounded object-cover border" />
+                      <p className="text-sm text-gray-700 truncate">{ytPreview.title}</p>
+                    </div>
+                  )}
                     <p className="text-xs text-gray-500 mt-1">
                       Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
                     </p>
