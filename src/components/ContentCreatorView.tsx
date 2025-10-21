@@ -27,7 +27,7 @@ interface Submission {
 }
 
 export function ContentCreatorView() {
-  const [activeTab, setActiveTab] = useState<'rewards' | 'submissions' | 'submit'>('rewards')
+  const [activeTab, setActiveTab] = useState<'campaigns' | 'my-submissions' | 'earnings'>('campaigns')
   const [activeRewards, setActiveRewards] = useState<ContentReward[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
   // const [selectedReward, setSelectedReward] = useState<string>('')
@@ -199,10 +199,6 @@ export function ContentCreatorView() {
               <a href="#" className="text-blue-400 hover:text-blue-300 text-sm">
                 How do Content Rewards work?
               </a>
-              <button className="inline-flex items-center px-3 py-2 border border-gray-600 rounded-lg text-sm hover:bg-gray-700 transition-colors">
-                <Settings className="w-4 h-4 mr-2" />
-                Edit
-              </button>
             </div>
           </div>
         </div>
@@ -213,34 +209,34 @@ export function ContentCreatorView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab('rewards')}
+              onClick={() => setActiveTab('campaigns')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'rewards'
+                activeTab === 'campaigns'
                   ? 'border-blue-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
               }`}
             >
-              Rewards
+              Active Campaigns
             </button>
             <button
-              onClick={() => setActiveTab('submissions')}
+              onClick={() => setActiveTab('my-submissions')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'submissions'
+                activeTab === 'my-submissions'
                   ? 'border-blue-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
               }`}
             >
-              My submissions
+              My Submissions
             </button>
             <button
-              onClick={() => setActiveTab('submit')}
+              onClick={() => setActiveTab('earnings')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'submit'
+                activeTab === 'earnings'
                   ? 'border-blue-500 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
               }`}
             >
-              Submit Unreleased Content
+              My Earnings
             </button>
           </div>
         </div>
@@ -248,11 +244,11 @@ export function ContentCreatorView() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'rewards' && (
+        {activeTab === 'campaigns' && (
           <div className="space-y-6">
-            {/* Content Rewards Layout */}
+            {/* Active Campaigns Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Side - Content Rewards Card */}
+              {/* Left Side - Active Campaigns Card */}
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 relative overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-20">
@@ -313,7 +309,7 @@ export function ContentCreatorView() {
           </div>
         )}
 
-        {activeTab === 'submissions' && (
+        {activeTab === 'my-submissions' && (
           <div className="space-y-6">
             {/* Filter and Action Bar */}
             <div className="bg-gray-800 border-b border-gray-700 p-4">
@@ -407,6 +403,54 @@ export function ContentCreatorView() {
           </div>
         )}
 
+        {activeTab === 'earnings' && (
+          <div className="space-y-6">
+            {/* Earnings Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-2">Total Earnings</h3>
+                <p className="text-3xl font-bold text-green-400">$0.00</p>
+                <p className="text-sm text-gray-400">From approved content</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-2">Approved Content</h3>
+                <p className="text-3xl font-bold text-blue-400">0</p>
+                <p className="text-sm text-gray-400">Videos approved</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-2">Pending Review</h3>
+                <p className="text-3xl font-bold text-yellow-400">0</p>
+                <p className="text-sm text-gray-400">Under review</p>
+              </div>
+            </div>
+
+            {/* Earnings History */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700">
+              <div className="p-6 border-b border-gray-700">
+                <h2 className="text-xl font-semibold text-white">Earnings History</h2>
+                <p className="text-gray-400">Track your approved content and earnings</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">No earnings yet</h3>
+                  <p className="text-gray-400 mb-4">Submit content to start earning rewards</p>
+                  <button 
+                    onClick={() => setActiveTab('campaigns')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    View Active Campaigns
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Submit Content Tab - Hidden from members, only accessible via campaigns */}
         {activeTab === 'submit' && (
           <div className="space-y-6">
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
