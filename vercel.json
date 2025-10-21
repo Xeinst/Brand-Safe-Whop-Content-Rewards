@@ -4,7 +4,27 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/((?!api).*)", "destination": "/index.html" }
-  ]
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://whop.com https://*.whop.com"
+        }
+      ]
+    }
+  ],
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
 
 
