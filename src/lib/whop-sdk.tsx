@@ -115,38 +115,70 @@ export class WhopSDKWrapper implements WhopSDK {
 
   async init(): Promise<void> {
     try {
-      // Check URL parameters or localStorage for testing different user types
-      const urlParams = new URLSearchParams(window.location.search)
-      const userType = urlParams.get('userType') || localStorage.getItem('userType') || 'owner'
+      // In a real implementation, this would initialize the actual Whop SDK
+      // and detect user permissions from Whop
       
-      if (userType === 'non-member') {
-        this.isWhopMemberFlag = false
-        this.user = null
-        this.company = null
-      } else {
-        // For now, use mock data until Whop SDK is properly configured
+      // For now, simulate Whop SDK initialization
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      // Simulate Whop SDK user data with permissions
+      // In production, this would come from the actual Whop SDK
         this.user = {
-          id: 'mock-user-1',
-          username: 'demo_user',
-          email: 'demo@example.com',
+        id: 'whop-user-1',
+        username: 'whop_user',
+        email: 'user@example.com',
           avatar: 'https://via.placeholder.com/40',
-          display_name: 'Demo User',
-          role: userType === 'member' ? 'member' : 'owner',
-          permissions: userType === 'member' 
-            ? ['read_content', 'write_content', 'read_analytics']
-            : ['read_content', 'write_content', 'read_analytics', 'member:stats:export', 'admin']
+        display_name: 'Whop User',
+        role: 'owner', // Will be determined by permissions
+        permissions: [
+          'read_content',
+          'write_content', 
+          'read_analytics',
+          'member:stats:export',
+          'admin'
+        ]
         }
         
         this.company = {
-          id: 'mock-company-1',
-          name: 'Demo Brand Community',
-          description: 'A sample community for testing brand-safe content approval'
-        }
-        this.isWhopMemberFlag = true
+        id: 'whop-company-1',
+        name: 'Whop Community',
+        description: 'Brand-safe content rewards community'
       }
+      
+      this.isWhopMemberFlag = true
+      
+      // Determine role based on permissions
+      this.determineUserRole()
+      
     } catch (error) {
       console.error('Failed to initialize Whop SDK:', error)
     }
+  }
+
+  private determineUserRole(): void {
+    if (!this.user) return
+    
+    // Determine role based on Whop permissions
+    // Owners have admin permissions or member:stats:export permission
+    if (this.user.permissions.includes('admin') || this.user.permissions.includes('member:stats:export')) {
+      this.user.role = 'owner'
+    } 
+    // Members have basic content permissions
+    else if (this.user.permissions.includes('read_content') && this.user.permissions.includes('write_content')) {
+      this.user.role = 'member'
+    } 
+    // Default to member if permissions are unclear
+    else {
+      this.user.role = 'member'
+    }
+  }
+
+  // Method to simulate different Whop permission scenarios for testing
+  public simulateWhopPermissions(permissions: string[]): void {
+    if (!this.user) return
+    
+    this.user.permissions = permissions
+    this.determineUserRole()
   }
 
   isAuthenticated(): boolean {
@@ -362,35 +394,60 @@ export class MockWhopSDK implements WhopSDK {
     // Mock initialization
     await new Promise(resolve => setTimeout(resolve, 500))
     
-    // Check URL parameters or localStorage for testing different user types
-    const urlParams = new URLSearchParams(window.location.search)
-    const userType = urlParams.get('userType') || localStorage.getItem('userType') || 'member'
-    
-    if (userType === 'non-member') {
-      this.isWhopMemberFlag = false
-      this.user = null
-      this.company = null
-    } else {
-      // Set mock data
+    // Simulate Whop SDK user data with permissions
+    // In production, this would come from the actual Whop SDK
       this.user = {
-        id: 'mock-user-1',
-        username: 'demo_user',
-        email: 'demo@example.com',
+      id: 'whop-user-1',
+      username: 'whop_user',
+      email: 'user@example.com',
         avatar: 'https://via.placeholder.com/40',
-        display_name: 'Demo User',
-        role: userType === 'member' ? 'member' : 'owner',
-        permissions: userType === 'member' 
-          ? ['read_content', 'write_content', 'read_analytics']
-          : ['read_content', 'write_content', 'read_analytics', 'member:stats:export', 'admin']
+      display_name: 'Whop User',
+      role: 'owner', // Will be determined by permissions
+      permissions: [
+        'read_content',
+        'write_content', 
+        'read_analytics',
+        'member:stats:export',
+        'admin'
+      ]
       }
       
       this.company = {
-        id: 'mock-company-1',
-        name: 'Demo Brand Community',
-        description: 'A sample community for testing brand-safe content approval'
-      }
-      this.isWhopMemberFlag = true
+      id: 'whop-company-1',
+      name: 'Whop Community',
+      description: 'Brand-safe content rewards community'
     }
+    
+    this.isWhopMemberFlag = true
+    
+    // Determine role based on permissions
+    this.determineUserRole()
+  }
+
+  private determineUserRole(): void {
+    if (!this.user) return
+    
+    // Determine role based on Whop permissions
+    // Owners have admin permissions or member:stats:export permission
+    if (this.user.permissions.includes('admin') || this.user.permissions.includes('member:stats:export')) {
+      this.user.role = 'owner'
+    } 
+    // Members have basic content permissions
+    else if (this.user.permissions.includes('read_content') && this.user.permissions.includes('write_content')) {
+      this.user.role = 'member'
+    } 
+    // Default to member if permissions are unclear
+    else {
+      this.user.role = 'member'
+    }
+  }
+
+  // Method to simulate different Whop permission scenarios for testing
+  public simulateWhopPermissions(permissions: string[]): void {
+    if (!this.user) return
+    
+    this.user.permissions = permissions
+    this.determineUserRole()
   }
 
   isAuthenticated(): boolean {
