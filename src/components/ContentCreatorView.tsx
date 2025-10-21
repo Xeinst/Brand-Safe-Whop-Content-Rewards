@@ -150,7 +150,7 @@ export function ContentCreatorView() {
     setYtPreview(null)
     setYtError(null)
 
-    alert('Video link submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
+    alert('Unlisted video submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
   }
 
   const getStatusIcon = (status: string) => {
@@ -415,14 +415,14 @@ export function ContentCreatorView() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Video Link *
+                    Unlisted Video Link *
                   </label>
                   <input
                     type="url"
                     value={currentSubmission.privateVideoLink || ''}
                     onChange={handleLinkChange}
                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 text-white"
-                    placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
+                    placeholder="https://youtube.com/watch?v=... (unlisted video)"
                   />
                   {ytError && (
                     <div className="mt-3 p-3 bg-red-900/50 border border-red-700 rounded-lg">
@@ -445,7 +445,7 @@ export function ContentCreatorView() {
                     </div>
                   )}
                   <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-                    Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
+                    Submit a link to your unlisted video for review. After approval, make it public and we'll track views automatically.
                   </p>
                 </div>
                 
@@ -455,7 +455,7 @@ export function ContentCreatorView() {
                 >
                   <span className="flex items-center justify-center space-x-2">
                     <Plus className="w-5 h-5" />
-                    <span>Submit Video Link</span>
+                    <span>Submit Unlisted Video</span>
                   </span>
                 </button>
               </div>
