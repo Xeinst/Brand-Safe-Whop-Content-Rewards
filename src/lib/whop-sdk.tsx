@@ -55,6 +55,37 @@ export interface ExportOptions {
   includeMetrics: string[]
 }
 
+export interface ContentReward {
+  id: string
+  name: string
+  description: string
+  cpm: number
+  status: 'active' | 'paused' | 'completed'
+  totalViews: number
+  totalPaid: number
+  approvedSubmissions: number
+  totalSubmissions: number
+  effectiveCPM: number
+}
+
+export interface Submission {
+  id: string
+  user: string
+  status: 'pending_approval' | 'approved' | 'rejected' | 'published'
+  paid: boolean
+  views: number
+  likes: number
+  submissionDate: Date
+  publishedDate: Date | null
+  content: {
+    title: string
+    privateVideoLink: string
+    publicVideoLink: string | null
+    thumbnail: string
+    platform: string
+  }
+}
+
 export interface WhopSDK {
   user: WhopUser | null
   company: WhopCompany | null
@@ -63,6 +94,12 @@ export interface WhopSDK {
   isWhopMember(): boolean
   getMemberStatistics(): Promise<MemberStatistics>
   exportMemberStats(options: ExportOptions): Promise<Blob>
+  getContentRewards(): Promise<ContentReward[]>
+  getSubmissions(): Promise<Submission[]>
+  createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward>
+  updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward>
+  approveSubmission(id: string): Promise<void>
+  rejectSubmission(id: string, reason: string): Promise<void>
 }
 
 export class WhopSDKWrapper implements WhopSDK {
@@ -220,6 +257,71 @@ export class WhopSDKWrapper implements WhopSDK {
 
     return [headers, ...rows].map(row => row.join(',')).join('\n')
   }
+
+  async getContentRewards(): Promise<ContentReward[]> {
+    // Mock implementation - in production, this would call the real Whop API
+    return [
+      {
+        id: '1',
+        name: 'Make videos different coaching businesses you can start',
+        description: 'Create content about coaching business opportunities',
+        cpm: 4.00,
+        status: 'active',
+        totalViews: 0,
+        totalPaid: 0,
+        approvedSubmissions: 0,
+        totalSubmissions: 0,
+        effectiveCPM: 0
+      }
+    ]
+  }
+
+  async getSubmissions(): Promise<Submission[]> {
+    // Mock implementation - in production, this would call the real Whop API
+    return [
+      {
+        id: '1',
+        user: 'creator123',
+        status: 'pending_approval',
+        paid: false,
+        views: 0,
+        likes: 0,
+        submissionDate: new Date(),
+        publishedDate: null,
+        content: {
+          title: 'Sample Video Title',
+          privateVideoLink: 'https://youtube.com/watch?v=sample',
+          publicVideoLink: null,
+          thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
+          platform: 'youtube'
+        }
+      }
+    ]
+  }
+
+  async createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward> {
+    // Mock implementation - in production, this would call the real Whop API
+    const newReward: ContentReward = {
+      ...reward,
+      id: Date.now().toString()
+    }
+    return newReward
+  }
+
+  async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
+    // Mock implementation - in production, this would call the real Whop API
+    return { ...updates, id } as ContentReward
+  }
+
+  async approveSubmission(id: string): Promise<void> {
+    // Mock implementation - in production, this would call the real Whop API
+    console.log(`Approving submission ${id}`)
+  }
+
+  async rejectSubmission(id: string, reason: string): Promise<void> {
+    // Mock implementation - in production, this would call the real Whop API
+    console.log(`Rejecting submission ${id}: ${reason}`)
+  }
 }
 
 // Mock SDK for development when official SDK is not available
@@ -376,6 +478,71 @@ export class MockWhopSDK implements WhopSDK {
     })
 
     return [headers, ...rows].map(row => row.join(',')).join('\n')
+  }
+
+  async getContentRewards(): Promise<ContentReward[]> {
+    // Mock implementation for development
+    return [
+      {
+        id: '1',
+        name: 'Make videos different coaching businesses you can start',
+        description: 'Create content about coaching business opportunities',
+        cpm: 4.00,
+        status: 'active',
+        totalViews: 0,
+        totalPaid: 0,
+        approvedSubmissions: 0,
+        totalSubmissions: 0,
+        effectiveCPM: 0
+      }
+    ]
+  }
+
+  async getSubmissions(): Promise<Submission[]> {
+    // Mock implementation for development
+    return [
+      {
+        id: '1',
+        user: 'creator123',
+        status: 'pending_approval',
+        paid: false,
+        views: 0,
+        likes: 0,
+        submissionDate: new Date(),
+        publishedDate: null,
+        content: {
+          title: 'Sample Video Title',
+          privateVideoLink: 'https://youtube.com/watch?v=sample',
+          publicVideoLink: null,
+          thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
+          platform: 'youtube'
+        }
+      }
+    ]
+  }
+
+  async createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward> {
+    // Mock implementation for development
+    const newReward: ContentReward = {
+      ...reward,
+      id: Date.now().toString()
+    }
+    return newReward
+  }
+
+  async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
+    // Mock implementation for development
+    return { ...updates, id } as ContentReward
+  }
+
+  async approveSubmission(id: string): Promise<void> {
+    // Mock implementation for development
+    console.log(`Approving submission ${id}`)
+  }
+
+  async rejectSubmission(id: string, reason: string): Promise<void> {
+    // Mock implementation for development
+    console.log(`Rejecting submission ${id}: ${reason}`)
   }
 }
 
