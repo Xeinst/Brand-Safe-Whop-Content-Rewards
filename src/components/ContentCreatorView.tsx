@@ -103,8 +103,8 @@ export function ContentCreatorView() {
   }
 
   const handleSubmit = () => {
-    if (!selectedReward || !currentSubmission.title || !currentSubmission.privateVideoLink) {
-      alert('Please fill in all required fields and provide a private video link')
+    if (!currentSubmission.privateVideoLink) {
+      alert('Please provide a video link')
       return
     }
 
@@ -115,14 +115,18 @@ export function ContentCreatorView() {
       return
     }
 
-    const reward = activeRewards.find(r => r.id === selectedReward)
-    if (!reward) return
+    // Use the first available reward or create a default one
+    const reward = activeRewards[0] || {
+      id: 'default',
+      name: 'Content Submission',
+      cpm: 4.00
+    }
 
     const newSubmission: Submission = {
       id: Date.now().toString(),
-      rewardId: selectedReward,
-      title: currentSubmission.title!,
-      description: currentSubmission.description || '',
+      rewardId: reward.id,
+      title: ytPreview?.title || 'Video Submission',
+      description: '',
       privateVideoLink: currentSubmission.privateVideoLink!,
       publicVideoLink: null,
       thumbnail: currentSubmission.thumbnail || '',
@@ -143,9 +147,10 @@ export function ContentCreatorView() {
       publicVideoLink: null,
       thumbnail: ''
     })
-    setSelectedReward('')
+    setYtPreview(null)
+    setYtError(null)
 
-    alert('Private video link submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
+    alert('Video link submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
   }
 
   const getStatusIcon = (status: string) => {
@@ -410,33 +415,7 @@ export function ContentCreatorView() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Content Title *
-                  </label>
-                  <input
-                    type="text"
-                    value={currentSubmission.title || ''}
-                    onChange={(e) => setCurrentSubmission(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 text-white"
-                    placeholder="Enter a descriptive title for your content"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Description
-                  </label>
-                  <textarea
-                    value={currentSubmission.description || ''}
-                    onChange={(e) => setCurrentSubmission(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 resize-none text-white"
-                    placeholder="Describe your content and key points covered"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Private Video Link *
+                    Video Link *
                   </label>
                   <input
                     type="url"
@@ -476,7 +455,7 @@ export function ContentCreatorView() {
                 >
                   <span className="flex items-center justify-center space-x-2">
                     <Plus className="w-5 h-5" />
-                    <span>Submit Private Video Link</span>
+                    <span>Submit Video Link</span>
                   </span>
                 </button>
               </div>
