@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { extractYouTubeVideoId } from '../lib/youtube'
-import { Video, FileText, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Video, FileText, DollarSign, Clock, CheckCircle, XCircle, Plus, Star, Users } from 'lucide-react'
 
 interface ContentReward {
   id: string
@@ -177,50 +177,77 @@ export function ContentCreatorView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {/* Fluid UI Header */}
+      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
                 <Video className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">Content Creator Portal</h1>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                  Creator Portal
+                </h1>
+                <p className="text-xs text-slate-500">Earn rewards for your content</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 bg-slate-100/50 rounded-lg px-3 py-2">
+                <Star className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-medium text-slate-700">Premium Creator</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Available Rewards */}
           <div className="lg:col-span-2 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Available Content Rewards</h2>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
+                Available Content Rewards
+              </h2>
+              <div className="space-y-6">
                 {activeRewards.map((reward) => (
-                  <div key={reward.id} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{reward.name}</h3>
-                        <p className="text-gray-600 mb-4">{reward.description}</p>
-                        <div className="flex items-center space-x-4 text-sm">
-                          <span className="text-gray-500">CPM: <span className="font-semibold text-green-600">${reward.cpm}</span></span>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                            {reward.status}
-                          </span>
+                  <div key={reward.id} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center">
+                            <DollarSign className="w-4 h-4 text-white" />
+                          </div>
+                          <h3 className="text-xl font-bold text-slate-900">{reward.name}</h3>
+                        </div>
+                        <p className="text-slate-600 mb-4 leading-relaxed">{reward.description}</p>
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg px-3 py-2">
+                            <DollarSign className="w-4 h-4 text-emerald-600" />
+                            <span className="text-sm font-semibold text-emerald-700">${reward.cpm} CPM</span>
+                          </div>
+                          <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-3 py-2">
+                            <Users className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-semibold text-blue-700 capitalize">{reward.status}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Requirements:</h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-slate-900 mb-3 flex items-center">
+                        <CheckCircle className="w-4 h-4 text-emerald-500 mr-2" />
+                        Requirements
+                      </h4>
+                      <ul className="space-y-2">
                         {reward.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                            {req}
+                          <li key={index} className="flex items-start space-x-3">
+                            <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                              <CheckCircle className="w-3 h-3 text-white" />
+                            </div>
+                            <span className="text-sm text-slate-600 leading-relaxed">{req}</span>
                           </li>
                         ))}
                       </ul>
@@ -228,13 +255,23 @@ export function ContentCreatorView() {
                     
                     <button
                       onClick={() => setSelectedReward(reward.id)}
-                      className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                         selectedReward === reward.id
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
+                          : 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 hover:from-slate-200 hover:to-slate-300 hover:shadow-md'
                       }`}
                     >
-                      {selectedReward === reward.id ? 'Selected' : 'Select This Reward'}
+                      {selectedReward === reward.id ? (
+                        <span className="flex items-center justify-center space-x-2">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Selected</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center space-x-2">
+                          <Plus className="w-4 h-4" />
+                          <span>Select This Reward</span>
+                        </span>
+                      )}
                     </button>
                   </div>
                 ))}
@@ -243,76 +280,99 @@ export function ContentCreatorView() {
 
             {/* Submission Form */}
             {selectedReward && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Submit Your Content</h3>
+              <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    Submit Your Content
+                  </h3>
+                </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
                       Content Title *
                     </label>
                     <input
                       type="text"
                       value={currentSubmission.title || ''}
                       onChange={(e) => setCurrentSubmission(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400"
                       placeholder="Enter a descriptive title for your content"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
                       Description
                     </label>
                     <textarea
                       value={currentSubmission.description || ''}
                       onChange={(e) => setCurrentSubmission(prev => ({ ...prev, description: e.target.value }))}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400 resize-none"
                       placeholder="Describe your content and key points covered"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">
                       Private Video Link *
                     </label>
                     <input
                       type="url"
                       value={currentSubmission.privateVideoLink || ''}
                       onChange={handleLinkChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400"
                       placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
                     />
-                  {ytError && (
-                    <p className="text-xs text-red-600 mt-1">{ytError}</p>
-                  )}
-                  {ytPreview && (
-                    <div className="flex items-center space-x-3 mt-2">
-                      <img src={ytPreview.thumbnail} alt={ytPreview.title} className="w-16 h-9 rounded object-cover border" />
-                      <p className="text-sm text-gray-700 truncate">{ytPreview.title}</p>
-                    </div>
-                  )}
-                    <p className="text-xs text-gray-500 mt-1">
+                    {ytError && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-700 flex items-center space-x-2">
+                          <XCircle className="w-4 h-4" />
+                          <span>{ytError}</span>
+                        </p>
+                      </div>
+                    )}
+                    {ytPreview && (
+                      <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <div className="flex items-center space-x-4">
+                          <img src={ytPreview.thumbnail} alt={ytPreview.title} className="w-20 h-11 rounded-lg object-cover border border-emerald-300" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-emerald-900 truncate">{ytPreview.title}</p>
+                            <p className="text-xs text-emerald-600">Video validated successfully</p>
+                          </div>
+                          <CheckCircle className="w-5 h-5 text-emerald-600" />
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500 mt-3 leading-relaxed">
                       Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
                     </p>
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">Approval Process</span>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Clock className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-semibold text-indigo-900">Approval Process</span>
                     </div>
-                    <p className="text-sm text-blue-800">
+                    <p className="text-sm text-indigo-800 leading-relaxed">
                       Your private video will be reviewed for brand safety and quality. Once approved, make your video public and we'll automatically track views and calculate your CPM earnings.
                     </p>
                   </div>
                   
                   <button
                     onClick={handleSubmit}
-                    className="w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transform hover:scale-[1.02]"
                   >
-                    Submit Private Video Link
+                    <span className="flex items-center justify-center space-x-2">
+                      <Plus className="w-5 h-5" />
+                      <span>Submit Private Video Link</span>
+                    </span>
                   </button>
                 </div>
               </div>

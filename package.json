@@ -4,7 +4,14 @@
   "description": "Content Rewards - A comprehensive Whop app for brand-safe content approval and CPM-based rewards",
   "private": true,
   "type": "module",
-  "keywords": ["whop", "brand-safety", "content-moderation", "cpm", "rewards", "approval"],
+  "keywords": [
+    "whop",
+    "brand-safety",
+    "content-moderation",
+    "cpm",
+    "rewards",
+    "approval"
+  ],
   "author": "Your Name",
   "license": "MIT",
   "scripts": {
@@ -19,6 +26,7 @@
   "dependencies": {
     "@whop-apps/sdk": "^0.0.1-canary.117",
     "clsx": "^2.0.0",
+    "googleapis": "^164.0.0",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
