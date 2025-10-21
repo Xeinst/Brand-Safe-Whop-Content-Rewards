@@ -27,6 +27,7 @@ interface Submission {
 }
 
 export function ContentCreatorView() {
+  const [activeTab, setActiveTab] = useState<'rewards' | 'submissions' | 'submit'>('rewards')
   const [activeRewards, setActiveRewards] = useState<ContentReward[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [selectedReward, setSelectedReward] = useState<string>('')
@@ -177,242 +178,125 @@ export function ContentCreatorView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Fluid UI Header */}
-      <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Video className="w-5 h-5 text-white" />
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">W</span>
               </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Creator Portal
-                </h1>
-                <p className="text-xs text-slate-500">Earn rewards for your content</p>
-              </div>
+              <h1 className="text-xl font-semibold">Content Rewards</h1>
             </div>
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 bg-slate-100/50 rounded-lg px-3 py-2">
-                <Star className="w-4 h-4 text-amber-500" />
-                <span className="text-sm font-medium text-slate-700">Premium Creator</span>
-              </div>
+            
+            <div className="flex items-center space-x-4">
+              <a href="#" className="text-blue-400 hover:text-blue-300 text-sm">
+                How do Content Rewards work?
+              </a>
+              <button className="inline-flex items-center px-3 py-2 border border-gray-600 rounded-lg text-sm hover:bg-gray-700 transition-colors">
+                <Settings className="w-4 h-4 mr-2" />
+                Edit
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Available Rewards */}
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-6">
-                Available Content Rewards
-              </h2>
-              <div className="space-y-6">
-                {activeRewards.map((reward) => (
-                  <div key={reward.id} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center">
-                            <DollarSign className="w-4 h-4 text-white" />
-                          </div>
-                          <h3 className="text-xl font-bold text-slate-900">{reward.name}</h3>
-                        </div>
-                        <p className="text-slate-600 mb-4 leading-relaxed">{reward.description}</p>
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg px-3 py-2">
-                            <DollarSign className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm font-semibold text-emerald-700">${reward.cpm} CPM</span>
-                          </div>
-                          <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-3 py-2">
-                            <Users className="w-4 h-4 text-blue-600" />
-                            <span className="text-sm font-semibold text-blue-700 capitalize">{reward.status}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-slate-900 mb-3 flex items-center">
-                        <CheckCircle className="w-4 h-4 text-emerald-500 mr-2" />
-                        Requirements
-                      </h4>
-                      <ul className="space-y-2">
-                        {reward.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start space-x-3">
-                            <div className="w-5 h-5 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                              <CheckCircle className="w-3 h-3 text-white" />
-                            </div>
-                            <span className="text-sm text-slate-600 leading-relaxed">{req}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    
-                    <button
-                      onClick={() => setSelectedReward(reward.id)}
-                      className={`w-full px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                        selectedReward === reward.id
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
-                          : 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 hover:from-slate-200 hover:to-slate-300 hover:shadow-md'
-                      }`}
-                    >
-                      {selectedReward === reward.id ? (
-                        <span className="flex items-center justify-center space-x-2">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Selected</span>
-                        </span>
-                      ) : (
-                        <span className="flex items-center justify-center space-x-2">
-                          <Plus className="w-4 h-4" />
-                          <span>Select This Reward</span>
-                        </span>
-                      )}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Navigation Tabs */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('rewards')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'rewards'
+                  ? 'border-blue-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              }`}
+            >
+              Rewards
+            </button>
+            <button
+              onClick={() => setActiveTab('submissions')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'submissions'
+                  ? 'border-blue-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              }`}
+            >
+              My submissions
+            </button>
+            <button
+              onClick={() => setActiveTab('submit')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'submit'
+                  ? 'border-blue-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+              }`}
+            >
+              Submit Unreleased Content
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Submission Form */}
-            {selectedReward && (
-              <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                    <Plus className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                    Submit Your Content
-                  </h3>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'rewards' && (
+          <div className="space-y-6">
+            {/* Content Rewards Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Side - Content Rewards Card */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-4 left-4 w-16 h-16 bg-white rounded-full"></div>
+                  <div className="absolute top-8 left-8 w-8 h-8 bg-white rounded-full"></div>
+                  <div className="absolute top-12 left-12 w-4 h-4 bg-white rounded-full"></div>
+                  <div className="absolute top-16 left-16 w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute top-20 left-20 w-1 h-1 bg-white rounded-full"></div>
                 </div>
                 
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      Content Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={currentSubmission.title || ''}
-                      onChange={(e) => setCurrentSubmission(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400"
-                      placeholder="Enter a descriptive title for your content"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      Description
-                    </label>
-                    <textarea
-                      value={currentSubmission.description || ''}
-                      onChange={(e) => setCurrentSubmission(prev => ({ ...prev, description: e.target.value }))}
-                      rows={3}
-                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400 resize-none"
-                      placeholder="Describe your content and key points covered"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      Private Video Link *
-                    </label>
-                    <input
-                      type="url"
-                      value={currentSubmission.privateVideoLink || ''}
-                      onChange={handleLinkChange}
-                      className="w-full px-4 py-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 placeholder-slate-400"
-                      placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
-                    />
-                    {ytError && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-700 flex items-center space-x-2">
-                          <XCircle className="w-4 h-4" />
-                          <span>{ytError}</span>
-                        </p>
-                      </div>
-                    )}
-                    {ytPreview && (
-                      <div className="mt-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <div className="flex items-center space-x-4">
-                          <img src={ytPreview.thumbnail} alt={ytPreview.title} className="w-20 h-11 rounded-lg object-cover border border-emerald-300" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-emerald-900 truncate">{ytPreview.title}</p>
-                            <p className="text-xs text-emerald-600">Video validated successfully</p>
-                          </div>
-                          <CheckCircle className="w-5 h-5 text-emerald-600" />
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-xs text-slate-500 mt-3 leading-relaxed">
-                      Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/50 rounded-xl p-4">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                        <Clock className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm font-semibold text-indigo-900">Approval Process</span>
-                    </div>
-                    <p className="text-sm text-indigo-800 leading-relaxed">
-                      Your private video will be reviewed for brand safety and quality. Once approved, make your video public and we'll automatically track views and calculate your CPM earnings.
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={handleSubmit}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transform hover:scale-[1.02]"
-                  >
-                    <span className="flex items-center justify-center space-x-2">
-                      <Plus className="w-5 h-5" />
-                      <span>Submit Private Video Link</span>
-                    </span>
-                  </button>
+                {/* Whop Logo */}
+                <div className="relative z-10 w-6 h-6 bg-white rounded flex items-center justify-center mb-4">
+                  <span className="text-orange-500 font-bold text-xs">W</span>
+                </div>
+                
+                {/* Main Content */}
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-bold text-white mb-2">Content rewards</h2>
+                  <p className="text-white/90 text-lg">create. post. earn.</p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Submissions History */}
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Your Submissions</h2>
-              {submissions.length === 0 ? (
-                <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                    <FileText className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <p className="text-gray-600">No submissions yet</p>
-                  <p className="text-sm text-gray-500">Submit content to start earning rewards</p>
-                </div>
-              ) : (
+              {/* Right Side - Reward Details */}
+              {activeRewards.length > 0 && (
                 <div className="space-y-4">
-                  {submissions.map((submission) => (
-                    <div key={submission.id} className="bg-white rounded-lg border border-gray-200 p-4">
-                      <div className="flex items-start space-x-3">
-                        {getStatusIcon(submission.status)}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">
-                            {submission.title}
-                          </h4>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {submission.submittedAt?.toLocaleDateString()}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-2">
-                            <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(submission.status)}`}>
-                              {submission.status.replace('_', ' ')}
-                            </span>
-                            {submission.status === 'published' && (
-                              <span className="text-xs text-green-600 font-medium">
-                                ${submission.estimatedEarnings.toFixed(2)} earned
-                              </span>
-                            )}
+                  {activeRewards.map((reward) => (
+                    <div key={reward.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                      <h3 className="text-xl font-bold text-white mb-2">{reward.name}</h3>
+                      <div className="text-gray-400 mb-4">${reward.cpm} CPM</div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            ${reward.cpm} / 1K
+                          </span>
+                          <div className="flex items-center space-x-2">
+                            {/* Platform Icons */}
+                            <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-orange-500 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">IG</span>
+                            </div>
+                            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">TT</span>
+                            </div>
+                            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">X</span>
+                            </div>
+                            <div className="w-6 h-6 bg-red-600 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">YT</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -421,34 +305,184 @@ export function ContentCreatorView() {
                 </div>
               )}
             </div>
-            
-            {/* Earnings Summary */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Earnings Summary</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Earned:</span>
-                  <span className="font-semibold text-green-600">
-                    ${submissions.filter(s => s.status === 'published').reduce((sum, s) => sum + s.estimatedEarnings, 0).toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Pending Approval:</span>
-                  <span className="font-semibold text-yellow-600">
-                    {submissions.filter(s => s.status === 'submitted' || s.status === 'pending_approval').length}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Published:</span>
-                  <span className="font-semibold text-green-600">
-                    {submissions.filter(s => s.status === 'published').length}
-                  </span>
+          </div>
+        )}
+
+        {activeTab === 'submissions' && (
+          <div className="space-y-6">
+            {/* Filter and Action Bar */}
+            <div className="bg-gray-800 border-b border-gray-700 p-4">
+              <div className="max-w-7xl mx-auto flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <button className="inline-flex items-center px-3 py-2 border border-gray-600 rounded-lg text-sm hover:bg-gray-700 transition-colors">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Status
+                  </button>
                 </div>
               </div>
             </div>
+
+            {/* Table Header */}
+            <div className="bg-gray-800 border-b border-gray-700">
+              <div className="max-w-7xl mx-auto px-4 py-3">
+                <div className="grid grid-cols-6 gap-4 text-sm font-medium">
+                  <div className="flex items-center">
+                    Title <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                  <div className="flex items-center">
+                    Status <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                  <div className="flex items-center">
+                    Total views <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                  <div className="flex items-center">
+                    Submission <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                  <div className="flex items-center">
+                    Reward rate <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                  <div className="flex items-center">
+                    Paid <MoreVertical className="w-4 h-4 ml-1" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Table Content */}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+              {submissions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-32 h-32 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
+                    <div className="w-20 h-20 bg-yellow-400 rounded-lg flex items-center justify-center">
+                      <div className="w-16 h-16 bg-orange-500 rounded flex items-center justify-center">
+                        <span className="text-white font-bold text-2xl">$</span>
+                      </div>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    No submissions <span className="text-yellow-400">here</span>
+                  </h2>
+                  <p className="text-gray-400">
+                    Start submitting content to earn money!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {submissions.map((submission) => (
+                    <div key={submission.id} className="border-b border-gray-700 py-4">
+                      <div className="grid grid-cols-6 gap-4 items-center">
+                        <div className="flex items-center">
+                          <span className="text-white font-medium">{submission.title}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(submission.status)}`}>
+                            {submission.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          {submission.actualViews.toLocaleString()}
+                        </div>
+                        <div className="flex items-center">
+                          {submission.submittedAt?.toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center">
+                          ${submission.estimatedEarnings.toFixed(2)}
+                        </div>
+                        <div className="flex items-center">
+                          <span className={submission.status === 'published' ? 'text-green-400' : 'text-gray-400'}>
+                            {submission.status === 'published' ? 'Yes' : 'No'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+
+        {activeTab === 'submit' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <h2 className="text-2xl font-bold text-white mb-6">Submit Unreleased Content</h2>
+              
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Content Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={currentSubmission.title || ''}
+                    onChange={(e) => setCurrentSubmission(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 text-white"
+                    placeholder="Enter a descriptive title for your content"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Description
+                  </label>
+                  <textarea
+                    value={currentSubmission.description || ''}
+                    onChange={(e) => setCurrentSubmission(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 resize-none text-white"
+                    placeholder="Describe your content and key points covered"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Private Video Link *
+                  </label>
+                  <input
+                    type="url"
+                    value={currentSubmission.privateVideoLink || ''}
+                    onChange={handleLinkChange}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-gray-400 text-white"
+                    placeholder="https://youtube.com/watch?v=... or https://tiktok.com/@user/video/..."
+                  />
+                  {ytError && (
+                    <div className="mt-3 p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                      <p className="text-sm text-red-400 flex items-center space-x-2">
+                        <XCircle className="w-4 h-4" />
+                        <span>{ytError}</span>
+                      </p>
+                    </div>
+                  )}
+                  {ytPreview && (
+                    <div className="mt-3 p-4 bg-green-900/50 border border-green-700 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <img src={ytPreview.thumbnail} alt={ytPreview.title} className="w-20 h-11 rounded-lg object-cover border border-green-600" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-green-300 truncate">{ytPreview.title}</p>
+                          <p className="text-xs text-green-400">Video validated successfully</p>
+                        </div>
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400 mt-3 leading-relaxed">
+                    Submit a link to your private video for review. After approval, make it public and we'll track views automatically.
+                  </p>
+                </div>
+                
+                <button
+                  onClick={handleSubmit}
+                  className="w-full px-6 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all duration-300"
+                >
+                  <span className="flex items-center justify-center space-x-2">
+                    <Plus className="w-5 h-5" />
+                    <span>Submit Private Video Link</span>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   )
 }
