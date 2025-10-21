@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
+import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK, useWhopSDK } from './lib/whop-sdk'
 import { RoleSelector, UserRole } from './components/RoleSelector'
 import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
 import { ContentCreatorView } from './components/ContentCreatorView'
@@ -70,19 +70,50 @@ function App() {
 }
 
 function AppRouter() {
+  const sdk = useWhopSDK()
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [toastNotification, setToastNotification] = useState<any>(null)
+  const [isDetectingRole, setIsDetectingRole] = useState(true)
 
-  const handleRoleSelect = (role: UserRole) => {
-    setUserRole(role)
-  }
+  // Auto-detect user role based on Whop membership
+  useEffect(() => {
+    const detectUserRole = async () => {
+      try {
+        // Check if user is a Whop member
+        const isWhopMember = sdk?.isWhopMember()
+        
+        if (isWhopMember) {
+          // If user is a Whop member, they are a content creator
+          setUserRole('creator')
+        } else {
+          // If not a Whop member, they are a brand manager
+          setUserRole('brand')
+        }
+      } catch (error) {
+        console.error('Error detecting user role:', error)
+        // Default to brand manager if detection fails
+        setUserRole('brand')
+      } finally {
+        setIsDetectingRole(false)
+      }
+    }
+
+    if (sdk) {
+      detectUserRole()
+    }
+  }, [sdk])
 
   const handleRoleChange = () => {
     setUserRole(null)
+    setIsDetectingRole(true)
+  }
+
+  if (isDetectingRole) {
+    return <LoadingSpinner />
   }
 
   if (!userRole) {
-    return <RoleSelector onRoleSelect={handleRoleSelect} />
+    return <RoleSelector onRoleSelect={setUserRole} />
   }
 
   return (
