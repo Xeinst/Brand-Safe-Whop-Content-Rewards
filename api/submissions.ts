@@ -1,0 +1,106 @@
+// API route for content submissions operations
+import { query } from './database'
+
+export default async function handler(req: any, res: any) {
+  const { method } = req
+
+  try {
+    switch (method) {
+      case 'GET':
+        return await handleGetSubmissions(req, res)
+      case 'POST':
+        return await handleCreateSubmission(req, res)
+      case 'PUT':
+        return await handleUpdateSubmission(req, res)
+      default:
+        res.setHeader('Allow', ['GET', 'POST', 'PUT'])
+        return res.status(405).json({ error: `Method ${method} not allowed` })
+    }
+  } catch (error) {
+    console.error('Submissions API error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+async function handleGetSubmissions(req: any, res: any) {
+  const { status, user_id, company_id } = req.query
+
+  let queryText = `
+    SELECT cs.*, u.username, u.display_name, cr.name as reward_name 
+    FROM content_submissions cs 
+    LEFT JOIN users u ON cs.user_id = u.id 
+    LEFT JOIN content_rewards cr ON cs.content_reward_id = cr.id 
+    WHERE 1=1
+  `
+  const params: any[] = []
+  let paramCount = 0
+
+  if (user_id) {
+    paramCount++
+    queryText += ` AND cs.user_id = $${paramCount}`
+    params.push(user_id)
+  }
+
+  if (status) {
+    paramCount++
+    queryText += ` AND cs.status = $${paramCount}`
+    params.push(status)
+  }
+
+  if (company_id) {
+    paramCount++
+    queryText += ` AND cr.company_id = $${paramCount}`
+    params.push(company_id)
+  }
+
+  queryText += ' ORDER BY cs.submission_date DESC'
+
+  const result = await query(queryText, params)
+  return res.json(result.rows)
+}
+
+async function handleCreateSubmission(req: any, res: any) {
+  const { user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform } = req.body
+
+  if (!user_id || !title || !private_video_link) {
+    return res.status(400).json({ error: 'Missing required fields' })
+  }
+
+  const result = await query(
+    'INSERT INTO content_submissions (user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+    [user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform || 'youtube']
+  )
+
+  return res.status(201).json(result.rows[0])
+}
+
+async function handleUpdateSubmission(req: any, res: any) {
+  const { id } = req.query
+  const { action, reason, approved_by } = req.body
+
+  if (!id) {
+    return res.status(400).json({ error: 'Missing submission id' })
+  }
+
+  let result
+
+  if (action === 'approve') {
+    result = await query(
+      'UPDATE content_submissions SET status = $1, approved_by = $2, approved_at = NOW(), updated_at = NOW() WHERE id = $3 RETURNING *',
+      ['approved', approved_by, id]
+    )
+  } else if (action === 'reject') {
+    result = await query(
+      'UPDATE content_submissions SET status = $1, approved_by = $2, approved_at = NOW(), rejection_reason = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
+      ['rejected', approved_by, reason, id]
+    )
+  } else {
+    return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject"' })
+  }
+
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: 'Submission not found' })
+  }
+
+  return res.json(result.rows[0])
+}
