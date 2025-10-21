@@ -7,6 +7,8 @@ export interface WhopUser {
   email?: string
   avatar?: string
   display_name?: string
+  role: 'member' | 'owner' | 'admin'
+  permissions: string[]
 }
 
 export interface WhopCompany {
@@ -92,6 +94,10 @@ export interface WhopSDK {
   init(): Promise<void>
   isAuthenticated(): boolean
   isWhopMember(): boolean
+  getUserRole(): 'member' | 'owner' | 'admin' | null
+  isOwner(): boolean
+  isMember(): boolean
+  hasPermission(permission: string): boolean
   getMemberStatistics(): Promise<MemberStatistics>
   exportMemberStats(options: ExportOptions): Promise<Blob>
   getContentRewards(): Promise<ContentReward[]>
@@ -105,16 +111,16 @@ export interface WhopSDK {
 export class WhopSDKWrapper implements WhopSDK {
   user: WhopUser | null = null
   company: WhopCompany | null = null
-  private isMember: boolean = true // Simulate Whop membership
+  private isWhopMemberFlag: boolean = true // Simulate Whop membership
 
   async init(): Promise<void> {
     try {
       // Check URL parameters or localStorage for testing different user types
       const urlParams = new URLSearchParams(window.location.search)
-      const userType = urlParams.get('userType') || localStorage.getItem('userType') || 'member'
+      const userType = urlParams.get('userType') || localStorage.getItem('userType') || 'owner'
       
       if (userType === 'non-member') {
-        this.isMember = false
+        this.isWhopMemberFlag = false
         this.user = null
         this.company = null
       } else {
@@ -124,7 +130,11 @@ export class WhopSDKWrapper implements WhopSDK {
           username: 'demo_user',
           email: 'demo@example.com',
           avatar: 'https://via.placeholder.com/40',
-          display_name: 'Demo User'
+          display_name: 'Demo User',
+          role: userType === 'member' ? 'member' : 'owner',
+          permissions: userType === 'member' 
+            ? ['read_content', 'write_content', 'read_analytics']
+            : ['read_content', 'write_content', 'read_analytics', 'member:stats:export', 'admin']
         }
         
         this.company = {
@@ -132,7 +142,7 @@ export class WhopSDKWrapper implements WhopSDK {
           name: 'Demo Brand Community',
           description: 'A sample community for testing brand-safe content approval'
         }
-        this.isMember = true
+        this.isWhopMemberFlag = true
       }
     } catch (error) {
       console.error('Failed to initialize Whop SDK:', error)
@@ -145,7 +155,25 @@ export class WhopSDKWrapper implements WhopSDK {
 
   isWhopMember(): boolean {
     // In a real implementation, this would check if the user is a member of the Whop community
-    return this.isMember
+    return this.isWhopMemberFlag
+  }
+
+  getUserRole(): 'member' | 'owner' | 'admin' | null {
+    if (!this.user) return null
+    return this.user.role
+  }
+
+  isOwner(): boolean {
+    return this.user?.role === 'owner' || this.user?.role === 'admin'
+  }
+
+  isMember(): boolean {
+    return this.user?.role === 'member'
+  }
+
+  hasPermission(permission: string): boolean {
+    if (!this.user) return false
+    return this.user.permissions.includes(permission)
   }
 
   async getMemberStatistics(): Promise<MemberStatistics> {
@@ -328,7 +356,7 @@ export class WhopSDKWrapper implements WhopSDK {
 export class MockWhopSDK implements WhopSDK {
   user: WhopUser | null = null
   company: WhopCompany | null = null
-  private isMember: boolean = true // Simulate Whop membership
+  private isWhopMemberFlag: boolean = true // Simulate Whop membership
 
   async init(): Promise<void> {
     // Mock initialization
@@ -339,7 +367,7 @@ export class MockWhopSDK implements WhopSDK {
     const userType = urlParams.get('userType') || localStorage.getItem('userType') || 'member'
     
     if (userType === 'non-member') {
-      this.isMember = false
+      this.isWhopMemberFlag = false
       this.user = null
       this.company = null
     } else {
@@ -349,7 +377,11 @@ export class MockWhopSDK implements WhopSDK {
         username: 'demo_user',
         email: 'demo@example.com',
         avatar: 'https://via.placeholder.com/40',
-        display_name: 'Demo User'
+        display_name: 'Demo User',
+        role: userType === 'member' ? 'member' : 'owner',
+        permissions: userType === 'member' 
+          ? ['read_content', 'write_content', 'read_analytics']
+          : ['read_content', 'write_content', 'read_analytics', 'member:stats:export', 'admin']
       }
       
       this.company = {
@@ -357,7 +389,7 @@ export class MockWhopSDK implements WhopSDK {
         name: 'Demo Brand Community',
         description: 'A sample community for testing brand-safe content approval'
       }
-      this.isMember = true
+      this.isWhopMemberFlag = true
     }
   }
 
@@ -367,7 +399,25 @@ export class MockWhopSDK implements WhopSDK {
 
   isWhopMember(): boolean {
     // In a real implementation, this would check if the user is a member of the Whop community
-    return this.isMember
+    return this.isWhopMemberFlag
+  }
+
+  getUserRole(): 'member' | 'owner' | 'admin' | null {
+    if (!this.user) return null
+    return this.user.role
+  }
+
+  isOwner(): boolean {
+    return this.user?.role === 'owner' || this.user?.role === 'admin'
+  }
+
+  isMember(): boolean {
+    return this.user?.role === 'member'
+  }
+
+  hasPermission(permission: string): boolean {
+    if (!this.user) return false
+    return this.user.permissions.includes(permission)
   }
 
   async getMemberStatistics(): Promise<MemberStatistics> {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
+import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK, useWhopSDK } from './lib/whop-sdk'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'
 import { MemberStatsView } from './components/MemberStatsView'
@@ -72,7 +72,7 @@ function App() {
 }
 
 function AppRouter() {
-  // const sdk = useWhopSDK()
+  const sdk = useWhopSDK()
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
@@ -86,13 +86,27 @@ function AppRouter() {
     return () => window.removeEventListener('popstate', handleRouteChange)
   }, [])
 
-  // Route to appropriate component based on path
+  // Route to appropriate component based on path and user role
   const renderCurrentView = () => {
+    // If no specific path, route based on user role
+    if (currentPath === '/' || currentPath === '/dashboard') {
+      if (sdk?.isOwner()) {
+        return <ContentRewardsDashboard />
+      } else if (sdk?.isMember()) {
+        return <ContentCreatorView />
+      } else {
+        // Default to owner dashboard if role is unclear
+        return <ContentRewardsDashboard />
+      }
+    }
+
+    // Handle specific paths
     switch (currentPath) {
-      case '/':
+      case '/owner':
       case '/dashboard':
         return <ContentRewardsDashboard />
       case '/creator':
+      case '/member':
         return <ContentCreatorView />
       case '/experiences':
         return <ExperienceView />
@@ -101,8 +115,14 @@ function AppRouter() {
       case '/dashboard/member-stats':
         return <MemberStatsView />
       default:
-        // Default to Content Rewards Dashboard for unknown paths
-        return <ContentRewardsDashboard />
+        // Default based on user role
+        if (sdk?.isOwner()) {
+          return <ContentRewardsDashboard />
+        } else if (sdk?.isMember()) {
+          return <ContentCreatorView />
+        } else {
+          return <ContentRewardsDashboard />
+        }
     }
   }
 
