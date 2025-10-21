@@ -43,9 +43,9 @@ export function ContentRewardsDashboard() {
     setContentRewards([
       {
         id: '1',
-        name: 'Gaming Chair Review Campaign',
-        description: 'Review our premium gaming chairs',
-        cpm: 5.00,
+        name: 'Make videos different coaching businesses you can start',
+        description: 'Create content about coaching business opportunities',
+        cpm: 4.00,
         status: 'active',
         totalViews: 0,
         totalPaid: 0,
@@ -117,54 +117,74 @@ export function ContentRewardsDashboard() {
               Active {contentRewards.filter(r => r.status === 'active').length}
             </div>
 
-            {/* Empty State */}
-            {contentRewards.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-32 h-32 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
-                  <div className="w-20 h-20 bg-yellow-400 rounded-lg flex items-center justify-center">
-                    <div className="w-16 h-16 bg-orange-500 rounded flex items-center justify-center">
-                      <span className="text-white font-bold text-2xl">$</span>
-                    </div>
-                  </div>
+            {/* Content Rewards Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Side - Content Rewards Card */}
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-8 relative overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-4 left-4 w-16 h-16 bg-white rounded-full"></div>
+                  <div className="absolute top-8 left-8 w-8 h-8 bg-white rounded-full"></div>
+                  <div className="absolute top-12 left-12 w-4 h-4 bg-white rounded-full"></div>
+                  <div className="absolute top-16 left-16 w-2 h-2 bg-white rounded-full"></div>
+                  <div className="absolute top-20 left-20 w-1 h-1 bg-white rounded-full"></div>
                 </div>
-                <h2 className="text-2xl font-bold mb-2">
-                  No active <span className="text-yellow-400">Content Rewards</span>
-                </h2>
-                <p className="text-gray-400 mb-8">
-                  You don't have any active Content Rewards. Create one to start paying out users.
-                </p>
-                <button className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Content Reward
-                </button>
+                
+                {/* Whop Logo */}
+                <div className="relative z-10 w-6 h-6 bg-white rounded flex items-center justify-center mb-4">
+                  <span className="text-orange-500 font-bold text-xs">W</span>
+                </div>
+                
+                {/* Main Content */}
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-bold text-white mb-2">Content rewards</h2>
+                  <p className="text-white/90 text-lg">create. post. earn.</p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {contentRewards.map((reward) => (
-                  <div key={reward.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-2">{reward.name}</h3>
-                        <p className="text-gray-400 mb-4">{reward.description}</p>
-                        <div className="flex items-center space-x-4 text-sm">
-                          <span className="text-gray-400">CPM: <span className="text-white font-medium">${reward.cpm}</span></span>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            reward.status === 'active' ? 'bg-green-100 text-green-800' :
-                            reward.status === 'paused' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {reward.status}
+
+              {/* Right Side - Reward Details */}
+              {contentRewards.length > 0 && (
+                <div className="space-y-4">
+                  {contentRewards.map((reward) => (
+                    <div key={reward.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                      <h3 className="text-xl font-bold text-white mb-2">{reward.name}</h3>
+                      <div className="text-gray-400 mb-4">${reward.totalPaid} of $200 paid out</div>
+                      
+                      {/* Progress Bar */}
+                      <div className="mb-4">
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div className="bg-gray-600 h-2 rounded-full" style={{ width: '0%' }}></div>
+                        </div>
+                        <div className="text-right text-sm text-gray-400 mt-1">0%</div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            ${reward.cpm} / 1K
                           </span>
+                          <div className="flex items-center space-x-2">
+                            {/* Platform Icons */}
+                            <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-orange-500 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">IG</span>
+                            </div>
+                            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">TT</span>
+                            </div>
+                            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">X</span>
+                            </div>
+                            <div className="w-6 h-6 bg-red-600 rounded flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">YT</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <button className="text-gray-400 hover:text-white">
-                        <MoreVertical className="w-5 h-5" />
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -195,12 +215,12 @@ export function ContentRewardsDashboard() {
                 <div className="text-2xl font-bold text-white">$0.00</div>
               </div>
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div className="text-sm text-gray-400 mb-1">Approved submissions</div>
-                <div className="text-2xl font-bold text-white">0</div>
-              </div>
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                 <div className="text-sm text-gray-400 mb-1">Effective CPM</div>
                 <div className="text-2xl font-bold text-white">$0.00</div>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div className="text-sm text-gray-400 mb-1">Approved submissions</div>
+                <div className="text-2xl font-bold text-white">0</div>
               </div>
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                 <div className="text-sm text-gray-400 mb-1">Total submissions</div>
@@ -212,7 +232,7 @@ export function ContentRewardsDashboard() {
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
               <h3 className="text-lg font-semibold mb-4">Total approved views</h3>
               <div className="h-64 bg-gray-700 rounded-lg flex items-center justify-center">
-                <p className="text-gray-400">A view chart for approved submissions will be displayed here</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div>
               </div>
             </div>
           </div>
@@ -234,6 +254,13 @@ function SubmissionsView({
 }) {
   return (
     <div className="bg-gray-900 text-white">
+      {/* Chart Placeholder */}
+      <div className="bg-gray-800 border-b border-gray-700 p-6">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-gray-400">A view chart for approved submissions will be displayed here</p>
+        </div>
+      </div>
+
       {/* Filter and Action Bar */}
       <div className="bg-gray-800 border-b border-gray-700 p-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
