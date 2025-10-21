@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
-// import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
-// import { ContentCreatorView } from './components/ContentCreatorView'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'
-import { DashboardView } from './components/DashboardView'
 import { MemberStatsView } from './components/MemberStatsView'
+import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
+import { ContentCreatorView } from './components/ContentCreatorView'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
@@ -91,17 +90,19 @@ function AppRouter() {
   const renderCurrentView = () => {
     switch (currentPath) {
       case '/':
+      case '/dashboard':
+        return <ContentRewardsDashboard />
+      case '/creator':
+        return <ContentCreatorView />
       case '/experiences':
         return <ExperienceView />
       case '/discover':
         return <DiscoverView />
-      case '/dashboard':
-        return <DashboardView />
       case '/dashboard/member-stats':
         return <MemberStatsView />
       default:
-        // Default to experience view for unknown paths
-        return <ExperienceView />
+        // Default to Content Rewards Dashboard for unknown paths
+        return <ContentRewardsDashboard />
     }
   }
 
