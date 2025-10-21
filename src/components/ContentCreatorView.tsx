@@ -462,6 +462,7 @@ export function ContentCreatorView() {
             </div>
           </div>
         )}
+      </div>
     </div>
   )
 }
