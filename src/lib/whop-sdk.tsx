@@ -319,44 +319,93 @@ export class WhopSDKWrapper implements WhopSDK {
   }
 
   async getContentRewards(): Promise<ContentReward[]> {
-    // Mock implementation - in production, this would call the real Whop API
-    return [
-      {
-        id: '1',
-        name: 'Make videos different coaching businesses you can start',
-        description: 'Create content about coaching business opportunities',
-        cpm: 4.00,
-        status: 'active',
-        totalViews: 0,
-        totalPaid: 0,
-        approvedSubmissions: 0,
-        totalSubmissions: 0,
-        effectiveCPM: 0
+    try {
+      const response = await fetch('/api/content-rewards?company_id=whop-company-1')
+      if (!response.ok) {
+        throw new Error('Failed to fetch content rewards')
       }
-    ]
+      const data = await response.json()
+      // Transform database format to interface format
+      return data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        cpm: item.cpm,
+        status: item.status,
+        totalViews: item.total_views,
+        totalPaid: item.total_paid,
+        approvedSubmissions: item.approved_submissions,
+        totalSubmissions: item.total_submissions,
+        effectiveCPM: item.effective_cpm
+      }))
+    } catch (error) {
+      console.error('Error fetching content rewards:', error)
+      // Fallback to mock data
+      return [
+        {
+          id: '1',
+          name: 'Make videos different coaching businesses you can start',
+          description: 'Create content about coaching business opportunities',
+          cpm: 4.00,
+          status: 'active',
+          totalViews: 0,
+          totalPaid: 0,
+          approvedSubmissions: 0,
+          totalSubmissions: 0,
+          effectiveCPM: 0
+        }
+      ]
+    }
   }
 
   async getSubmissions(): Promise<Submission[]> {
-    // Mock implementation - in production, this would call the real Whop API
-    return [
-      {
-        id: '1',
-        user: 'creator123',
-        status: 'pending_approval',
-        paid: false,
-        views: 0,
-        likes: 0,
-        submissionDate: new Date(),
-        publishedDate: null,
-        content: {
-          title: 'Sample Video Title',
-          privateVideoLink: 'https://youtube.com/watch?v=sample',
-          publicVideoLink: null,
-          thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
-          platform: 'youtube'
-        }
+    try {
+      const response = await fetch('/api/submissions?company_id=whop-company-1')
+      if (!response.ok) {
+        throw new Error('Failed to fetch submissions')
       }
-    ]
+      const data = await response.json()
+      // Transform database format to interface format
+      return data.map((item: any) => ({
+        id: item.id,
+        user: item.username || 'Unknown User',
+        status: item.status,
+        paid: item.paid,
+        views: item.views,
+        likes: item.likes,
+        submissionDate: new Date(item.submission_date),
+        publishedDate: item.published_date ? new Date(item.published_date) : null,
+        content: {
+          title: item.title,
+          privateVideoLink: item.private_video_link,
+          publicVideoLink: item.public_video_link,
+          thumbnail: item.thumbnail_url,
+          platform: item.platform
+        }
+      }))
+    } catch (error) {
+      console.error('Error fetching submissions:', error)
+      // Fallback to mock data
+      return [
+        {
+          id: '1',
+          user: 'creator123',
+          status: 'pending_approval',
+          paid: false,
+          views: 0,
+          likes: 0,
+          submissionDate: new Date(),
+          publishedDate: null,
+          content: {
+            title: 'Sample Video Title',
+            privateVideoLink: 'https://youtube.com/watch?v=sample',
+            publicVideoLink: null,
+            thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
+            platform: 'youtube'
+          }
+        }
+      ]
+    }
   }
 
   async createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward> {
@@ -374,13 +423,52 @@ export class WhopSDKWrapper implements WhopSDK {
   }
 
   async approveSubmission(id: string): Promise<void> {
-    // Mock implementation - in production, this would call the real Whop API
-    console.log(`Approving submission ${id}`)
+    try {
+      const response = await fetch(`/api/submissions?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'approve',
+          approved_by: this.user?.id || 'whop-user-1'
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to approve submission')
+      }
+      
+      console.log(`Submission ${id} approved successfully`)
+    } catch (error) {
+      console.error('Error approving submission:', error)
+      throw error
+    }
   }
 
   async rejectSubmission(id: string, reason: string): Promise<void> {
-    // Mock implementation - in production, this would call the real Whop API
-    console.log(`Rejecting submission ${id}: ${reason}`)
+    try {
+      const response = await fetch(`/api/submissions?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'reject',
+          reason: reason,
+          approved_by: this.user?.id || 'whop-user-1'
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to reject submission')
+      }
+      
+      console.log(`Submission ${id} rejected: ${reason}`)
+    } catch (error) {
+      console.error('Error rejecting submission:', error)
+      throw error
+    }
   }
 }
 
