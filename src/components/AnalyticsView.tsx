@@ -7,8 +7,7 @@ import {
   CheckCircle, 
   Target,
   Filter,
-  Download,
-  Users
+  Download
 } from 'lucide-react'
 import { useWhopSDK, ExportOptions } from '../lib/whop-sdk'
 
@@ -41,7 +40,7 @@ interface ContentAnalytics {
 
 
 export function AnalyticsView() {
-  const { sdk } = useWhopSDK()
+  const sdk = useWhopSDK()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [contentData, setContentData] = useState<ContentAnalytics[]>([])
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { extractYouTubeVideoId } from '../lib/youtube'
-import { Video, FileText, DollarSign, Clock, CheckCircle, XCircle, Plus, Star, Users } from 'lucide-react'
+import { CheckCircle, XCircle, Plus, Settings, MoreVertical } from 'lucide-react'
 
 interface ContentReward {
   id: string
@@ -30,7 +30,7 @@ export function ContentCreatorView() {
   const [activeTab, setActiveTab] = useState<'rewards' | 'submissions' | 'submit'>('rewards')
   const [activeRewards, setActiveRewards] = useState<ContentReward[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [selectedReward, setSelectedReward] = useState<string>('')
+  // const [selectedReward, setSelectedReward] = useState<string>('')
   const [currentSubmission, setCurrentSubmission] = useState<Partial<Submission>>({
     title: '',
     description: '',
@@ -153,18 +153,18 @@ export function ContentCreatorView() {
     alert('Unlisted video submitted for approval! You will be notified once it\'s reviewed. After approval, make your video public and we\'ll start tracking views.')
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle className="w-5 h-5 text-green-500" />
-      case 'rejected':
-        return <XCircle className="w-5 h-5 text-red-500" />
-      case 'published':
-        return <DollarSign className="w-5 h-5 text-green-500" />
-      default:
-        return <Clock className="w-5 h-5 text-yellow-500" />
-    }
-  }
+  // const getStatusIcon = (status: string) => {
+  //   switch (status) {
+  //     case 'approved':
+  //       return <CheckCircle className="w-5 h-5 text-green-500" />
+  //     case 'rejected':
+  //       return <XCircle className="w-5 h-5 text-red-500" />
+  //     case 'published':
+  //       return <DollarSign className="w-5 h-5 text-green-500" />
+  //     default:
+  //       return <Clock className="w-5 h-5 text-yellow-500" />
+  //   }
+  // }
 
   const getStatusColor = (status: string) => {
     switch (status) {

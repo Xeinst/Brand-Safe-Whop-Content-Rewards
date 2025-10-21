@@ -3,7 +3,6 @@ import {
   Users, 
   TrendingUp, 
   Download, 
-  FileText, 
   BarChart3,
   Award,
   Target,
@@ -13,7 +12,7 @@ import {
 import { useWhopSDK, MemberStatistics, ExportOptions } from '../lib/whop-sdk'
 
 export function MemberStatsView() {
-  const { sdk } = useWhopSDK()
+  const sdk = useWhopSDK()
   const [memberStats, setMemberStats] = useState<MemberStatistics | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)

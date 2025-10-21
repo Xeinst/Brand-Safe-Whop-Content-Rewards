@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK, useWhopSDK } from './lib/whop-sdk'
-import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
-import { ContentCreatorView } from './components/ContentCreatorView'
+import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK } from './lib/whop-sdk'
+// import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
+// import { ContentCreatorView } from './components/ContentCreatorView'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'
 import { DashboardView } from './components/DashboardView'
@@ -73,7 +73,7 @@ function App() {
 }
 
 function AppRouter() {
-  const sdk = useWhopSDK()
+  // const sdk = useWhopSDK()
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
