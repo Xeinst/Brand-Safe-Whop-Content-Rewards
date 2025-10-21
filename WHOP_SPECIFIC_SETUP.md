@@ -62,7 +62,35 @@ WHOP_APP_BASE_URL=https://your-app.vercel.app
    Category: Community/Marketing
    ```
 
-### Step 2: Development Setup
+### Step 2: Configure App Permissions (CRITICAL)
+
+> **⚠️ IMPORTANT**: Your app requires specific permissions to function properly. Without these permissions, automatic role detection and content features won't work.
+
+1. **Go to Permissions Section**
+   - In your Whop app settings, click **"Permissions"**
+   - Click **"Add Permissions"**
+
+2. **Add Required Permissions**
+   ```
+   ✅ read_user - Read user basic information
+   ✅ read_user_profile - Access user profile details  
+   ✅ read_company - Access company/community info
+   ✅ read_company_members - Access community members
+   ✅ read_content - Read content submissions
+   ✅ write_content - Create/update content
+   ✅ read_analytics - Access performance data
+   ✅ read_payments - Read payment information
+   ✅ write_payments - Process payments and payouts
+   ```
+
+3. **Set All as Required**
+   - Mark all permissions as **"Required"** (not optional)
+   - Provide justification for each permission
+   - Save the permissions configuration
+
+> **📖 Detailed Guide**: See `WHOP_PERMISSIONS_SETUP.md` for complete permissions documentation.
+
+### Step 3: Development Setup
 
 1. **Copy Environment Variables**
    - In your Whop app settings, copy the **"Environment variables"**
@@ -82,7 +110,7 @@ WHOP_APP_BASE_URL=https://your-app.vercel.app
    - Make sure **"Localhost"** environment is selected
    - Set port to **3000**
 
-### Step 3: Test in Whop
+### Step 4: Test in Whop
 
 1. **Start Development Server**
    ```bash
@@ -94,7 +122,7 @@ WHOP_APP_BASE_URL=https://your-app.vercel.app
    - Navigate through all features
    - Test content submission and moderation
 
-### Step 4: Production Deployment
+### Step 5: Production Deployment
 
 1. **Deploy to Vercel**
    - Push to GitHub

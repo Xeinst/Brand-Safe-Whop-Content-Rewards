@@ -71,18 +71,24 @@ npm install
    - Name it "Brand Safe Content Approval"
    - Select category: "Community" or "Marketing"
 
-2. **Get Your Whop Environment Variables**
+2. **Configure App Permissions (CRITICAL)**
+   - Go to your app settings → "Permissions"
+   - Add all required permissions (see `WHOP_PERMISSIONS_SETUP.md`)
+   - **Without proper permissions, automatic role detection won't work!**
+
+3. **Get Your Whop Environment Variables**
    - In your Whop app settings, copy the "Environment variables"
    - Create a `.env.local` file in your project root
    - Paste the Whop environment variables into `.env.local`
 
-3. **Configure Whop App URLs**
+4. **Configure Whop App URLs**
    - Set Base URL to `http://localhost:3000` for development
    - Set Experience URL to `/` (main user interface)
    - Set Discover URL to `/discover` (public marketing page)
    - Set Dashboard URL to `/dashboard` (admin interface)
 
 > **📖 For detailed Whop setup**: See `WHOP_SPECIFIC_SETUP.md` for complete Whop configuration guide.
+> **🔐 For permissions setup**: See `WHOP_PERMISSIONS_SETUP.md` for required permissions.
 
 ### Step 3: Start Development
 
