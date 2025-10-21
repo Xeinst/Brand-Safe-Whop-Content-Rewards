@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { WhopApp, WhopSDK, WhopSDKWrapper, MockWhopSDK, useWhopSDK } from './lib/whop-sdk'
-import { RoleSelector, UserRole } from './components/RoleSelector'
 import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
 import { ContentCreatorView } from './components/ContentCreatorView'
+import { ExperienceView } from './components/ExperienceView'
+import { DiscoverView } from './components/DiscoverView'
+import { DashboardView } from './components/DashboardView'
+import { MemberStatsView } from './components/MemberStatsView'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
@@ -71,69 +74,40 @@ function App() {
 
 function AppRouter() {
   const sdk = useWhopSDK()
-  const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [toastNotification, setToastNotification] = useState<any>(null)
-  const [isDetectingRole, setIsDetectingRole] = useState(true)
+  const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
-  // Auto-detect user role based on Whop membership
+  // Handle routing based on current path
   useEffect(() => {
-    const detectUserRole = async () => {
-      try {
-        // Check if user is a Whop member
-        const isWhopMember = sdk?.isWhopMember()
-        
-        if (isWhopMember) {
-          // If user is a Whop member, they are a content creator
-          setUserRole('creator')
-        } else {
-          // If not a Whop member, they are a brand manager
-          setUserRole('brand')
-        }
-      } catch (error) {
-        console.error('Error detecting user role:', error)
-        // Default to brand manager if detection fails
-        setUserRole('brand')
-      } finally {
-        setIsDetectingRole(false)
-      }
+    const handleRouteChange = () => {
+      setCurrentPath(window.location.pathname)
     }
 
-    if (sdk) {
-      detectUserRole()
+    window.addEventListener('popstate', handleRouteChange)
+    return () => window.removeEventListener('popstate', handleRouteChange)
+  }, [])
+
+  // Route to appropriate component based on path
+  const renderCurrentView = () => {
+    switch (currentPath) {
+      case '/':
+      case '/experiences':
+        return <ExperienceView />
+      case '/discover':
+        return <DiscoverView />
+      case '/dashboard':
+        return <DashboardView />
+      case '/dashboard/member-stats':
+        return <MemberStatsView />
+      default:
+        // Default to experience view for unknown paths
+        return <ExperienceView />
     }
-  }, [sdk])
-
-  const handleRoleChange = () => {
-    setUserRole(null)
-    setIsDetectingRole(true)
-  }
-
-  if (isDetectingRole) {
-    return <LoadingSpinner />
-  }
-
-  if (!userRole) {
-    return <RoleSelector onRoleSelect={setUserRole} />
   }
 
   return (
     <div className="min-h-screen">
-      {/* Role Switch Button */}
-      <div className="fixed top-4 right-4 z-50">
-        <button
-          onClick={handleRoleChange}
-          className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white hover:shadow-lg transition-all duration-200"
-        >
-          Switch Role
-        </button>
-      </div>
-
-      {/* Render Appropriate Dashboard */}
-      {userRole === 'creator' ? (
-        <ContentCreatorView />
-      ) : (
-        <ContentRewardsDashboard />
-      )}
+      {renderCurrentView()}
       
       {/* Toast Notifications */}
       <ToastNotification 

@@ -71,6 +71,11 @@ const company = await sdk.getCompany()
 - **Why needed**: Show analytics dashboard and content performance
 - **Usage**: Display view counts, engagement metrics, and ROI data
 
+#### `member:stats:export` (Required)
+- **Purpose**: Export member statistics and analytics data
+- **Why needed**: Allow brand managers to export comprehensive member statistics for reporting and analysis
+- **Usage**: Export member engagement, content performance, and reward statistics to CSV/Excel
+
 ## 🚀 How to Add Permissions
 
 ### Step 1: Access Whop Developer Dashboard
@@ -101,6 +106,7 @@ Click **"Add Permissions"** and add each of these:
 ✅ read_content - Read content submissions
 ✅ write_content - Create/update content
 ✅ read_analytics - Access performance data
+✅ member:stats:export - Export member statistics
 ```
 
 #### Payment Permissions (Required)
@@ -122,6 +128,7 @@ read_company_members: "Needed to verify membership status for role detection"
 read_content: "Required to display content submissions for brand review"
 write_content: "Needed for creators to submit content for approval"
 read_analytics: "Required to show performance metrics and engagement data"
+member:stats:export: "Needed to export comprehensive member statistics for reporting and analysis"
 read_payments: "Needed to display earnings and payment history"
 write_payments: "Required to process CPM-based creator payouts"
 ```
@@ -162,6 +169,10 @@ await sdk.submitContent(contentData)
 
 // Analytics (requires read_analytics)
 const analytics = await sdk.getAnalytics()
+
+// Member Statistics Export (requires member:stats:export)
+const memberStats = await sdk.getMemberStatistics()
+await sdk.exportMemberStats(format, dateRange)
 
 // Payments (requires read_payments, write_payments)
 const earnings = await sdk.getEarnings()

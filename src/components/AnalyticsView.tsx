@@ -6,8 +6,11 @@ import {
   DollarSign, 
   CheckCircle, 
   Target,
-  Filter
+  Filter,
+  Download,
+  Users
 } from 'lucide-react'
+import { useWhopSDK, ExportOptions } from '../lib/whop-sdk'
 
 interface AnalyticsData {
   totalSubmissions: number
@@ -38,10 +41,12 @@ interface ContentAnalytics {
 
 
 export function AnalyticsView() {
+  const { sdk } = useWhopSDK()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [contentData, setContentData] = useState<ContentAnalytics[]>([])
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     const loadAnalytics = async () => {
@@ -112,6 +117,46 @@ export function AnalyticsView() {
     loadAnalytics()
   }, [timeRange])
 
+  const handleExportMemberStats = async () => {
+    if (!sdk) return
+
+    setExporting(true)
+    try {
+      const options: ExportOptions = {
+        format: 'csv',
+        dateRange: {
+          start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          end: new Date()
+        },
+        includeMetrics: [
+          'totalMembers',
+          'activeMembers',
+          'newMembers',
+          'memberEngagement',
+          'contentStats',
+          'rewardStats',
+          'topContributors'
+        ]
+      }
+
+      const blob = await sdk.exportMemberStats(options)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `member-statistics-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export member statistics:', error)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -147,6 +192,18 @@ export function AnalyticsView() {
                   <option value="90d">Last 90 days</option>
                 </select>
               </div>
+              <button
+                onClick={handleExportMemberStats}
+                disabled={exporting}
+                className="flex items-center space-x-2 px-4 py-2 bg-whop-primary text-white rounded-md hover:bg-whop-primary/90 disabled:opacity-50"
+              >
+                {exporting ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>{exporting ? 'Exporting...' : 'Export Member Stats'}</span>
+              </button>
             </div>
           </div>
         </div>
