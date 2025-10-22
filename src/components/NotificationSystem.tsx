@@ -139,7 +139,7 @@ export function NotificationSystem() {
       {/* Notification Bell */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-whop-primary rounded-md"
+        className="relative p-2 backdrop-blur-md bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-md border border-white/20"
       >
         <Bell className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -151,7 +151,7 @@ export function NotificationSystem() {
 
       {/* Notification Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-96 backdrop-blur-md bg-white/10 rounded-lg shadow-lg border border-white/20 z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Notifications</h3>
