@@ -175,6 +175,10 @@ export class WhopSDKWrapper implements WhopSDK {
       const userRole = urlParams.get('user_role') || 'member'
       const isOwner = urlParams.get('is_owner') === 'true' || userRole === 'owner' || userRole === 'admin'
       
+      // Try to get real permissions from Whop context
+      const whopPermissions = urlParams.get('permissions')?.split(',') || []
+      const hasAdminPerms = whopPermissions.includes('admin') || whopPermissions.includes('member:stats:export')
+      
       // Create user data based on Whop context
       this.user = {
         id: userId,
@@ -182,10 +186,12 @@ export class WhopSDKWrapper implements WhopSDK {
         email: urlParams.get('email') || 'user@example.com',
         avatar: urlParams.get('avatar') || 'https://via.placeholder.com/40',
         display_name: urlParams.get('display_name') || 'Whop User',
-        role: isOwner ? 'owner' : 'member',
-        permissions: isOwner 
-          ? ['admin', 'member:stats:export', 'read_content', 'write_content', 'read_analytics']
-          : ['read_content', 'write_content', 'read_analytics']
+        role: (isOwner || hasAdminPerms) ? 'owner' : 'member',
+        permissions: whopPermissions.length > 0 
+          ? whopPermissions 
+          : (isOwner || hasAdminPerms)
+            ? ['admin', 'member:stats:export', 'read_content', 'write_content', 'read_analytics']
+            : ['read_content', 'write_content', 'read_analytics']
       }
 
       // Create company data
@@ -198,6 +204,9 @@ export class WhopSDKWrapper implements WhopSDK {
       this.isWhopMemberFlag = true
       this.determineUserRole()
 
+      // Listen for Whop postMessage events
+      this.setupWhopMessageListener()
+      
       // Additionally, attempt background sync to our API/Whop API for real data
       // This won't block rendering; it will enrich user/company when available
       this.syncWithWhop().catch(err => {
@@ -562,6 +571,40 @@ export class WhopSDKWrapper implements WhopSDK {
       console.error('Error fetching Whop company:', error)
       return null
     }
+  }
+
+  private setupWhopMessageListener(): void {
+    if (typeof window === 'undefined') return
+    
+    window.addEventListener('message', (event) => {
+      // Only accept messages from Whop domains
+      if (!event.origin.includes('whop.com')) return
+      
+      try {
+        const data = event.data
+        if (data && data.type === 'whop-user-data') {
+          console.log('Received Whop user data:', data)
+          
+          // Update user with real Whop data
+          if (data.user) {
+            this.user = {
+              id: data.user.id || this.user?.id || 'whop-user-1',
+              username: data.user.username || this.user?.username || 'whop_user',
+              email: data.user.email || this.user?.email || 'user@example.com',
+              avatar: data.user.avatar || this.user?.avatar || 'https://via.placeholder.com/40',
+              display_name: data.user.display_name || this.user?.display_name || 'Whop User',
+              role: data.user.role || 'member',
+              permissions: data.user.permissions || ['read_content', 'write_content', 'read_analytics']
+            }
+            
+            this.determineUserRole()
+            console.log('Updated user from Whop:', this.user)
+          }
+        }
+      } catch (error) {
+        console.warn('Error processing Whop message:', error)
+      }
+    })
   }
 
   async syncWithWhop(): Promise<void> {
