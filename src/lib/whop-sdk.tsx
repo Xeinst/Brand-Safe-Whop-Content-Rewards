@@ -119,9 +119,19 @@ export class WhopSDKWrapper implements WhopSDK {
     try {
       // Check if we're in browser environment
       if (typeof window !== 'undefined') {
-        // In browser, use mock data for development
-        // In production, this would use real Whop SDK
-        await this.initializeMockWhopSDK()
+        // Check if we're in a Whop iframe
+        const isWhopIframe = window.parent !== window || 
+                             window.location !== window.parent.location ||
+                             document.referrer.includes('whop.com') ||
+                             window.location.hostname.includes('whop.com')
+        
+        if (isWhopIframe) {
+          // We're in Whop, try to use real Whop SDK
+          await this.initializeRealWhopSDK()
+        } else {
+          // We're in development, use mock data
+          await this.initializeMockWhopSDK()
+        }
       } else {
         // In server environment, get credentials from environment
         this.whopAppId = process.env.WHOP_APP_ID || null
@@ -146,38 +156,36 @@ export class WhopSDKWrapper implements WhopSDK {
 
   private async initializeRealWhopSDK(): Promise<void> {
     try {
-      // Get user data from Whop API
-      const userData = await this.getWhopUser()
-      if (userData) {
-        this.user = userData
-      } else {
-        // Fallback to mock data if Whop API fails
-        this.user = {
-          id: 'whop-user-1',
-          username: 'whop_user',
-          email: 'user@example.com',
-          avatar: 'https://via.placeholder.com/40',
-          display_name: 'Whop User',
-          role: 'member',
-          permissions: ['read_content', 'write_content', 'read_analytics']
-        }
+      // In Whop iframe, try to get user data from URL parameters or postMessage
+      const urlParams = new URLSearchParams(window.location.search)
+      const userId = urlParams.get('user_id') || 'whop-user-1'
+      const userRole = urlParams.get('user_role') || 'member'
+      const isOwner = urlParams.get('is_owner') === 'true' || userRole === 'owner' || userRole === 'admin'
+      
+      // Create user data based on Whop context
+      this.user = {
+        id: userId,
+        username: urlParams.get('username') || 'whop_user',
+        email: urlParams.get('email') || 'user@example.com',
+        avatar: urlParams.get('avatar') || 'https://via.placeholder.com/40',
+        display_name: urlParams.get('display_name') || 'Whop User',
+        role: isOwner ? 'owner' : 'member',
+        permissions: isOwner 
+          ? ['admin', 'member:stats:export', 'read_content', 'write_content', 'read_analytics']
+          : ['read_content', 'write_content', 'read_analytics']
       }
 
-      // Get company data from Whop API
-      const companyData = await this.getWhopCompany()
-      if (companyData) {
-        this.company = companyData
-      } else {
-        // Fallback to mock data if Whop API fails
-        this.company = {
-          id: 'whop-company-1',
-          name: 'Whop Community',
-          description: 'Brand-safe content rewards community'
-        }
+      // Create company data
+      this.company = {
+        id: urlParams.get('company_id') || 'whop-company-1',
+        name: urlParams.get('company_name') || 'Whop Community',
+        description: 'Brand-safe content rewards community'
       }
-      
+
       this.isWhopMemberFlag = true
       this.determineUserRole()
+      
+      console.log('Whop SDK initialized with user:', this.user)
     } catch (error) {
       console.error('Failed to initialize real Whop SDK:', error)
       // Fallback to mock data

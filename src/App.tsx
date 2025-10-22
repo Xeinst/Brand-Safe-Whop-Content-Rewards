@@ -13,7 +13,8 @@ import { AllSubmissionsView } from './components/AllSubmissionsView'
 import { MySubmissionsView } from './components/MySubmissionsView'
 import { WhopAuth } from './components/WhopAuth'
 import { ToastNotification } from './components/NotificationSystem'
-import { LoadingSpinner } from './components/LoadingSpinner'
+import { DebugInfo } from './components/DebugInfo'
+import { WhopTest } from './components/WhopTest'
 
 function App() {
   const [sdk, setSdk] = useState<WhopSDK | null>(null)
@@ -46,7 +47,15 @@ function App() {
   }, [])
 
   if (loading) {
-    return <LoadingSpinner />
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-2">Loading Brand Safe Content Rewards...</h1>
+          <p className="text-gray-300">Initializing Whop SDK...</p>
+        </div>
+      </div>
+    )
   }
 
       if (error) {
@@ -191,6 +200,10 @@ function AppRouter() {
         notification={toastNotification} 
         onClose={() => setToastNotification(null)} 
       />
+      
+      {/* Debug Info */}
+      <DebugInfo sdk={sdk} />
+      <WhopTest />
     </div>
   )
 }
