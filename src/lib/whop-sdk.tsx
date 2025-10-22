@@ -117,17 +117,24 @@ export class WhopSDKWrapper implements WhopSDK {
 
   async init(): Promise<void> {
     try {
-      // Get Whop app credentials from environment
-      this.whopAppId = process.env.WHOP_APP_ID || null
-      this.whopAppSecret = process.env.WHOP_APP_SECRET || null
-      
-      // In production, this would initialize the actual Whop SDK
-      if (this.whopAppId && this.whopAppSecret) {
-        // Real Whop SDK initialization would go here
-        await this.initializeRealWhopSDK()
-      } else {
-        // Fallback to mock data for development
+      // Check if we're in browser environment
+      if (typeof window !== 'undefined') {
+        // In browser, use mock data for development
+        // In production, this would use real Whop SDK
         await this.initializeMockWhopSDK()
+      } else {
+        // In server environment, get credentials from environment
+        this.whopAppId = process.env.WHOP_APP_ID || null
+        this.whopAppSecret = process.env.WHOP_APP_SECRET || null
+        
+        // In production, this would initialize the actual Whop SDK
+        if (this.whopAppId && this.whopAppSecret) {
+          // Real Whop SDK initialization would go here
+          await this.initializeRealWhopSDK()
+        } else {
+          // Fallback to mock data for development
+          await this.initializeMockWhopSDK()
+        }
       }
       
     } catch (error) {
