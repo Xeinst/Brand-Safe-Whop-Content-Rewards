@@ -149,13 +149,11 @@ export class WhopSDKWrapper implements WhopSDK {
       email: 'user@example.com',
       avatar: 'https://via.placeholder.com/40',
       display_name: 'Whop User',
-      role: 'owner',
+      role: 'member',
       permissions: [
         'read_content',
         'write_content', 
-        'read_analytics',
-        'member:stats:export',
-        'admin'
+        'read_analytics'
       ]
     }
     
@@ -179,13 +177,11 @@ export class WhopSDKWrapper implements WhopSDK {
       email: 'user@example.com',
       avatar: 'https://via.placeholder.com/40',
       display_name: 'Whop User',
-      role: 'owner',
+      role: 'member',
       permissions: [
         'read_content',
         'write_content', 
-        'read_analytics',
-        'member:stats:export',
-        'admin'
+        'read_analytics'
       ]
     }
     
@@ -202,16 +198,12 @@ export class WhopSDKWrapper implements WhopSDK {
   private determineUserRole(): void {
     if (!this.user) return
     
-    // Determine role based on Whop permissions
-    // Owners have admin permissions or member:stats:export permission
+    // For Whop integration, check if user has owner permissions
+    // In a real Whop app, this would check actual Whop permissions
     if (this.user.permissions.includes('admin') || this.user.permissions.includes('member:stats:export')) {
       this.user.role = 'owner'
     } 
-    // Members have basic content permissions
-    else if (this.user.permissions.includes('read_content') && this.user.permissions.includes('write_content')) {
-      this.user.role = 'member'
-    } 
-    // Default to member if permissions are unclear
+    // Default to member for all other users (including regular Whop members)
     else {
       this.user.role = 'member'
     }
@@ -613,13 +605,11 @@ export class MockWhopSDK implements WhopSDK {
       email: 'user@example.com',
         avatar: 'https://via.placeholder.com/40',
       display_name: 'Whop User',
-      role: 'owner', // Will be determined by permissions
+      role: 'member', // Default to member for Whop users
       permissions: [
         'read_content',
         'write_content', 
-        'read_analytics',
-        'member:stats:export',
-        'admin'
+        'read_analytics'
       ]
       }
       
