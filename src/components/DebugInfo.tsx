@@ -24,6 +24,13 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({ sdk }) => {
     window.dispatchEvent(new CustomEvent('whop-role-changed'))
   }
 
+  const testPermissions = (perms: string[]) => {
+    if (!sdk || !sdk.user) return
+    sdk.user.permissions = perms
+    sdk.user.role = perms.includes('admin') || perms.includes('member:stats:export') ? 'owner' : 'member'
+    window.dispatchEvent(new CustomEvent('whop-role-changed'))
+  }
+
   return (
     <div className="fixed bottom-4 right-4 bg-black bg-opacity-80 text-white p-4 rounded-lg text-xs max-w-sm z-50">
       <h3 className="font-bold mb-2">Debug Info</h3>
@@ -41,6 +48,28 @@ export const DebugInfo: React.FC<DebugInfoProps> = ({ sdk }) => {
         >
           Toggle {sdk?.isOwner() ? '→ Member' : '→ Owner'}
         </button>
+        
+        <div className="mt-2 space-y-1">
+          <div className="text-xs text-gray-300">Test Permissions:</div>
+          <button
+            onClick={() => testPermissions(['read_content', 'write_content'])}
+            className="block w-full px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+          >
+            Basic Member
+          </button>
+          <button
+            onClick={() => testPermissions(['read_content', 'write_content', 'read_analytics'])}
+            className="block w-full px-2 py-1 bg-yellow-600 text-white rounded text-xs hover:bg-yellow-700"
+          >
+            Member + Analytics
+          </button>
+          <button
+            onClick={() => testPermissions(['admin'])}
+            className="block w-full px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+          >
+            Admin (Owner)
+          </button>
+        </div>
       </div>
     </div>
   )
