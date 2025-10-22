@@ -55,16 +55,18 @@ export function ContentRewardsDashboard() {
               <a href="/submit" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 Submit Content
               </a>
+              <a href="/campaigns" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                Manage Campaigns
+              </a>
+              <a href="/all-submissions" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                All Submissions
+              </a>
               <a href="/moderate" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 Moderate Content
               </a>
               <a href="/payouts" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 CPM Payouts
               </a>
-              <button className="text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors bg-whop-byzantine-blue hover:bg-blue-700">
-                <Plus className="w-4 h-4" />
-                <span>Create Content Reward</span>
-              </button>
             </div>
           </div>
         </div>

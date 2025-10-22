@@ -72,6 +72,9 @@ export function ContentCreatorView() {
               <a href="/submit" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 Submit Content
               </a>
+              <a href="/my-submissions" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                My Submissions
+              </a>
               {sdk?.isOwner() && (
                 <a href="/dashboard" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                   Owner Dashboard

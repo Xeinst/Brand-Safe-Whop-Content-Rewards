@@ -8,6 +8,9 @@ import { ContentCreatorView } from './components/ContentCreatorView'
 import { ContentSubmissionView } from './components/ContentSubmissionView'
 import { BrandModerationView } from './components/BrandModerationView'
 import { CPMPayoutView } from './components/CPMPayoutView'
+import { CampaignManagement } from './components/CampaignManagement'
+import { AllSubmissionsView } from './components/AllSubmissionsView'
+import { MySubmissionsView } from './components/MySubmissionsView'
 import { WhopAuth } from './components/WhopAuth'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
@@ -150,6 +153,23 @@ function AppRouter() {
         } else {
           return <ContentCreatorView />
         }
+      case '/campaigns':
+        // Only owners can manage campaigns
+        if (sdk?.isOwner()) {
+          return <CampaignManagement />
+        } else {
+          return <ContentCreatorView />
+        }
+      case '/all-submissions':
+        // Only owners can see all submissions
+        if (sdk?.isOwner()) {
+          return <AllSubmissionsView />
+        } else {
+          return <ContentCreatorView />
+        }
+      case '/my-submissions':
+        // Both owners and members can see their own submissions
+        return <MySubmissionsView />
       default:
         // Default based on user role
         if (sdk?.isOwner()) {
