@@ -98,14 +98,14 @@ export function ContentCreatorView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-green-500 rounded flex items-center justify-center">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
-              <h1 className="text-xl font-semibold">Content Rewards</h1>
+              <h1 className="text-xl font-semibold text-whop-midnight">Content Rewards</h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <a href="#" className="text-blue-400 hover:text-blue-300 text-sm">
+              <a href="#" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 How do Content Rewards work?
               </a>
             </div>
@@ -121,9 +121,10 @@ export function ContentCreatorView() {
               onClick={() => setActiveTab('rewards')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'rewards'
-                  ? 'border-blue-500 text-gray-900'
+                  ? 'text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
               }`}
+              style={activeTab === 'rewards' ? {borderBottomColor: 'var(--whop-dragon-fire)'} : {}}
             >
               Content Rewards
             </button>
@@ -131,9 +132,10 @@ export function ContentCreatorView() {
               onClick={() => setActiveTab('analytics')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'analytics'
-                  ? 'border-blue-500 text-gray-900'
+                  ? 'text-gray-900'
                   : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
               }`}
+              style={activeTab === 'analytics' ? {borderBottomColor: 'var(--whop-dragon-fire)'} : {}}
             >
               Analytics
             </button>

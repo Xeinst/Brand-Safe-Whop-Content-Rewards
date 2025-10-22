@@ -46,7 +46,7 @@ function App() {
         return (
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
-              <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+              <h1 className="text-2xl font-bold mb-4 text-whop-dragon-fire">Error</h1>
               <p className="text-gray-600">{error}</p>
             </div>
           </div>
@@ -57,7 +57,7 @@ function App() {
         return (
           <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
-              <h1 className="text-2xl font-bold text-red-600 mb-4">SDK Not Available</h1>
+              <h1 className="text-2xl font-bold mb-4 text-whop-dragon-fire">SDK Not Available</h1>
               <p className="text-gray-600">Whop SDK could not be initialized</p>
             </div>
           </div>

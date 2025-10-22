@@ -1,0 +1,63 @@
+/* Whop Brand Colors - Based on https://brand.whop.com/ */
+
+:root {
+  /* Primary Brand Colors */
+  --whop-dragon-fire: #FA4616;
+  --whop-midnight: #141212;
+  --whop-snow: #FCF6F5;
+  --whop-lemon-lime: #DBF505;
+  --whop-byzantine-blue: #1754D8;
+  
+  /* Extended Palette */
+  --whop-light-blue: #D7E1F7;
+  --whop-light-orange: #F6DCD5;
+  --whop-light-yellow: #F9FACE;
+  --whop-light-purple: #EFE7FF;
+  --whop-light-green: #D9F9CB;
+  --whop-light-pink: #FFD9E7;
+  --whop-dark-blue: #52699A;
+  --whop-orange: #E86644;
+  --whop-green: #9B9B3D;
+  --whop-purple: #8160CE;
+  --whop-teal: #00876D;
+  --whop-pink: #E26394;
+  --whop-blue: #1754D8;
+  --whop-red: #FA4616;
+  --whop-yellow: #DBF505;
+  --whop-violet: #6318F8;
+  --whop-lime: #06D718;
+  --whop-magenta: #FF008D;
+  --whop-navy: #09142E;
+  --whop-brown: #351209;
+  --whop-olive: #373807;
+  --whop-maroon: #340527;
+  --whop-black: #141212;
+  --whop-light-pink-alt: #E2AAA5;
+}
+
+/* Utility Classes for Whop Brand Colors */
+.text-whop-dragon-fire { color: var(--whop-dragon-fire); }
+.text-whop-midnight { color: var(--whop-midnight); }
+.text-whop-snow { color: var(--whop-snow); }
+.text-whop-lemon-lime { color: var(--whop-lemon-lime); }
+.text-whop-byzantine-blue { color: var(--whop-byzantine-blue); }
+
+.bg-whop-dragon-fire { background-color: var(--whop-dragon-fire); }
+.bg-whop-midnight { background-color: var(--whop-midnight); }
+.bg-whop-snow { background-color: var(--whop-snow); }
+.bg-whop-lemon-lime { background-color: var(--whop-lemon-lime); }
+.bg-whop-byzantine-blue { background-color: var(--whop-byzantine-blue); }
+
+.border-whop-dragon-fire { border-color: var(--whop-dragon-fire); }
+.border-whop-midnight { border-color: var(--whop-midnight); }
+.border-whop-byzantine-blue { border-color: var(--whop-byzantine-blue); }
+
+/* Hover States */
+.hover\:bg-whop-dragon-fire:hover { background-color: var(--whop-dragon-fire); }
+.hover\:bg-whop-byzantine-blue:hover { background-color: var(--whop-byzantine-blue); }
+.hover\:text-whop-dragon-fire:hover { color: var(--whop-dragon-fire); }
+.hover\:text-whop-byzantine-blue:hover { color: var(--whop-byzantine-blue); }
+
+/* Focus States */
+.focus\:ring-whop-dragon-fire:focus { --tw-ring-color: var(--whop-dragon-fire); }
+.focus\:ring-whop-byzantine-blue:focus { --tw-ring-color: var(--whop-byzantine-blue); }
