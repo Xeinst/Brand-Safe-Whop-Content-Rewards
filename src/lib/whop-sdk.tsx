@@ -119,17 +119,30 @@ export class WhopSDKWrapper implements WhopSDK {
     try {
       // Check if we're in browser environment
       if (typeof window !== 'undefined') {
-        // Check if we're in a Whop iframe
-        const isWhopIframe = window.parent !== window || 
-                             window.location !== window.parent.location ||
-                             document.referrer.includes('whop.com') ||
-                             window.location.hostname.includes('whop.com')
-        
-        if (isWhopIframe) {
-          // We're in Whop, try to use real Whop SDK
+        // Safely detect iframe and Whop host without cross-origin access
+        const isIframe = (() => {
+          try {
+            return window.self !== window.top
+          } catch (_e) {
+            // Cross-origin access throws; if so, we are in an iframe
+            return true
+          }
+        })()
+
+        const isWhopHost = (() => {
+          try {
+            return document.referrer.includes('whop.com') ||
+                   window.location.hostname.includes('whop.com')
+          } catch (_e) {
+            return false
+          }
+        })()
+
+        if (isIframe || isWhopHost) {
+          // We're in Whop, try to use real Whop SDK (with internal fallbacks)
           await this.initializeRealWhopSDK()
         } else {
-          // We're in development, use mock data
+          // Local/dev usage
           await this.initializeMockWhopSDK()
         }
       } else {
@@ -184,8 +197,12 @@ export class WhopSDKWrapper implements WhopSDK {
 
       this.isWhopMemberFlag = true
       this.determineUserRole()
-      
-      console.log('Whop SDK initialized with user:', this.user)
+
+      // Additionally, attempt background sync to our API/Whop API for real data
+      // This won't block rendering; it will enrich user/company when available
+      this.syncWithWhop().catch(err => {
+        console.warn('Background sync with Whop failed:', err)
+      })
     } catch (error) {
       console.error('Failed to initialize real Whop SDK:', error)
       // Fallback to mock data
