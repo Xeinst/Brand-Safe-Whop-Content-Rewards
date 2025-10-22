@@ -9,6 +9,45 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Black theme overrides */
+.bg-white {
+  background-color: #000000 !important;
+}
+
+.text-gray-900 {
+  color: #ffffff !important;
+}
+
+.text-gray-600 {
+  color: #cccccc !important;
+}
+
+.text-gray-500 {
+  color: #999999 !important;
+}
+
+.text-gray-400 {
+  color: #666666 !important;
+}
+
+.border-gray-200 {
+  border-color: #333333 !important;
+}
+
+.border-gray-300 {
+  border-color: #444444 !important;
+}
+
+.bg-gray-50 {
+  background-color: #111111 !important;
+}
+
+.bg-gray-100 {
+  background-color: #222222 !important;
 }
 
 code {

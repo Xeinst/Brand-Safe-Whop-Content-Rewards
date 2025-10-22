@@ -8,9 +8,12 @@ export default {
     extend: {
       colors: {
         whop: {
-          primary: '#6366f1',
-          secondary: '#8b5cf6',
-          accent: '#06b6d4',
+          primary: '#000000',
+          secondary: '#1a1a1a',
+          accent: '#333333',
+          dragonFire: '#ff6b35',
+          byzantineBlue: '#4a90e2',
+          midnight: '#2c3e50',
         }
       },
       backdropBlur: {

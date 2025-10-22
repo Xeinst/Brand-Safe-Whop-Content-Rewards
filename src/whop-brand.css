@@ -1,12 +1,12 @@
 /* Whop Brand Colors - Based on https://brand.whop.com/ */
 
 :root {
-  /* Primary Brand Colors */
-  --whop-dragon-fire: #FA4616;
-  --whop-midnight: #141212;
-  --whop-snow: #FCF6F5;
-  --whop-lemon-lime: #DBF505;
-  --whop-byzantine-blue: #1754D8;
+  /* Primary Brand Colors - Black Theme */
+  --whop-dragon-fire: #ff6b35;
+  --whop-midnight: #000000;
+  --whop-snow: #ffffff;
+  --whop-lemon-lime: #ff6b35;
+  --whop-byzantine-blue: #4a90e2;
   
   /* Extended Palette */
   --whop-light-blue: #D7E1F7;
