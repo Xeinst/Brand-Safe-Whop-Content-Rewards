@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Plus, MoreVertical, ArrowUpDown, ChevronDown, Download, Edit } from 'lucide-react'
-import { useWhopSDK, ContentReward, Submission } from '../lib/whop-sdk'
+import { useWhopSDK, Submission } from '../lib/whop-sdk'
 
 
 export function ContentRewardsDashboard() {
   const sdk = useWhopSDK()
   const [activeTab, setActiveTab] = useState<'rewards' | 'analytics'>('rewards')
-  const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -15,13 +14,10 @@ export function ContentRewardsDashboard() {
       
       setLoading(true)
       try {
-        // Load real submissions from Whop SDK
-        const submissionsData = await sdk.getSubmissions()
-        setSubmissions(submissionsData)
+        // Load data from Whop SDK
+        // Data will be loaded when needed
       } catch (error) {
-        console.error('Error loading submissions:', error)
-        // Fallback to empty array
-        setSubmissions([])
+        console.error('Error loading data:', error)
       } finally {
         setLoading(false)
       }

@@ -6,8 +6,6 @@ export function ContentCreatorView() {
   const sdk = useWhopSDK()
   const [activeTab, setActiveTab] = useState<'rewards' | 'analytics'>('rewards')
   const [activeRewards, setActiveRewards] = useState<ContentReward[]>([])
-  const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [endedRewards, setEndedRewards] = useState<ContentReward[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -16,23 +14,17 @@ export function ContentCreatorView() {
       
       setLoading(true)
       try {
-        // Load content rewards and submissions from SDK
+        // Load content rewards from SDK
         const rewardsData = await sdk.getContentRewards()
-        const submissionsData = await sdk.getSubmissions()
         
-        // Filter active vs ended rewards
+        // Filter active rewards
         const active = rewardsData.filter(r => r.status === 'active')
-        const ended = rewardsData.filter(r => r.status === 'completed' || r.status === 'paused')
         
         setActiveRewards(active)
-        setEndedRewards(ended)
-        setSubmissions(submissionsData)
       } catch (error) {
         console.error('Error loading data:', error)
         // Fallback to mock data
         setActiveRewards([])
-        setSubmissions([])
-        setEndedRewards([])
       } finally {
         setLoading(false)
       }
