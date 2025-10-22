@@ -138,33 +138,44 @@ export class WhopSDKWrapper implements WhopSDK {
   }
 
   private async initializeRealWhopSDK(): Promise<void> {
-    // This would be the real Whop SDK initialization
-    // For now, we'll use mock data but with real structure
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // In production, this would make real API calls to Whop
-    this.user = {
-      id: 'whop-user-1',
-      username: 'whop_user',
-      email: 'user@example.com',
-      avatar: 'https://via.placeholder.com/40',
-      display_name: 'Whop User',
-      role: 'member',
-      permissions: [
-        'read_content',
-        'write_content', 
-        'read_analytics'
-      ]
+    try {
+      // Get user data from Whop API
+      const userData = await this.getWhopUser()
+      if (userData) {
+        this.user = userData
+      } else {
+        // Fallback to mock data if Whop API fails
+        this.user = {
+          id: 'whop-user-1',
+          username: 'whop_user',
+          email: 'user@example.com',
+          avatar: 'https://via.placeholder.com/40',
+          display_name: 'Whop User',
+          role: 'member',
+          permissions: ['read_content', 'write_content', 'read_analytics']
+        }
+      }
+
+      // Get company data from Whop API
+      const companyData = await this.getWhopCompany()
+      if (companyData) {
+        this.company = companyData
+      } else {
+        // Fallback to mock data if Whop API fails
+        this.company = {
+          id: 'whop-company-1',
+          name: 'Whop Community',
+          description: 'Brand-safe content rewards community'
+        }
+      }
+      
+      this.isWhopMemberFlag = true
+      this.determineUserRole()
+    } catch (error) {
+      console.error('Failed to initialize real Whop SDK:', error)
+      // Fallback to mock data
+      await this.initializeMockWhopSDK()
     }
-    
-    this.company = {
-      id: 'whop-company-1',
-      name: 'Whop Community',
-      description: 'Brand-safe content rewards community'
-    }
-    
-    this.isWhopMemberFlag = true
-    this.determineUserRole()
   }
 
   private async initializeMockWhopSDK(): Promise<void> {
@@ -420,18 +431,73 @@ export class WhopSDKWrapper implements WhopSDK {
     return response.json()
   }
 
+  // Get current user from Whop API
+  private async getCurrentUserFromWhop(): Promise<any> {
+    try {
+      // Try to get user from Whop API
+      const response = await fetch('/api/whop/user', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        return await response.json()
+      }
+    } catch (error) {
+      console.error('Error fetching user from Whop:', error)
+    }
+    return null
+  }
+
+  // Get current company from Whop API
+  private async getCurrentCompanyFromWhop(): Promise<any> {
+    try {
+      // Try to get company from Whop API
+      const response = await fetch('/api/whop/company', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        return await response.json()
+      }
+    } catch (error) {
+      console.error('Error fetching company from Whop:', error)
+    }
+    return null
+  }
+
   // Enhanced methods for real Whop integration
   async getWhopUser(): Promise<WhopUser | null> {
     try {
-      const userData = await this.makeWhopAPIRequest('users/me')
+      // First try to get user from our API endpoint
+      const userData = await this.getCurrentUserFromWhop()
+      if (userData) {
+        return {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          avatar: userData.avatar_url,
+          display_name: userData.display_name,
+          role: userData.role || 'member',
+          permissions: userData.permissions || ['read_content', 'write_content', 'read_analytics']
+        }
+      }
+
+      // Fallback to direct Whop API call
+      const whopUserData = await this.makeWhopAPIRequest('users/me')
       return {
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        avatar: userData.avatar_url,
-        display_name: userData.display_name,
-        role: userData.role,
-        permissions: userData.permissions || []
+        id: whopUserData.id,
+        username: whopUserData.username,
+        email: whopUserData.email,
+        avatar: whopUserData.avatar_url,
+        display_name: whopUserData.display_name,
+        role: whopUserData.role || 'member',
+        permissions: whopUserData.permissions || ['read_content', 'write_content', 'read_analytics']
       }
     } catch (error) {
       console.error('Error fetching Whop user:', error)
@@ -441,12 +507,24 @@ export class WhopSDKWrapper implements WhopSDK {
 
   async getWhopCompany(): Promise<WhopCompany | null> {
     try {
-      const companyData = await this.makeWhopAPIRequest('companies/me')
+      // First try to get company from our API endpoint
+      const companyData = await this.getCurrentCompanyFromWhop()
+      if (companyData) {
+        return {
+          id: companyData.id,
+          name: companyData.name,
+          description: companyData.description,
+          logo: companyData.logo_url
+        }
+      }
+
+      // Fallback to direct Whop API call
+      const whopCompanyData = await this.makeWhopAPIRequest('companies/me')
       return {
-        id: companyData.id,
-        name: companyData.name,
-        description: companyData.description,
-        logo: companyData.logo_url
+        id: whopCompanyData.id,
+        name: whopCompanyData.name,
+        description: whopCompanyData.description,
+        logo: whopCompanyData.logo_url
       }
     } catch (error) {
       console.error('Error fetching Whop company:', error)

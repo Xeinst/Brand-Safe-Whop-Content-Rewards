@@ -17,7 +17,9 @@ export function MySubmissionsView() {
         const allSubmissions = await sdk.getSubmissions()
         // Filter to only show current user's submissions
         const mySubmissions = allSubmissions.filter(submission => 
-          submission.user === sdk.user?.username || submission.user === sdk.user?.display_name
+          submission.user === sdk.user?.username || 
+          submission.user === sdk.user?.display_name ||
+          submission.user === sdk.user?.id
         )
         setSubmissions(mySubmissions)
       } catch (error) {
