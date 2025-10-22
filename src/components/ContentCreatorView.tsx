@@ -72,6 +72,11 @@ export function ContentCreatorView() {
               <a href="/submit" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 Submit Content
               </a>
+              {sdk?.isOwner() && (
+                <a href="/dashboard" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                  Owner Dashboard
+                </a>
+              )}
               <a href="#" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 How do Content Rewards work?
               </a>

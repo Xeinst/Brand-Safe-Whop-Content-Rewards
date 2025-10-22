@@ -101,31 +101,55 @@ function AppRouter() {
       } else if (sdk?.isMember()) {
         return <ContentCreatorView />
       } else {
-        // Default to owner dashboard if role is unclear
-        return <ContentRewardsDashboard />
+        // Default to member view if role is unclear
+        return <ContentCreatorView />
       }
     }
 
-    // Handle specific paths
+    // Handle specific paths with role-based access control
     switch (currentPath) {
       case '/owner':
       case '/dashboard':
-        return <ContentRewardsDashboard />
+        // Only owners can access owner dashboard
+        if (sdk?.isOwner()) {
+          return <ContentRewardsDashboard />
+        } else {
+          return <ContentCreatorView />
+        }
       case '/creator':
       case '/member':
+        // Both owners and members can access creator view
         return <ContentCreatorView />
       case '/submit':
+        // Both owners and members can submit content
         return <ContentSubmissionView />
       case '/moderate':
-        return <BrandModerationView />
+        // Only owners can moderate content
+        if (sdk?.isOwner()) {
+          return <BrandModerationView />
+        } else {
+          return <ContentCreatorView />
+        }
       case '/payouts':
-        return <CPMPayoutView />
+        // Only owners can access payouts
+        if (sdk?.isOwner()) {
+          return <CPMPayoutView />
+        } else {
+          return <ContentCreatorView />
+        }
       case '/experiences':
+        // Both owners and members can access experiences
         return <ExperienceView />
       case '/discover':
+        // Both owners and members can access discover
         return <DiscoverView />
       case '/dashboard/member-stats':
-        return <MemberStatsView />
+        // Only owners can access member stats
+        if (sdk?.isOwner()) {
+          return <MemberStatsView />
+        } else {
+          return <ContentCreatorView />
+        }
       default:
         // Default based on user role
         if (sdk?.isOwner()) {
@@ -133,7 +157,7 @@ function AppRouter() {
         } else if (sdk?.isMember()) {
           return <ContentCreatorView />
         } else {
-          return <ContentRewardsDashboard />
+          return <ContentCreatorView />
         }
     }
   }

@@ -49,6 +49,12 @@ export function ContentRewardsDashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <a href="/creator" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                Creator View
+              </a>
+              <a href="/submit" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                Submit Content
+              </a>
               <a href="/moderate" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 Moderate Content
               </a>
