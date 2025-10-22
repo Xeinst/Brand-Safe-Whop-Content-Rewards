@@ -8,6 +8,7 @@ import { ContentCreatorView } from './components/ContentCreatorView'
 import { ContentSubmissionView } from './components/ContentSubmissionView'
 import { BrandModerationView } from './components/BrandModerationView'
 import { CPMPayoutView } from './components/CPMPayoutView'
+import { WhopAuth } from './components/WhopAuth'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
@@ -69,7 +70,9 @@ function App() {
 
   return (
     <WhopApp sdk={sdk}>
-      <AppRouter />
+      <WhopAuth>
+        <AppRouter />
+      </WhopAuth>
     </WhopApp>
   )
 }
