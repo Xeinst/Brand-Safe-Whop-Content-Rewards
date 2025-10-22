@@ -1,460 +1,310 @@
 import { useState, useEffect } from 'react'
-import { useWhopSDK } from '../lib/whop-sdk'
-import { 
-  CheckCircle, 
-  XCircle, 
-  Eye, 
-  Clock, 
-  AlertTriangle,
-  DollarSign,
-  Users,
-  TrendingUp,
-  Shield,
-  FileText,
-  Video,
-  Image,
-} from 'lucide-react'
-
-interface ContentSubmission {
-  id: string
-  title: string
-  description: string
-  type: 'video' | 'image' | 'text'
-  url?: string
-  creator: {
-    id: string
-    username: string
-    avatar?: string
-  }
-  brandGuidelines: string[]
-  estimatedCPM: number
-  status: 'submitted' | 'under_review' | 'approved' | 'rejected'
-  submittedAt: Date
-  reviewedAt?: Date
-  reviewerNotes?: string
-  brandSafetyScore?: number
-  potentialIssues?: string[]
-}
-
-interface ModerationStats {
-  totalSubmissions: number
-  pendingReview: number
-  approvedToday: number
-  rejectedToday: number
-  averageReviewTime: string
-  brandSafetyScore: number
-}
+import { CheckCircle, XCircle, Eye, Clock, User, DollarSign, ThumbsUp, MessageSquare } from 'lucide-react'
+import { useWhopSDK, Submission } from '../lib/whop-sdk'
 
 export function BrandModerationView() {
-  const { company } = useWhopSDK()
-  const [submissions, setSubmissions] = useState<ContentSubmission[]>([])
-  const [selectedSubmission, setSelectedSubmission] = useState<ContentSubmission | null>(null)
-  const [reviewNotes, setReviewNotes] = useState('')
-  const [isReviewing, setIsReviewing] = useState(false)
-  const [stats, setStats] = useState<ModerationStats>({
-    totalSubmissions: 0,
-    pendingReview: 0,
-    approvedToday: 0,
-    rejectedToday: 0,
-    averageReviewTime: '2.5 hours',
-    brandSafetyScore: 94.2
-  })
+  const sdk = useWhopSDK()
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending')
+  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null)
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [showRejectionModal, setShowRejectionModal] = useState(false)
 
   useEffect(() => {
-    // Load mock data
-    const mockSubmissions: ContentSubmission[] = [
-      {
-        id: '1',
-        title: 'Product Demo Video',
-        description: 'A clean demonstration of our new product features with professional lighting and clear audio.',
-        type: 'video',
-        url: 'https://via.placeholder.com/400x300',
-        creator: {
-          id: 'creator-1',
-          username: 'alice_creator',
-          avatar: 'https://via.placeholder.com/40'
-        },
-        brandGuidelines: ['No profanity or offensive language', 'Must align with brand values', 'Appropriate for all audiences'],
-        estimatedCPM: 2.50,
-        status: 'submitted',
-        submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        brandSafetyScore: 95,
-        potentialIssues: []
-      },
-      {
-        id: '2',
-        title: 'Lifestyle Image Post',
-        description: 'Beautiful lifestyle image showcasing our product in a natural setting.',
-        type: 'image',
-        url: 'https://via.placeholder.com/400x300',
-        creator: {
-          id: 'creator-2',
-          username: 'bob_photographer',
-          avatar: 'https://via.placeholder.com/40'
-        },
-        brandGuidelines: ['No profanity or offensive language', 'Must align with brand values', 'Appropriate for all audiences'],
-        estimatedCPM: 1.80,
-        status: 'under_review',
-        submittedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-        brandSafetyScore: 88,
-        potentialIssues: ['Check lighting quality']
-      },
-      {
-        id: '3',
-        title: 'Educational Content',
-        description: 'Informative post about industry trends and how our product fits in.',
-        type: 'text',
-        creator: {
-          id: 'creator-3',
-          username: 'charlie_educator',
-          avatar: 'https://via.placeholder.com/40'
-        },
-        brandGuidelines: ['No profanity or offensive language', 'Must align with brand values', 'No misleading claims about products'],
-        estimatedCPM: 1.20,
-        status: 'approved',
-        submittedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        reviewedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-        reviewerNotes: 'Great educational content, approved for publication.',
-        brandSafetyScore: 98
+    const loadSubmissions = async () => {
+      if (!sdk) return
+      
+      setLoading(true)
+      try {
+        const data = await sdk.getSubmissions()
+        setSubmissions(data)
+      } catch (error) {
+        console.error('Error loading submissions:', error)
+        setSubmissions([])
+      } finally {
+        setLoading(false)
       }
-    ]
+    }
 
-    setSubmissions(mockSubmissions)
-    setStats({
-      totalSubmissions: mockSubmissions.length,
-      pendingReview: mockSubmissions.filter(s => s.status === 'submitted' || s.status === 'under_review').length,
-      approvedToday: mockSubmissions.filter(s => s.status === 'approved').length,
-      rejectedToday: 0,
-      averageReviewTime: '2.5 hours',
-      brandSafetyScore: 94.2
-    })
-  }, [])
+    loadSubmissions()
+  }, [sdk])
 
-  const handleApprove = async (submissionId: string) => {
-    setIsReviewing(true)
+  const filteredSubmissions = submissions.filter(submission => {
+    if (filter === 'all') return true
+    if (filter === 'pending') return submission.status === 'pending_approval'
+    if (filter === 'approved') return submission.status === 'approved'
+    if (filter === 'rejected') return submission.status === 'rejected'
+    return true
+  })
+
+  const handleApprove = async (submission: Submission) => {
+    if (!sdk) return
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setSubmissions(prev => prev.map(submission => 
-      submission.id === submissionId 
-        ? { 
-            ...submission, 
-            status: 'approved' as const,
-            reviewedAt: new Date(),
-            reviewerNotes: reviewNotes || 'Approved for publication'
-          }
-        : submission
-    ))
-    
-    setSelectedSubmission(null)
-    setReviewNotes('')
-    setIsReviewing(false)
+    try {
+      await sdk.approveSubmission(submission.id)
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id ? { ...s, status: 'approved' as const } : s
+      ))
+      setSelectedSubmission(null)
+    } catch (error) {
+      console.error('Error approving submission:', error)
+    }
   }
 
-  const handleReject = async (submissionId: string) => {
-    setIsReviewing(true)
+  const handleReject = async (submission: Submission) => {
+    if (!sdk || !rejectionReason) return
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setSubmissions(prev => prev.map(submission => 
-      submission.id === submissionId 
-        ? { 
-            ...submission, 
-            status: 'rejected' as const,
-            reviewedAt: new Date(),
-            reviewerNotes: reviewNotes || 'Content does not meet brand guidelines'
-          }
-        : submission
-    ))
-    
-    setSelectedSubmission(null)
-    setReviewNotes('')
-    setIsReviewing(false)
+    try {
+      await sdk.rejectSubmission(submission.id, rejectionReason)
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id ? { ...s, status: 'rejected' as const } : s
+      ))
+      setShowRejectionModal(false)
+      setSelectedSubmission(null)
+      setRejectionReason('')
+    } catch (error) {
+      console.error('Error rejecting submission:', error)
+    }
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'submitted':
-        return <Clock className="w-4 h-4 text-yellow-500" />
-      case 'under_review':
-        return <Eye className="w-4 h-4 text-blue-500" />
       case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
+        return <CheckCircle className="w-5 h-5 text-green-500" />
       case 'rejected':
-        return <XCircle className="w-4 h-4 text-red-500" />
+        return <XCircle className="w-5 h-5 text-red-500" />
+      case 'pending_approval':
+        return <Clock className="w-5 h-5 text-yellow-500" />
       default:
-        return <Clock className="w-4 h-4 text-gray-500" />
+        return <Clock className="w-5 h-5 text-gray-500" />
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'submitted':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'under_review':
-        return 'bg-blue-100 text-blue-800'
       case 'approved':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-900/20 text-green-400 border-green-500'
       case 'rejected':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-900/20 text-red-400 border-red-500'
+      case 'pending_approval':
+        return 'bg-yellow-900/20 text-yellow-400 border-yellow-500'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-900/20 text-gray-400 border-gray-500'
     }
   }
 
-  const getContentIcon = (type: string) => {
-    switch (type) {
-      case 'video':
-        return <Video className="w-5 h-5" />
-      case 'image':
-        return <Image className="w-5 h-5" />
-      case 'text':
-        return <FileText className="w-5 h-5" />
-      default:
-        return <FileText className="w-5 h-5" />
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading submissions...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Brand Moderation Dashboard</h1>
-          <p className="text-gray-600">
-            Review and approve content for {company?.name || 'your brand'} to ensure brand safety
-          </p>
-        </div>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Review</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.pendingReview}</p>
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+                <span className="text-white font-bold text-sm">W</span>
+              </div>
+              <h1 className="text-xl font-semibold">Content Moderation</h1>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg text-yellow-600">
-              <Clock className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Approved Today</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.approvedToday}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg text-green-600">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Brand Safety Score</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.brandSafetyScore}%</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg text-blue-600">
-              <Shield className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Avg Review Time</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.averageReviewTime}</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
-              <TrendingUp className="w-6 h-6" />
+            
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-400">
+                {filteredSubmissions.length} submissions
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Review Queue */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Content Review Queue</h2>
+      {/* Filter Tabs */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'pending_approval').length },
+              { key: 'approved', label: 'Approved', count: submissions.filter(s => s.status === 'approved').length },
+              { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length },
+              { key: 'all', label: 'All', count: submissions.length }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key as any)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  filter === tab.key
+                    ? 'text-white border-whop-dragon-fire'
+                    : 'text-gray-400 border-transparent hover:text-white hover:border-gray-300'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </nav>
         </div>
-        <div className="divide-y divide-gray-200">
-          {submissions.map((submission) => (
-            <div key={submission.id} className="p-6">
-              <div className="flex items-start space-x-4">
-                {/* Content Preview */}
-                <div className="flex-shrink-0">
-                  {submission.type === 'video' ? (
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Video className="w-8 h-8 text-gray-400" />
-                    </div>
-                  ) : submission.type === 'image' ? (
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Image className="w-8 h-8 text-gray-400" />
-                    </div>
-                  ) : (
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
+      </div>
 
-                {/* Content Details */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-gray-900">{submission.title}</h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(submission.status)}`}>
-                      {getStatusIcon(submission.status)}
-                      <span className="ml-1 capitalize">{submission.status.replace('_', ' ')}</span>
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-3">{submission.description}</p>
-                  
-                  <div className="flex items-center space-x-6 text-sm text-gray-500 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <Users className="w-4 h-4" />
-                      <span>{submission.creator.username}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {getContentIcon(submission.type)}
-                      <span className="capitalize">{submission.type}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="w-4 h-4" />
-                      <span>${submission.estimatedCPM} CPM</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Shield className="w-4 h-4" />
-                      <span>{submission.brandSafetyScore}% safe</span>
-                    </div>
-                  </div>
-
-                  {/* Brand Guidelines Compliance */}
-                  <div className="mb-3">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Brand Guidelines Compliance:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {submission.brandGuidelines.map((guideline, index) => (
-                        <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          {guideline}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Potential Issues */}
-                  {submission.potentialIssues && submission.potentialIssues.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Potential Issues:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {submission.potentialIssues.map((issue, index) => (
-                          <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            {issue}
-                          </span>
-                        ))}
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {filteredSubmissions.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-white mb-2">No submissions found</h3>
+            <p className="text-gray-400">No content submissions match your current filter.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Submissions List */}
+            <div className="lg:col-span-2 space-y-4">
+              {filteredSubmissions.map(submission => (
+                <div
+                  key={submission.id}
+                  className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-gray-600 transition-colors cursor-pointer"
+                  onClick={() => setSelectedSubmission(submission)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        {getStatusIcon(submission.status)}
+                        <h3 className="text-lg font-semibold text-white">{submission.content.title}</h3>
+                      </div>
+                      
+                      <p className="text-gray-400 text-sm mb-3">No description provided</p>
+                      
+                      <div className="flex items-center space-x-6 text-sm text-gray-400">
+                        <div className="flex items-center space-x-1">
+                          <User className="w-4 h-4" />
+                          <span>{submission.user}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Eye className="w-4 h-4" />
+                          <span>{submission.views.toLocaleString()} views</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <ThumbsUp className="w-4 h-4" />
+                          <span>{submission.likes.toLocaleString()} likes</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <DollarSign className="w-4 h-4" />
+                          <span>{submission.paid ? 'Paid' : 'Unpaid'}</span>
+                        </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  {submission.status === 'submitted' && (
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => setSelectedSubmission(submission)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>Review</span>
-                      </button>
-                      <button
-                        onClick={() => handleApprove(submission.id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center space-x-2"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        <span>Approve</span>
-                      </button>
-                      <button
-                        onClick={() => handleReject(submission.id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        <span>Reject</span>
-                      </button>
+                    
+                    <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(submission.status)}`}>
+                      {submission.status.replace('_', ' ')}
                     </div>
-                  )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Submission Details */}
+            {selectedSubmission && (
+              <div className="lg:col-span-1">
+                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 sticky top-6">
+                  <h3 className="text-lg font-semibold mb-4">Submission Details</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm text-gray-400">Title</label>
+                      <p className="text-white font-medium">{selectedSubmission.content.title}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm text-gray-400">Creator</label>
+                      <p className="text-white">{selectedSubmission.user}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm text-gray-400">Platform</label>
+                      <p className="text-white capitalize">{selectedSubmission.content.platform}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm text-gray-400">Views</label>
+                      <p className="text-white">{selectedSubmission.views.toLocaleString()}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm text-gray-400">Likes</label>
+                      <p className="text-white">{selectedSubmission.likes.toLocaleString()}</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm text-gray-400">Status</label>
+                      <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedSubmission.status)}`}>
+                        {getStatusIcon(selectedSubmission.status)}
+                        <span className="ml-1">{selectedSubmission.status.replace('_', ' ')}</span>
+                      </div>
+                    </div>
+                    
+                    {selectedSubmission.status === 'pending_approval' && (
+                      <div className="flex space-x-3 pt-4">
+                        <button
+                          onClick={() => handleApprove(selectedSubmission)}
+                          className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Approve</span>
+                        </button>
+                        <button
+                          onClick={() => setShowRejectionModal(true)}
+                          className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        >
+                          <XCircle className="w-4 h-4" />
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Review Modal */}
-      {selectedSubmission && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Review Content</h3>
-                <button
-                  onClick={() => setSelectedSubmission(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XCircle className="w-6 h-6" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-900">{selectedSubmission.title}</h4>
-                  <p className="text-gray-600">{selectedSubmission.description}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Review Notes
-                  </label>
-                  <textarea
-                    value={reviewNotes}
-                    onChange={(e) => setReviewNotes(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
-                    placeholder="Add notes about your review decision..."
-                  />
-                </div>
-                
-                <div className="flex items-center justify-end space-x-3 pt-4">
-                  <button
-                    onClick={() => setSelectedSubmission(null)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handleReject(selectedSubmission.id)}
-                    disabled={isReviewing}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => handleApprove(selectedSubmission.id)}
-                    disabled={isReviewing}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors"
-                  >
-                    Approve
-                  </button>
-                </div>
-              </div>
+      {/* Rejection Modal */}
+      {showRejectionModal && selectedSubmission && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Reject Submission</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Reason for rejection</label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                rows={4}
+                placeholder="Please provide a reason for rejection..."
+                required
+              />
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowRejectionModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleReject(selectedSubmission)}
+                disabled={!rejectionReason.trim()}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              >
+                Reject
+              </button>
             </div>
           </div>
         </div>

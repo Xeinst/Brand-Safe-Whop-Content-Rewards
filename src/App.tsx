@@ -5,6 +5,9 @@ import { DiscoverView } from './components/DiscoverView'
 import { MemberStatsView } from './components/MemberStatsView'
 import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
 import { ContentCreatorView } from './components/ContentCreatorView'
+import { ContentSubmissionView } from './components/ContentSubmissionView'
+import { BrandModerationView } from './components/BrandModerationView'
+import { CPMPayoutView } from './components/CPMPayoutView'
 import { ToastNotification } from './components/NotificationSystem'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
@@ -108,6 +111,12 @@ function AppRouter() {
       case '/creator':
       case '/member':
         return <ContentCreatorView />
+      case '/submit':
+        return <ContentSubmissionView />
+      case '/moderate':
+        return <BrandModerationView />
+      case '/payouts':
+        return <CPMPayoutView />
       case '/experiences':
         return <ExperienceView />
       case '/discover':

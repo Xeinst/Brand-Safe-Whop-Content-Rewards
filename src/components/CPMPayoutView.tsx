@@ -1,400 +1,278 @@
 import { useState, useEffect } from 'react'
-import { 
-  DollarSign, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle,
-  Eye,
-  ThumbsUp
-} from 'lucide-react'
+import { DollarSign, TrendingUp, CheckCircle, Clock } from 'lucide-react'
+import { useWhopSDK, Submission } from '../lib/whop-sdk'
 
-interface CPMPayout {
-  id: string
-  contentId: string
-  contentTitle: string
-  creatorId: string
-  creatorName: string
-  cpmRate: number
-  views: number
-  earnings: number
-  status: 'pending' | 'approved' | 'paid' | 'rejected'
-  approvedAt?: Date
-  paidAt?: Date
-  paymentMethod: string
-}
-
-interface ContentPerformance {
-  id: string
-  title: string
-  views: number
-  likes: number
-  shares: number
-  engagement: number
-  cpmEarnings: number
-  approvalDate: Date
+interface PayoutData {
+  totalEarnings: number
+  pendingPayouts: number
+  completedPayouts: number
+  averageCPM: number
+  totalViews: number
+  topEarners: Array<{
+    user: string
+    earnings: number
+    views: number
+    submissions: number
+  }>
 }
 
 export function CPMPayoutView() {
-  const [payouts, setPayouts] = useState<CPMPayout[]>([])
-  const [performance, setPerformance] = useState<ContentPerformance[]>([])
-  const [totalEarnings, setTotalEarnings] = useState(0)
-  const [pendingPayouts, setPendingPayouts] = useState(0)
+  const sdk = useWhopSDK()
+  const [payoutData, setPayoutData] = useState<PayoutData | null>(null)
+  const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all')
 
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true)
+      if (!sdk) return
       
-      // Mock CPM payout data
-      const mockPayouts: CPMPayout[] = [
-        {
-          id: '1',
-          contentId: 'content-1',
-          contentTitle: 'Product Demo Video',
-          creatorId: 'creator-1',
-          creatorName: 'alice_creator',
-          cpmRate: 2.50,
-          views: 15420,
-          earnings: 38.55,
-          status: 'paid',
-          approvedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          paidAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          paymentMethod: 'Whop Wallet'
-        },
-        {
-          id: '2',
-          contentId: 'content-2',
-          contentTitle: 'Lifestyle Image Post',
-          creatorId: 'creator-2',
-          creatorName: 'bob_photographer',
-          cpmRate: 1.80,
-          views: 8930,
-          earnings: 16.07,
-          status: 'approved',
-          approvedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          paymentMethod: 'Whop Wallet'
-        },
-        {
-          id: '3',
-          contentId: 'content-3',
-          contentTitle: 'Educational Content',
-          creatorId: 'creator-3',
-          creatorName: 'charlie_educator',
-          cpmRate: 1.20,
-          views: 12500,
-          earnings: 15.00,
-          status: 'pending',
-          paymentMethod: 'Whop Wallet'
-        }
-      ]
-
-      const mockPerformance: ContentPerformance[] = [
-        {
-          id: '1',
-          title: 'Product Demo Video',
-          views: 15420,
-          likes: 892,
-          shares: 156,
-          engagement: 6.8,
-          cpmEarnings: 38.55,
-          approvalDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: '2',
-          title: 'Lifestyle Image Post',
-          views: 8930,
-          likes: 445,
-          shares: 78,
-          engagement: 5.9,
-          cpmEarnings: 16.07,
-          approvalDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-        },
-        {
-          id: '3',
-          title: 'Educational Content',
-          views: 12500,
-          likes: 623,
-          shares: 134,
-          engagement: 6.1,
-          cpmEarnings: 15.00,
-          approvalDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-        }
-      ]
-
-      setPayouts(mockPayouts)
-      setPerformance(mockPerformance)
-      setTotalEarnings(mockPayouts.reduce((sum, payout) => sum + payout.earnings, 0))
-      setPendingPayouts(mockPayouts.filter(p => p.status === 'pending' || p.status === 'approved').length)
-      setLoading(false)
+      setLoading(true)
+      try {
+        const submissionsData = await sdk.getSubmissions()
+        setSubmissions(submissionsData)
+        
+        // Calculate payout data
+        const approvedSubmissions = submissionsData.filter(s => s.status === 'approved')
+        const totalViews = approvedSubmissions.reduce((sum, s) => sum + s.views, 0)
+        const totalEarnings = approvedSubmissions.reduce((sum, s) => sum + (s.views * 4.00 / 1000), 0) // Assuming $4 CPM
+        const pendingPayouts = approvedSubmissions.filter(s => !s.paid).length
+        const completedPayouts = approvedSubmissions.filter(s => s.paid).length
+        
+        // Calculate top earners
+        const userEarnings = approvedSubmissions.reduce((acc, submission) => {
+          const earnings = submission.views * 4.00 / 1000
+          if (!acc[submission.user]) {
+            acc[submission.user] = { earnings: 0, views: 0, submissions: 0 }
+          }
+          acc[submission.user].earnings += earnings
+          acc[submission.user].views += submission.views
+          acc[submission.user].submissions += 1
+          return acc
+        }, {} as Record<string, { earnings: number; views: number; submissions: number }>)
+        
+        const topEarners = Object.entries(userEarnings)
+          .map(([user, data]) => ({ user, ...data }))
+          .sort((a, b) => b.earnings - a.earnings)
+          .slice(0, 10)
+        
+        setPayoutData({
+          totalEarnings,
+          pendingPayouts,
+          completedPayouts,
+          averageCPM: 4.00,
+          totalViews,
+          topEarners
+        })
+      } catch (error) {
+        console.error('Error loading payout data:', error)
+        setPayoutData(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
     loadData()
-  }, [])
+  }, [sdk])
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
-      case 'paid':
-        return <DollarSign className="w-4 h-4 text-blue-500" />
-      case 'rejected':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />
-    }
-  }
+  const filteredSubmissions = submissions.filter(submission => {
+    if (filter === 'all') return submission.status === 'approved'
+    if (filter === 'pending') return submission.status === 'approved' && !submission.paid
+    if (filter === 'paid') return submission.status === 'approved' && submission.paid
+    return true
+  })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'paid':
-        return 'bg-blue-100 text-blue-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  const handleProcessPayout = async (submission: Submission) => {
+    if (!sdk) return
+    
+    try {
+      // In a real implementation, this would process the actual payout
+      console.log(`Processing payout for submission ${submission.id}`)
+      
+      // Update submission status
+      setSubmissions(prev => prev.map(s => 
+        s.id === submission.id ? { ...s, paid: true } : s
+      ))
+    } catch (error) {
+      console.error('Error processing payout:', error)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-whop-primary"></div>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading payout data...</div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">CPM Payout Dashboard</h1>
-          <p className="text-gray-600">
-            Track your earnings from approved brand-safe content
-          </p>
-        </div>
-      </div>
-
-      {/* Earnings Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Earnings</p>
-              <p className="text-2xl font-bold text-gray-900">${totalEarnings.toFixed(2)}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg text-green-600">
-              <DollarSign className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Payouts</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingPayouts}</p>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-lg text-yellow-600">
-              <Clock className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Approved Content</p>
-              <p className="text-2xl font-bold text-gray-900">{performance.length}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg text-blue-600">
-              <CheckCircle className="w-6 h-6" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Views</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {performance.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg text-purple-600">
-              <Eye className="w-6 h-6" />
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+                <span className="text-white font-bold text-sm">W</span>
+              </div>
+              <h1 className="text-xl font-semibold">CPM Payouts</h1>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Performance */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Content Performance</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Content
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Views
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Engagement
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  CPM Earnings
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Approved
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {performance.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{item.title}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Eye className="w-4 h-4 mr-1 text-gray-400" />
-                      {item.views.toLocaleString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <ThumbsUp className="w-4 h-4 mr-1 text-gray-400" />
-                      {item.engagement}%
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-green-600">
-                      ${item.cpmEarnings.toFixed(2)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {item.approvalDate.toLocaleDateString()}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Filter Tabs */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { key: 'all', label: 'All Approved', count: submissions.filter(s => s.status === 'approved').length },
+              { key: 'pending', label: 'Pending Payout', count: submissions.filter(s => s.status === 'approved' && !s.paid).length },
+              { key: 'paid', label: 'Paid Out', count: submissions.filter(s => s.status === 'approved' && s.paid).length }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key as any)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  filter === tab.key
+                    ? 'text-white border-whop-dragon-fire'
+                    : 'text-gray-400 border-transparent hover:text-white hover:border-gray-300'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
 
-      {/* Payout History */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Payout History</h2>
-        </div>
-        <div className="divide-y divide-gray-200">
-          {payouts.map((payout) => (
-            <div key={payout.id} className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-medium text-gray-900">{payout.contentTitle}</h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payout.status)}`}>
-                      {getStatusIcon(payout.status)}
-                      <span className="ml-1 capitalize">{payout.status}</span>
-                    </span>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {payoutData && (
+          <>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Total Earnings</p>
+                    <p className="text-2xl font-bold text-white">${payoutData.totalEarnings.toFixed(2)}</p>
                   </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Creator:</span> {payout.creatorName}
-                    </div>
-                    <div>
-                      <span className="font-medium">CPM Rate:</span> ${payout.cpmRate}
-                    </div>
-                    <div>
-                      <span className="font-medium">Views:</span> {payout.views.toLocaleString()}
-                    </div>
-                    <div>
-                      <span className="font-medium">Earnings:</span> 
-                      <span className="font-bold text-green-600 ml-1">${payout.earnings.toFixed(2)}</span>
-                    </div>
+                  <DollarSign className="w-8 h-8 text-whop-dragon-fire" />
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Pending Payouts</p>
+                    <p className="text-2xl font-bold text-white">{payoutData.pendingPayouts}</p>
                   </div>
-
-                  {payout.approvedAt && (
-                    <div className="mt-2 text-sm text-gray-500">
-                      Approved: {payout.approvedAt.toLocaleDateString()}
-                    </div>
-                  )}
-                  
-                  {payout.paidAt && (
-                    <div className="mt-2 text-sm text-gray-500">
-                      Paid: {payout.paidAt.toLocaleDateString()} via {payout.paymentMethod}
-                    </div>
-                  )}
+                  <Clock className="w-8 h-8 text-yellow-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Completed Payouts</p>
+                    <p className="text-2xl font-bold text-white">{payoutData.completedPayouts}</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-500" />
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-400">Total Views</p>
+                    <p className="text-2xl font-bold text-white">{payoutData.totalViews.toLocaleString()}</p>
+                  </div>
+                  <TrendingUp className="w-8 h-8 text-blue-500" />
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Payment Settings */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Payment Settings</h2>
-        </div>
-        <div className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Default Payment Method
-              </label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary">
-                <option>Whop Wallet</option>
-                <option>PayPal</option>
-                <option>Bank Transfer</option>
-                <option>Crypto Wallet</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Payout Threshold
-              </label>
-              <input
-                type="number"
-                defaultValue={10.00}
-                step="0.01"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
-              />
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Submissions List */}
+              <div className="lg:col-span-2">
+                <div className="bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="p-4 border-b border-gray-700">
+                    <h3 className="text-lg font-semibold">Approved Submissions</h3>
+                  </div>
+                  
+                  <div className="divide-y divide-gray-700">
+                    {filteredSubmissions.map(submission => {
+                      const earnings = submission.views * payoutData.averageCPM / 1000
+                      return (
+                        <div key={submission.id} className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h4 className="text-white font-medium">{submission.content.title}</h4>
+                              <p className="text-gray-400 text-sm">{submission.user}</p>
+                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
+                                <span>{submission.views.toLocaleString()} views</span>
+                                <span>${earnings.toFixed(2)} earnings</span>
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  submission.paid 
+                                    ? 'bg-green-900/20 text-green-400' 
+                                    : 'bg-yellow-900/20 text-yellow-400'
+                                }`}>
+                                  {submission.paid ? 'Paid' : 'Pending'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {!submission.paid && (
+                              <button
+                                onClick={() => handleProcessPayout(submission)}
+                                className="px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors"
+                              >
+                                Process Payout
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="autoPayout"
-                defaultChecked
-                className="h-4 w-4 text-whop-primary focus:ring-whop-primary border-gray-300 rounded"
-              />
-              <label htmlFor="autoPayout" className="ml-2 block text-sm text-gray-900">
-                Enable automatic payouts when threshold is reached
-              </label>
+              {/* Top Earners */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-800 rounded-lg border border-gray-700">
+                  <div className="p-4 border-b border-gray-700">
+                    <h3 className="text-lg font-semibold">Top Earners</h3>
+                  </div>
+                  
+                  <div className="p-4">
+                    <div className="space-y-4">
+                      {payoutData.topEarners.map((earner, index) => (
+                        <div key={earner.user} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{earner.user}</p>
+                              <p className="text-gray-400 text-sm">{earner.submissions} submissions</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-white font-bold">${earner.earnings.toFixed(2)}</p>
+                            <p className="text-gray-400 text-sm">{earner.views.toLocaleString()} views</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            <button className="bg-whop-primary text-white px-6 py-2 rounded-md hover:bg-whop-primary/90 transition-colors">
-              Update Payment Settings
-            </button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

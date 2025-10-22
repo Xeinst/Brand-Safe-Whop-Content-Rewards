@@ -1,402 +1,287 @@
-import { useState, useRef } from 'react'
-import { 
-  Upload, 
-  Video, 
-  Image, 
-  FileText, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock,
-  DollarSign,
-  Eye,
-  Shield
-} from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Upload, Link, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useWhopSDK, ContentReward } from '../lib/whop-sdk'
 
-interface ContentSubmission {
-  id: string
+interface SubmissionForm {
   title: string
   description: string
-  type: 'video' | 'image' | 'text'
-  file?: File
-  url?: string
-  brandGuidelines: string[]
-  estimatedCPM: number
-  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected'
-  submittedAt?: Date
-  reviewedAt?: Date
-  reviewerNotes?: string
+  videoUrl: string
+  platform: string
+  contentRewardId: string
 }
 
 export function ContentSubmissionView() {
-  const [submissions, setSubmissions] = useState<ContentSubmission[]>([])
-  const [currentSubmission, setCurrentSubmission] = useState<Partial<ContentSubmission>>({
+  const sdk = useWhopSDK()
+  const [activeRewards, setActiveRewards] = useState<ContentReward[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [formData, setFormData] = useState<SubmissionForm>({
     title: '',
     description: '',
-    type: 'video',
-    brandGuidelines: [],
-    estimatedCPM: 0
+    videoUrl: '',
+    platform: 'youtube',
+    contentRewardId: ''
   })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const brandGuidelines = [
-    'No profanity or offensive language',
-    'No violence or harmful content',
-    'No misleading claims about products',
-    'Must align with brand values',
-    'No competitor mentions',
-    'Appropriate for all audiences',
-    'No controversial political content',
-    'No discriminatory content'
-  ]
-
-  const handleFileUpload = (file: File) => {
-    if (file) {
-      setCurrentSubmission(prev => ({
-        ...prev,
-        file,
-        url: URL.createObjectURL(file)
-      }))
+  useEffect(() => {
+    const loadRewards = async () => {
+      if (!sdk) return
+      
+      setLoading(true)
+      try {
+        const rewards = await sdk.getContentRewards()
+        const active = rewards.filter(r => r.status === 'active')
+        setActiveRewards(active)
+        
+        if (active.length > 0) {
+          setFormData(prev => ({ ...prev, contentRewardId: active[0].id }))
+        }
+      } catch (error) {
+        console.error('Error loading rewards:', error)
+        setActiveRewards([])
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  const handleDrag = (e: React.DragEvent) => {
+    loadRewards()
+  }, [sdk])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
+    if (!sdk || !formData.title || !formData.videoUrl) return
+
+    setSubmitting(true)
+    setSubmissionStatus('idle')
+
+    try {
+      // Extract video ID from URL
+      const videoId = extractVideoId(formData.videoUrl)
+      if (!videoId) {
+        throw new Error('Invalid video URL')
+      }
+
+      // Create submission
+      const submission = {
+        user_id: sdk.user?.id || 'demo-user',
+        content_reward_id: formData.contentRewardId,
+        title: formData.title,
+        description: formData.description,
+        private_video_link: formData.videoUrl,
+        public_video_link: null,
+        thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        platform: formData.platform
+      }
+
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submission)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to submit content')
+      }
+
+      setSubmissionStatus('success')
+      setFormData({
+        title: '',
+        description: '',
+        videoUrl: '',
+        platform: 'youtube',
+        contentRewardId: activeRewards[0]?.id || ''
+      })
+    } catch (error) {
+      console.error('Submission error:', error)
+      setSubmissionStatus('error')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
+  const extractVideoId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/shorts\/([^&\n?#]+)/
+    ]
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0])
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match) return match[1]
     }
+    return null
   }
 
-  const handleSubmit = async () => {
-    if (!currentSubmission.title || !currentSubmission.description) {
-      alert('Please fill in all required fields')
-      return
-    }
-
-    setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const newSubmission: ContentSubmission = {
-      id: Date.now().toString(),
-      ...currentSubmission,
-      status: 'submitted',
-      submittedAt: new Date()
-    } as ContentSubmission
-
-    setSubmissions(prev => [newSubmission, ...prev])
-    setCurrentSubmission({
-      title: '',
-      description: '',
-      type: 'video',
-      brandGuidelines: [],
-      estimatedCPM: 0
-    })
-    setIsSubmitting(false)
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'submitted':
-        return <Clock className="w-4 h-4 text-yellow-500" />
-      case 'under_review':
-        return <Eye className="w-4 h-4 text-blue-500" />
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />
-      case 'rejected':
-        return <AlertCircle className="w-4 h-4 text-red-500" />
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'submitted':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'under_review':
-        return 'bg-blue-100 text-blue-800'
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Earn Rewards</h1>
-          <p className="text-gray-600">
-            Create and submit content to earn rewards and build your community
-          </p>
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+                <span className="text-white font-bold text-sm">W</span>
+              </div>
+              <h1 className="text-xl font-semibold">Submit Content</h1>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Submission Form */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Submit New Content</h2>
-        </div>
-        <div className="p-6 space-y-6">
-          {/* Content Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Content Type
-            </label>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { type: 'video', icon: Video, label: 'Video' },
-                { type: 'image', icon: Image, label: 'Image' },
-                { type: 'text', icon: FileText, label: 'Text Post' }
-              ].map(({ type, icon: Icon, label }) => (
-                <button
-                  key={type}
-                  onClick={() => setCurrentSubmission(prev => ({ ...prev, type: type as any }))}
-                  className={`p-4 border-2 rounded-lg text-center transition-colors ${
-                    currentSubmission.type === type
-                      ? 'border-whop-primary bg-whop-primary/5'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-6 h-6 mx-auto mb-2 text-gray-600" />
-                  <span className="text-sm font-medium">{label}</span>
-                </button>
-              ))}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-6">Submit Your Content for Review</h2>
+          
+          {submissionStatus === 'success' && (
+            <div className="mb-6 p-4 bg-green-900/20 border border-green-500 rounded-lg flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500" />
+              <span className="text-green-400">Content submitted successfully! We'll review it and get back to you soon.</span>
             </div>
-          </div>
+          )}
 
-          {/* File Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Upload Content
-            </label>
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                dragActive
-                  ? 'border-whop-primary bg-whop-primary/5'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              {currentSubmission.url ? (
-                <div className="space-y-4">
-                  {currentSubmission.type === 'video' ? (
-                    <video
-                      src={currentSubmission.url}
-                      className="max-w-full max-h-48 mx-auto rounded-lg"
-                      controls
-                    />
-                  ) : currentSubmission.type === 'image' ? (
-                    <img
-                      src={currentSubmission.url}
-                      alt="Preview"
-                      className="max-w-full max-h-48 mx-auto rounded-lg"
-                    />
-                  ) : (
-                    <div className="p-4 bg-gray-100 rounded-lg">
-                      <FileText className="w-12 h-12 mx-auto text-gray-400" />
-                    </div>
-                  )}
-                  <p className="text-sm text-gray-600">{currentSubmission.file?.name}</p>
-                  <button
-                    onClick={() => setCurrentSubmission(prev => ({ ...prev, file: undefined, url: undefined }))}
-                    className="text-sm text-red-600 hover:text-red-700"
-                  >
-                    Remove file
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Upload className="w-12 h-12 mx-auto text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      Drag and drop your {currentSubmission.type} here, or{' '}
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-whop-primary hover:text-whop-primary/80 font-medium"
-                      >
-                        browse files
-                      </button>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Supports MP4, MOV, AVI for videos; JPG, PNG, GIF for images
-                    </p>
-                  </div>
-                </div>
-              )}
+          {submissionStatus === 'error' && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500 rounded-lg flex items-center space-x-3">
+              <XCircle className="w-5 h-5 text-red-500" />
+              <span className="text-red-400">Failed to submit content. Please try again.</span>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={currentSubmission.type === 'video' ? 'video/*' : currentSubmission.type === 'image' ? 'image/*' : '.txt,.md'}
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-              className="hidden"
-            />
-          </div>
+          )}
 
-          {/* Content Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Content Reward Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title *
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Content Reward
+              </label>
+              <select
+                value={formData.contentRewardId}
+                onChange={(e) => setFormData(prev => ({ ...prev, contentRewardId: e.target.value }))}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                required
+              >
+                <option value="">Select a content reward</option>
+                {activeRewards.map(reward => (
+                  <option key={reward.id} value={reward.id}>
+                    {reward.name} - ${reward.cpm}/1000 views
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Content Title *
               </label>
               <input
                 type="text"
-                value={currentSubmission.title}
-                onChange={(e) => setCurrentSubmission(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
-                placeholder="Enter content title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                placeholder="Enter your content title"
+                required
               />
             </div>
+
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Estimated CPM ($)
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Description
               </label>
-              <input
-                type="number"
-                value={currentSubmission.estimatedCPM}
-                onChange={(e) => setCurrentSubmission(prev => ({ ...prev, estimatedCPM: parseFloat(e.target.value) || 0 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
-                placeholder="0.00"
-                step="0.01"
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                rows={4}
+                placeholder="Describe your content..."
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
-            </label>
-            <textarea
-              value={currentSubmission.description}
-              onChange={(e) => setCurrentSubmission(prev => ({ ...prev, description: e.target.value }))}
-              rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
-              placeholder="Describe your content and how it aligns with brand values"
-            />
-          </div>
-
-          {/* Brand Guidelines */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Brand Guidelines Compliance
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {brandGuidelines.map((guideline, index) => (
-                <label key={index} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={currentSubmission.brandGuidelines?.includes(guideline)}
-                    onChange={(e) => {
-                      const guidelines = currentSubmission.brandGuidelines || []
-                      if (e.target.checked) {
-                        setCurrentSubmission(prev => ({
-                          ...prev,
-                          brandGuidelines: [...guidelines, guideline]
-                        }))
-                      } else {
-                        setCurrentSubmission(prev => ({
-                          ...prev,
-                          brandGuidelines: guidelines.filter(g => g !== guideline)
-                        }))
-                      }
-                    }}
-                    className="h-4 w-4 text-whop-primary focus:ring-whop-primary border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-700">{guideline}</span>
-                </label>
-              ))}
+            {/* Video URL */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Video URL *
+              </label>
+              <div className="relative">
+                <input
+                  type="url"
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                  placeholder="https://youtube.com/watch?v=..."
+                  required
+                />
+                <Link className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+              <p className="mt-1 text-sm text-gray-400">
+                Supported platforms: YouTube, YouTube Shorts
+              </p>
             </div>
-          </div>
 
-          {/* Submit Button */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Shield className="w-4 h-4" />
-              <span>Content will be reviewed for brand safety before approval</span>
+            {/* Platform */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Platform
+              </label>
+              <select
+                value={formData.platform}
+                onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value }))}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+              >
+                <option value="youtube">YouTube</option>
+                <option value="youtube_shorts">YouTube Shorts</option>
+              </select>
             </div>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !currentSubmission.title || !currentSubmission.description}
-              className="bg-whop-primary text-white px-6 py-2 rounded-md hover:bg-whop-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <>
-                  <DollarSign className="w-4 h-4" />
-                  <span>Submit for Review</span>
-                </>
-              )}
-            </button>
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={submitting || !formData.title || !formData.videoUrl || !formData.contentRewardId}
+                className="px-6 py-3 bg-whop-dragon-fire hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center space-x-2"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    <span>Submit Content</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Guidelines */}
+          <div className="mt-8 p-4 bg-gray-700 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              Submission Guidelines
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-300">
+              <li>• Content must be brand-safe and appropriate for all audiences</li>
+              <li>• Videos should be high quality and engaging</li>
+              <li>• Include relevant hashtags and descriptions</li>
+              <li>• Content will be reviewed within 24-48 hours</li>
+              <li>• You'll earn CPM rewards for approved content</li>
+            </ul>
           </div>
         </div>
       </div>
-
-      {/* Submission History */}
-      {submissions.length > 0 && (
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Your Submissions</h2>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {submissions.map((submission) => (
-              <div key={submission.id} className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{submission.title}</h3>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(submission.status)}`}>
-                        {getStatusIcon(submission.status)}
-                        <span className="ml-1 capitalize">{submission.status.replace('_', ' ')}</span>
-                      </span>
-                    </div>
-                    <p className="text-gray-600 mb-3">{submission.description}</p>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <span>Type: {submission.type}</span>
-                      <span>CPM: ${submission.estimatedCPM}</span>
-                      <span>Submitted: {submission.submittedAt?.toLocaleDateString()}</span>
-                    </div>
-                    {submission.reviewerNotes && (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-md">
-                        <p className="text-sm text-gray-700">
-                          <strong>Reviewer Notes:</strong> {submission.reviewerNotes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

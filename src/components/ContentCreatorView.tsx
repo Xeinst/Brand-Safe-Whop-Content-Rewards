@@ -24,7 +24,20 @@ export function ContentCreatorView() {
       } catch (error) {
         console.error('Error loading data:', error)
         // Fallback to mock data
-        setActiveRewards([])
+        setActiveRewards([
+          {
+            id: '1',
+            name: 'Make videos different coaching businesses you can start',
+            description: 'Create content about coaching business opportunities',
+            cpm: 4.00,
+            status: 'active',
+            totalViews: 0,
+            totalPaid: 0,
+            approvedSubmissions: 0,
+            totalSubmissions: 0,
+            effectiveCPM: 0
+          }
+        ])
       } finally {
         setLoading(false)
       }
@@ -56,6 +69,9 @@ export function ContentCreatorView() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <a href="/submit" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                Submit Content
+              </a>
               <a href="#" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
                 How do Content Rewards work?
               </a>

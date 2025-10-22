@@ -49,6 +49,12 @@ export function ContentRewardsDashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
+              <a href="/moderate" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                Moderate Content
+              </a>
+              <a href="/payouts" className="text-sm transition-colors text-whop-byzantine-blue hover:text-blue-700">
+                CPM Payouts
+              </a>
               <button className="text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors bg-whop-byzantine-blue hover:bg-blue-700">
                 <Plus className="w-4 h-4" />
                 <span>Create Content Reward</span>
