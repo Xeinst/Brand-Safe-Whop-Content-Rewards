@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, MoreVertical, ArrowUpDown, ChevronDown, Download, Edit } from 'lucide-react'
-import { useWhopSDK, Submission } from '../lib/whop-sdk'
+import { useWhopSDK } from '../lib/whop-sdk'
 
 
 export function ContentRewardsDashboard() {
