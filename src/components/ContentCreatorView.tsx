@@ -1,33 +1,6 @@
 import { useState, useEffect } from 'react'
-import { extractYouTubeVideoId } from '../lib/youtube'
-import { CheckCircle, XCircle, Plus, Settings, MoreVertical, ChevronDown, ArrowUpDown, Download, Edit } from 'lucide-react'
-import { useWhopSDK } from '../lib/whop-sdk'
-
-interface ContentReward {
-  id: string
-  name: string
-  description: string
-  cpm: number
-  requirements: string[]
-  status: 'active' | 'paused' | 'completed'
-}
-
-interface Submission {
-  id: string
-  rewardId: string
-  title: string
-  description: string
-  privateVideoLink: string
-  publicVideoLink: string | null
-  thumbnail: string
-  status: 'draft' | 'submitted' | 'pending_approval' | 'approved' | 'rejected' | 'published'
-  submittedAt: Date | null
-  publishedAt: Date | null
-  estimatedEarnings: number
-  actualViews: number
-  rewardRate: number
-  paidOut: number
-}
+import { Plus, MoreVertical, ChevronDown, ArrowUpDown, Download, Edit } from 'lucide-react'
+import { useWhopSDK, ContentReward, Submission } from '../lib/whop-sdk'
 
 export function ContentCreatorView() {
   const sdk = useWhopSDK()
@@ -68,20 +41,6 @@ export function ContentCreatorView() {
     loadData()
   }, [sdk])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
-      case 'published':
-        return 'bg-blue-100 text-blue-800'
-      case 'pending_approval':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
   if (loading) {
     return (
@@ -199,8 +158,8 @@ export function ContentCreatorView() {
               <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                 <h3 className="text-sm text-gray-500 mb-1">Total submissions</h3>
                 <p className="text-2xl font-bold text-gray-900">0</p>
-              </div>
-            </div>
+                            </div>
+                    </div>
                     
             {/* Chart Section */}
             <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">

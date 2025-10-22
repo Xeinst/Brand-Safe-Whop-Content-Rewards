@@ -1,24 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Plus, Settings, MoreVertical, ArrowUpDown, ChevronDown, Download, Edit } from 'lucide-react'
-import { useWhopSDK } from '../lib/whop-sdk'
+import { Plus, MoreVertical, ArrowUpDown, ChevronDown, Download, Edit } from 'lucide-react'
+import { useWhopSDK, ContentReward, Submission } from '../lib/whop-sdk'
 
-interface Submission {
-  id: string
-  user: string
-  status: 'pending_approval' | 'approved' | 'rejected' | 'published'
-  paid: boolean
-  views: number
-  likes: number
-  submissionDate: Date
-  publishedDate: Date | null
-  content: {
-    title: string
-    privateVideoLink: string
-    publicVideoLink: string | null
-    thumbnail: string
-    platform: string
-  }
-}
 
 export function ContentRewardsDashboard() {
   const sdk = useWhopSDK()
@@ -47,46 +30,6 @@ export function ContentRewardsDashboard() {
     loadRealData()
   }, [sdk])
 
-  const handleApproveSubmission = async (id: string) => {
-    if (!sdk) return
-    
-    try {
-      await sdk.approveSubmission(id)
-      // Refresh submissions
-      const updatedSubmissions = await sdk.getSubmissions()
-      setSubmissions(updatedSubmissions)
-    } catch (error) {
-      console.error('Error approving submission:', error)
-    }
-  }
-
-  const handleRejectSubmission = async (id: string, reason: string) => {
-    if (!sdk) return
-    
-    try {
-      await sdk.rejectSubmission(id, reason)
-      // Refresh submissions
-      const updatedSubmissions = await sdk.getSubmissions()
-      setSubmissions(updatedSubmissions)
-    } catch (error) {
-      console.error('Error rejecting submission:', error)
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'rejected':
-        return 'bg-red-100 text-red-800'
-      case 'published':
-        return 'bg-blue-100 text-blue-800'
-      case 'pending_approval':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
 
   if (loading) {
     return (
