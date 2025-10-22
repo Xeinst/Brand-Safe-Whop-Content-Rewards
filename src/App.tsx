@@ -44,10 +44,10 @@ function App() {
 
       if (error) {
         return (
-          <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-            <div className="backdrop-blur-md bg-white/10 p-8 rounded-lg border border-white/20 text-center">
-              <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
-              <p className="text-gray-300">{error}</p>
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+              <p className="text-gray-600">{error}</p>
             </div>
           </div>
         )
@@ -55,10 +55,10 @@ function App() {
 
       if (!sdk) {
         return (
-          <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-            <div className="backdrop-blur-md bg-white/10 p-8 rounded-lg border border-white/20 text-center">
-              <h1 className="text-2xl font-bold text-red-400 mb-4">SDK Not Available</h1>
-              <p className="text-gray-300">Whop SDK could not be initialized</p>
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">SDK Not Available</h1>
+              <p className="text-gray-600">Whop SDK could not be initialized</p>
             </div>
           </div>
         )

@@ -92,9 +92,9 @@ export function ContentCreatorView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen bg-white text-gray-900">
       {/* Header */}
-      <div className="backdrop-blur-md bg-white/10 border-b border-white/20">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -114,15 +114,15 @@ export function ContentCreatorView() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="backdrop-blur-md bg-white/5 border-b border-white/20">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab('rewards')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'rewards'
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
               }`}
             >
               Content Rewards
@@ -131,8 +131,8 @@ export function ContentCreatorView() {
               onClick={() => setActiveTab('analytics')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'analytics'
-                  ? 'border-blue-500 text-white'
-                  : 'border-transparent text-gray-400 hover:text-white hover:border-gray-300'
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
               }`}
             >
               Analytics
@@ -178,61 +178,61 @@ export function ContentCreatorView() {
                     
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="backdrop-blur-md bg-white/10 rounded-lg p-4 border border-white/20">
-                <h3 className="text-sm text-gray-400 mb-1">Total views generated</h3>
-                <p className="text-2xl font-bold text-white">0</p>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <h3 className="text-sm text-gray-500 mb-1">Total views generated</h3>
+                <p className="text-2xl font-bold text-gray-900">0</p>
               </div>
-              <div className="backdrop-blur-md bg-white/10 rounded-lg p-4 border border-white/20">
-                <h3 className="text-sm text-gray-400 mb-1">Total amount paid out</h3>
-                <p className="text-2xl font-bold text-white">$0.00</p>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <h3 className="text-sm text-gray-500 mb-1">Total amount paid out</h3>
+                <p className="text-2xl font-bold text-gray-900">$0.00</p>
               </div>
-              <div className="backdrop-blur-md bg-white/10 rounded-lg p-4 border border-white/20">
-                <h3 className="text-sm text-gray-400 mb-1">Effective CPM</h3>
-                <p className="text-2xl font-bold text-white">$0.00</p>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <h3 className="text-sm text-gray-500 mb-1">Effective CPM</h3>
+                <p className="text-2xl font-bold text-gray-900">$0.00</p>
               </div>
-              <div className="backdrop-blur-md bg-white/10 rounded-lg p-4 border border-white/20">
-                <h3 className="text-sm text-gray-400 mb-1">Approved submissions</h3>
-                <p className="text-2xl font-bold text-white">0</p>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <h3 className="text-sm text-gray-500 mb-1">Approved submissions</h3>
+                <p className="text-2xl font-bold text-gray-900">0</p>
               </div>
-              <div className="backdrop-blur-md bg-white/10 rounded-lg p-4 border border-white/20">
-                <h3 className="text-sm text-gray-400 mb-1">Total submissions</h3>
-                <p className="text-2xl font-bold text-white">0</p>
-                            </div>
-                    </div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                <h3 className="text-sm text-gray-500 mb-1">Total submissions</h3>
+                <p className="text-2xl font-bold text-gray-900">0</p>
+              </div>
+            </div>
                     
             {/* Chart Section */}
-            <div className="backdrop-blur-md bg-white/10 rounded-lg p-6 border border-white/20">
-              <h3 className="text-lg font-semibold text-white mb-4">Total approved views</h3>
+            <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Total approved views</h3>
               <div className="h-64 flex items-center justify-center">
-                <p className="text-gray-400">A view chart for approved submissions will be displayed here</p>
+                <p className="text-gray-500">A view chart for approved submissions will be displayed here</p>
               </div>
             </div>
 
             {/* Submissions Section */}
-            <div className="backdrop-blur-md bg-white/10 rounded-lg border border-white/20">
+            <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
               {/* Filter and Action Bar */}
-              <div className="p-4 border-b border-white/20">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center space-x-4">
-                    <button className="px-3 py-2 border border-dashed border-gray-600 rounded-lg text-sm text-gray-400 hover:bg-gray-700 transition-colors flex items-center">
+                    <button className="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors flex items-center">
                       <Plus className="w-4 h-4 mr-2" />
                       Date Created
                     </button>
-                    <button className="px-3 py-2 border border-gray-600 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors flex items-center">
+                    <button className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center">
                       <span className="mr-2">Status | Approved</span>
                       <ChevronDown className="w-4 h-4" />
                     </button>
-                    <button className="px-3 py-2 border border-dashed border-gray-600 rounded-lg text-sm text-gray-400 hover:bg-gray-700 transition-colors flex items-center">
+                    <button className="px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition-colors flex items-center">
                       <Plus className="w-4 h-4 mr-2" />
                       Platform
                     </button>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="px-3 py-2 border border-gray-600 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors flex items-center">
+                    <button className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center">
                       <Download className="w-4 h-4 mr-2" />
                       Export
                     </button>
-                    <button className="px-3 py-2 border border-gray-600 rounded-lg text-sm text-gray-300 hover:bg-gray-700 transition-colors flex items-center">
+                    <button className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center">
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
                     </button>
@@ -241,8 +241,8 @@ export function ContentCreatorView() {
                 </div>
                 
               {/* Table Header */}
-              <div className="px-4 py-3 backdrop-blur-md bg-white/5">
-                <div className="grid grid-cols-5 gap-4 text-sm text-gray-300">
+              <div className="px-4 py-3 bg-gray-50">
+                <div className="grid grid-cols-5 gap-4 text-sm text-gray-600">
                   <div className="flex items-center">
                     User
                   </div>
