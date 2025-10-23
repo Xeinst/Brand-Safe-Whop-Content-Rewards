@@ -73,7 +73,8 @@ export interface ContentReward {
 export interface Submission {
   id: string
   user: string
-  status: 'pending_approval' | 'approved' | 'rejected' | 'published'
+  status: 'pending_review' | 'approved' | 'rejected' | 'flagged' | 'published'
+  visibility: 'private' | 'public'
   paid: boolean
   views: number
   likes: number
@@ -99,7 +100,7 @@ export interface WhopSDK {
   isMember(): boolean
   hasPermission(permission: string): boolean
   getContentRewards(): Promise<ContentReward[]>
-  getSubmissions(filters?: { status?: string; user_id?: string }): Promise<Submission[]>
+  getSubmissions(filters?: { status?: string; user_id?: string; public_only?: boolean }): Promise<Submission[]>
   createSubmission(submission: Partial<Submission>): Promise<Submission>
   approveSubmission(submissionId: string): Promise<void>
   rejectSubmission(submissionId: string, reason: string): Promise<void>
@@ -120,7 +121,7 @@ export class RealWhopSDK implements WhopSDK {
   async init(): Promise<void> {
     try {
       // For now, use mock data since the real Whop SDK needs proper setup
-      // In production, this would initialize the actual Whop SDK
+        // In production, this would initialize the actual Whop SDK
       await this.initializeMockData()
       
     } catch (error) {
@@ -193,7 +194,7 @@ export class RealWhopSDK implements WhopSDK {
 
   private async initializeMockData(): Promise<void> {
     // Fallback mock data for development
-    this.user = {
+            this.user = {
       id: 'demo-user-1',
       username: 'demo_user',
       email: 'demo@example.com',
@@ -222,11 +223,12 @@ export class RealWhopSDK implements WhopSDK {
     }
   }
 
-  async getSubmissions(filters?: { status?: string; user_id?: string }): Promise<Submission[]> {
+  async getSubmissions(filters?: { status?: string; user_id?: string; public_only?: boolean }): Promise<Submission[]> {
     try {
       const params = new URLSearchParams()
       if (filters?.status) params.append('status', filters.status)
       if (filters?.user_id) params.append('user_id', filters.user_id)
+      if (filters?.public_only) params.append('public_only', 'true')
       
       const response = await fetch(`/api/submissions?${params}`)
       if (!response.ok) throw new Error('Failed to fetch submissions')
@@ -287,7 +289,7 @@ export class RealWhopSDK implements WhopSDK {
       return await response.json()
     } catch (error) {
       console.error('Error fetching member statistics:', error)
-      return {
+    return {
         totalMembers: 0,
         activeMembers: 0,
         newMembers: 0,

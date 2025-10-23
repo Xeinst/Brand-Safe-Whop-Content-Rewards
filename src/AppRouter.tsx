@@ -11,6 +11,7 @@ import { CPMPayoutView } from './components/CPMPayoutView'
 import { CampaignManagement } from './components/CampaignManagement'
 import { AllSubmissionsView } from './components/AllSubmissionsView'
 import { MySubmissionsView } from './components/MySubmissionsView'
+import { AdminReviewView } from './components/AdminReviewView'
 import { ToastNotification } from './components/NotificationSystem'
 import { DebugInfo } from './components/DebugInfo'
 
@@ -104,6 +105,13 @@ export function AppRouter() {
       case '/my-submissions':
         // Both owners and members can see their own submissions
         return <MySubmissionsView />
+      case '/admin/review':
+        // Only owners can access admin review
+        if (sdk?.isOwner()) {
+          return <AdminReviewView />
+        } else {
+          return <ContentCreatorView />
+        }
       default:
         // Default based on user role
         if (sdk?.isOwner()) {

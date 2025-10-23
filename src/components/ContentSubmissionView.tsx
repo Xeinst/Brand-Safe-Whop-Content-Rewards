@@ -78,7 +78,7 @@ export function ContentSubmissionView() {
         throw new Error('Invalid video URL')
       }
 
-      // Create submission using SDK
+      // Create submission using SDK - now defaults to PENDING_REVIEW and PRIVATE
       const submission = {
         user: sdk.user?.id || 'demo-user',
         content: {
@@ -88,7 +88,8 @@ export function ContentSubmissionView() {
           thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
           platform: formData.platform
         },
-        status: 'pending_approval' as const,
+        status: 'pending_review' as const,
+        visibility: 'private' as const,
         paid: false,
         views: 0,
         likes: 0,
@@ -288,8 +289,9 @@ export function ContentSubmissionView() {
               <li>• Content must be brand-safe and appropriate for all audiences</li>
               <li>• Videos should be high quality and engaging</li>
               <li>• Include relevant hashtags and descriptions</li>
-              <li>• Content will be reviewed within 24-48 hours</li>
-              <li>• You'll earn CPM rewards for approved content</li>
+              <li>• Content will be reviewed by admins before going public</li>
+              <li>• You'll earn CPM rewards only for approved and published content</li>
+              <li>• Private content is not visible to the public until approved</li>
             </ul>
           </div>
         </div>

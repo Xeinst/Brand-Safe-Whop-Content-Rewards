@@ -54,16 +54,22 @@ CREATE TABLE content_submissions (
     public_video_link TEXT,
     thumbnail_url TEXT,
     platform VARCHAR(50) NOT NULL DEFAULT 'youtube',
-    status VARCHAR(20) NOT NULL DEFAULT 'pending_approval' 
-        CHECK (status IN ('pending_approval', 'approved', 'rejected', 'published')),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending_review' 
+        CHECK (status IN ('pending_review', 'approved', 'rejected', 'flagged', 'published')),
+    visibility VARCHAR(10) NOT NULL DEFAULT 'private' 
+        CHECK (visibility IN ('private', 'public')),
+    mod_verdict VARCHAR(20),
+    mod_score DECIMAL(3,2),
+    unsafe_reasons TEXT[] DEFAULT '{}',
+    approved_at TIMESTAMP WITH TIME ZONE,
+    rejected_at TIMESTAMP WITH TIME ZONE,
+    reviewed_by UUID REFERENCES users(id),
+    review_note TEXT,
     paid BOOLEAN DEFAULT FALSE,
     views BIGINT DEFAULT 0,
     likes BIGINT DEFAULT 0,
     submission_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     published_date TIMESTAMP WITH TIME ZONE,
-    approved_by UUID REFERENCES users(id),
-    approved_at TIMESTAMP WITH TIME ZONE,
-    rejection_reason TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -145,7 +151,9 @@ CREATE INDEX idx_content_rewards_company_id ON content_rewards(company_id);
 CREATE INDEX idx_content_rewards_status ON content_rewards(status);
 CREATE INDEX idx_content_submissions_user_id ON content_submissions(user_id);
 CREATE INDEX idx_content_submissions_status ON content_submissions(status);
+CREATE INDEX idx_content_submissions_visibility ON content_submissions(visibility);
 CREATE INDEX idx_content_submissions_submission_date ON content_submissions(submission_date);
+CREATE INDEX idx_content_submissions_approved_at ON content_submissions(approved_at);
 CREATE INDEX idx_member_statistics_company_id ON member_statistics(company_id);
 CREATE INDEX idx_member_statistics_recorded_at ON member_statistics(recorded_at);
 CREATE INDEX idx_top_contributors_company_id ON top_contributors(company_id);
@@ -200,6 +208,17 @@ INSERT INTO content_rewards (company_id, name, description, cpm, created_by) VAL
  4.00,
  (SELECT id FROM users WHERE whop_user_id = 'whop-user-1'));
 
+-- Sample content submission with new schema
+INSERT INTO content_submissions (user_id, content_reward_id, title, description, private_video_link, platform, status, visibility) VALUES 
+((SELECT id FROM users WHERE whop_user_id = 'whop-user-2'),
+ (SELECT id FROM content_rewards WHERE name = 'Make videos different coaching businesses you can start'),
+ 'Sample Coaching Business Video',
+ 'A demo video about starting a coaching business',
+ 'https://youtube.com/watch?v=demo123',
+ 'youtube',
+ 'pending_review',
+ 'private');
+
 -- Views for common queries
 CREATE VIEW user_submission_stats AS
 SELECT 
@@ -207,11 +226,12 @@ SELECT
     u.username,
     u.display_name,
     COUNT(cs.id) as total_submissions,
-    COUNT(CASE WHEN cs.status = 'approved' THEN 1 END) as approved_submissions,
+    COUNT(CASE WHEN cs.status = 'approved' AND cs.visibility = 'public' THEN 1 END) as approved_submissions,
     COUNT(CASE WHEN cs.status = 'rejected' THEN 1 END) as rejected_submissions,
-    COUNT(CASE WHEN cs.status = 'pending_approval' THEN 1 END) as pending_submissions,
-    SUM(cs.views) as total_views,
-    SUM(cs.likes) as total_likes
+    COUNT(CASE WHEN cs.status = 'pending_review' THEN 1 END) as pending_submissions,
+    COUNT(CASE WHEN cs.status = 'flagged' THEN 1 END) as flagged_submissions,
+    SUM(CASE WHEN cs.visibility = 'public' THEN cs.views ELSE 0 END) as total_views,
+    SUM(CASE WHEN cs.visibility = 'public' THEN cs.likes ELSE 0 END) as total_likes
 FROM users u
 LEFT JOIN content_submissions cs ON u.id = cs.user_id
 GROUP BY u.id, u.username, u.display_name;
@@ -223,10 +243,11 @@ SELECT
     COUNT(DISTINCT u.id) as total_members,
     COUNT(DISTINCT cs.user_id) as active_creators,
     COUNT(cs.id) as total_submissions,
-    COUNT(CASE WHEN cs.status = 'approved' THEN 1 END) as approved_content,
+    COUNT(CASE WHEN cs.status = 'approved' AND cs.visibility = 'public' THEN 1 END) as approved_content,
     COUNT(CASE WHEN cs.status = 'rejected' THEN 1 END) as rejected_content,
-    COUNT(CASE WHEN cs.status = 'pending_approval' THEN 1 END) as pending_content,
-    SUM(cs.views) as total_views,
+    COUNT(CASE WHEN cs.status = 'pending_review' THEN 1 END) as pending_content,
+    COUNT(CASE WHEN cs.status = 'flagged' THEN 1 END) as flagged_content,
+    SUM(CASE WHEN cs.visibility = 'public' THEN cs.views ELSE 0 END) as total_views,
     AVG(cr.cpm) as average_cpm
 FROM companies c
 LEFT JOIN users u ON u.role = 'member'

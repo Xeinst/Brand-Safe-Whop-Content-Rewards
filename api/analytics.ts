@@ -44,11 +44,12 @@ async function handleGetAnalytics(req: any, res: any) {
       COUNT(DISTINCT u.id) as total_members,
       COUNT(DISTINCT cs.user_id) as active_creators,
       COUNT(cs.id) as total_submissions,
-      COUNT(CASE WHEN cs.status = 'approved' THEN 1 END) as approved_content,
+      COUNT(CASE WHEN cs.status = 'approved' AND cs.visibility = 'public' THEN 1 END) as approved_content,
       COUNT(CASE WHEN cs.status = 'rejected' THEN 1 END) as rejected_content,
-      COUNT(CASE WHEN cs.status = 'pending_approval' THEN 1 END) as pending_content,
-      SUM(cs.views) as total_views,
-      SUM(cs.likes) as total_likes,
+      COUNT(CASE WHEN cs.status = 'pending_review' THEN 1 END) as pending_content,
+      COUNT(CASE WHEN cs.status = 'flagged' THEN 1 END) as flagged_content,
+      SUM(CASE WHEN cs.visibility = 'public' THEN cs.views ELSE 0 END) as total_views,
+      SUM(CASE WHEN cs.visibility = 'public' THEN cs.likes ELSE 0 END) as total_likes,
       AVG(cr.cpm) as average_cpm,
       SUM(cr.total_paid) as total_paid_out
     FROM companies c
@@ -88,11 +89,11 @@ async function handleGetAnalytics(req: any, res: any) {
       u.username,
       u.display_name,
       COUNT(cs.id) as submissions,
-      COUNT(CASE WHEN cs.status = 'approved' THEN 1 END) as approved_content,
-      SUM(cs.views) as total_views,
-      SUM(cs.likes) as total_likes,
+      COUNT(CASE WHEN cs.status = 'approved' AND cs.visibility = 'public' THEN 1 END) as approved_content,
+      SUM(CASE WHEN cs.visibility = 'public' THEN cs.views ELSE 0 END) as total_views,
+      SUM(CASE WHEN cs.visibility = 'public' THEN cs.likes ELSE 0 END) as total_likes,
       ROUND(
-        (COUNT(CASE WHEN cs.status = 'approved' THEN 1 END)::DECIMAL / NULLIF(COUNT(cs.id), 0)) * 100, 
+        (COUNT(CASE WHEN cs.status = 'approved' AND cs.visibility = 'public' THEN 1 END)::DECIMAL / NULLIF(COUNT(cs.id), 0)) * 100, 
         2
       ) as approval_rate
     FROM users u
@@ -105,7 +106,7 @@ async function handleGetAnalytics(req: any, res: any) {
 
   const contributorsResult = await query(contributorsQuery, [])
 
-  // Get recent activity
+  // Get recent activity (only public content for public feeds)
   const activityQuery = `
     SELECT 
       cs.id,
@@ -120,7 +121,7 @@ async function handleGetAnalytics(req: any, res: any) {
     FROM content_submissions cs
     LEFT JOIN users u ON cs.user_id = u.id
     LEFT JOIN content_rewards cr ON cs.content_reward_id = cr.id
-    WHERE cr.company_id = $1
+    WHERE cr.company_id = $1 AND cs.visibility = 'public'
     ORDER BY cs.submission_date DESC
     LIMIT 20
   `

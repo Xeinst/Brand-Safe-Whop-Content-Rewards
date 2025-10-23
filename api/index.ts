@@ -29,6 +29,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (pathname.startsWith('/api/youtube-meta')) {
     const youtubeHandler = await import('./youtube-meta')
     return youtubeHandler.default(req, res)
+  } else if (pathname.startsWith('/api/admin/review-queue')) {
+    const reviewQueueHandler = await import('./admin/review-queue')
+    return reviewQueueHandler.default(req, res)
+  } else if (pathname.includes('/api/admin/submissions/') && pathname.includes('/approve')) {
+    const approveHandler = await import('./admin/submissions/[id]/approve')
+    return approveHandler.default(req, res)
+  } else if (pathname.includes('/api/admin/submissions/') && pathname.includes('/reject')) {
+    const rejectHandler = await import('./admin/submissions/[id]/reject')
+    return rejectHandler.default(req, res)
+  } else if (pathname.startsWith('/api/events/view')) {
+    const viewHandler = await import('./events/view')
+    return viewHandler.default(req, res)
+  } else if (pathname.startsWith('/api/secure-content')) {
+    const secureContentHandler = await import('./secure-content')
+    return secureContentHandler.default(req, res)
   } else {
     res.status(404).json({ error: 'API endpoint not found' })
   }

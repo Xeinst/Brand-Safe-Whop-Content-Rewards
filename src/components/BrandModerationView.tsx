@@ -32,7 +32,7 @@ export function BrandModerationView() {
 
   const filteredSubmissions = submissions.filter(submission => {
     if (filter === 'all') return true
-    if (filter === 'pending') return submission.status === 'pending_approval'
+    if (filter === 'pending') return submission.status === 'pending_review' || submission.status === 'flagged'
     if (filter === 'approved') return submission.status === 'approved'
     if (filter === 'rejected') return submission.status === 'rejected'
     return true
@@ -74,8 +74,10 @@ export function BrandModerationView() {
         return <CheckCircle className="w-5 h-5 text-green-500" />
       case 'rejected':
         return <XCircle className="w-5 h-5 text-red-500" />
-      case 'pending_approval':
+      case 'pending_review':
         return <Clock className="w-5 h-5 text-yellow-500" />
+      case 'flagged':
+        return <XCircle className="w-5 h-5 text-orange-500" />
       default:
         return <Clock className="w-5 h-5 text-gray-500" />
     }
@@ -87,8 +89,10 @@ export function BrandModerationView() {
         return 'bg-green-900/20 text-green-400 border-green-500'
       case 'rejected':
         return 'bg-red-900/20 text-red-400 border-red-500'
-      case 'pending_approval':
+      case 'pending_review':
         return 'bg-yellow-900/20 text-yellow-400 border-yellow-500'
+      case 'flagged':
+        return 'bg-orange-900/20 text-orange-400 border-orange-500'
       default:
         return 'bg-gray-900/20 text-gray-400 border-gray-500'
     }
@@ -129,7 +133,7 @@ export function BrandModerationView() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             {[
-              { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'pending_approval').length },
+              { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'pending_review' || s.status === 'flagged').length },
               { key: 'approved', label: 'Approved', count: submissions.filter(s => s.status === 'approved').length },
               { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length },
               { key: 'all', label: 'All', count: submissions.length }
@@ -247,7 +251,7 @@ export function BrandModerationView() {
                       </div>
                     </div>
                     
-                    {selectedSubmission.status === 'pending_approval' && (
+                    {selectedSubmission.status === 'pending_review' && (
                       <div className="flex space-x-3 pt-4">
                         <button
                           onClick={() => handleApprove(selectedSubmission)}
