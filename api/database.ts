@@ -5,9 +5,18 @@ let pool: Pool | null = null
 
 export function getDatabase() {
   if (!pool) {
+    const connectionString = process.env.DATABASE_URL
+    
+    if (!connectionString) {
+      throw new Error('DATABASE_URL environment variable is not set')
+    }
+
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
     })
   }
   return pool

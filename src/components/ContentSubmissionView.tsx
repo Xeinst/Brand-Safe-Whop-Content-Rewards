@@ -39,7 +39,23 @@ export function ContentSubmissionView() {
         }
       } catch (error) {
         console.error('Error loading rewards:', error)
-        setActiveRewards([])
+        // Fallback to mock data for development
+        const mockRewards = [
+          {
+            id: 'demo-reward-1',
+            name: 'Make videos different coaching businesses you can start',
+            description: 'Create content about coaching business opportunities',
+            cpm: 4.00,
+            status: 'active' as const,
+            totalViews: 0,
+            totalPaid: 0,
+            approvedSubmissions: 0,
+            totalSubmissions: 0,
+            effectiveCPM: 4.00
+          }
+        ]
+        setActiveRewards(mockRewards)
+        setFormData(prev => ({ ...prev, contentRewardId: mockRewards[0].id }))
       } finally {
         setLoading(false)
       }
@@ -62,29 +78,25 @@ export function ContentSubmissionView() {
         throw new Error('Invalid video URL')
       }
 
-      // Create submission
+      // Create submission using SDK
       const submission = {
-        user_id: sdk.user?.id || 'demo-user',
-        content_reward_id: formData.contentRewardId,
-        title: formData.title,
-        description: formData.description,
-        private_video_link: formData.videoUrl,
-        public_video_link: null,
-        thumbnail_url: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-        platform: formData.platform
-      }
-
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+        user: sdk.user?.id || 'demo-user',
+        content: {
+          title: formData.title,
+          privateVideoLink: formData.videoUrl,
+          publicVideoLink: null,
+          thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          platform: formData.platform
         },
-        body: JSON.stringify(submission)
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to submit content')
+        status: 'pending_approval' as const,
+        paid: false,
+        views: 0,
+        likes: 0,
+        submissionDate: new Date(),
+        publishedDate: null
       }
+
+      await sdk.createSubmission(submission)
 
       setSubmissionStatus('success')
       setFormData({

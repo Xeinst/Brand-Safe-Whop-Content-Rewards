@@ -1,5 +1,6 @@
-// Whop SDK implementation for brand-safe content approval app
-import React, { createContext, useContext } from 'react'
+// Real Whop SDK implementation for brand-safe content approval app
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { WhopApp, WhopSDK as WhopSDKType } from '@whop-apps/sdk'
 
 export interface WhopUser {
   id: string
@@ -98,189 +99,54 @@ export interface WhopSDK {
   isOwner(): boolean
   isMember(): boolean
   hasPermission(permission: string): boolean
-  getMemberStatistics(): Promise<MemberStatistics>
-  exportMemberStats(options: ExportOptions): Promise<Blob>
   getContentRewards(): Promise<ContentReward[]>
-  getSubmissions(): Promise<Submission[]>
-  createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward>
-  updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward>
-  approveSubmission(id: string): Promise<void>
-  rejectSubmission(id: string, reason: string): Promise<void>
+  getSubmissions(filters?: { status?: string; user_id?: string }): Promise<Submission[]>
+  createSubmission(submission: Partial<Submission>): Promise<Submission>
+  approveSubmission(submissionId: string): Promise<void>
+  rejectSubmission(submissionId: string, reason: string): Promise<void>
+  getMemberStatistics(): Promise<MemberStatistics>
+  exportData(options: ExportOptions): Promise<Blob>
+  syncWithWhop(): Promise<void>
 }
 
-export class WhopSDKWrapper implements WhopSDK {
-  user: WhopUser | null = null
-  company: WhopCompany | null = null
-  private isWhopMemberFlag: boolean = true // Simulate Whop membership
-  private whopAppId: string | null = null
-  private whopAppSecret: string | null = null
+// Real Whop SDK Implementation
+export class RealWhopSDK implements WhopSDK {
+  public user: WhopUser | null = null
+  public company: WhopCompany | null = null
+  private whopSDK: WhopSDKType | null = null
 
   async init(): Promise<void> {
     try {
-      // Check if we're in browser environment
-      if (typeof window !== 'undefined') {
-        // Safely detect iframe and Whop host without cross-origin access
-        const isIframe = (() => {
-          try {
-            return window.self !== window.top
-          } catch (_e) {
-            // Cross-origin access throws; if so, we are in an iframe
-            return true
-          }
-        })()
-
-        const isWhopHost = (() => {
-          try {
-            return document.referrer.includes('whop.com') ||
-                   window.location.hostname.includes('whop.com')
-          } catch (_e) {
-            return false
-          }
-        })()
-
-        if (isIframe || isWhopHost) {
-          // We're in Whop, try to use real Whop SDK (with internal fallbacks)
-          await this.initializeRealWhopSDK()
-        } else {
-          // Local/dev usage
-          await this.initializeMockWhopSDK()
-        }
-      } else {
-        // In server environment, get credentials from environment
-        this.whopAppId = process.env.WHOP_APP_ID || null
-        this.whopAppSecret = process.env.WHOP_APP_SECRET || null
-        
-        // In production, this would initialize the actual Whop SDK
-        if (this.whopAppId && this.whopAppSecret) {
-          // Real Whop SDK initialization would go here
-          await this.initializeRealWhopSDK()
-        } else {
-          // Fallback to mock data for development
-          await this.initializeMockWhopSDK()
-        }
-      }
-      
-    } catch (error) {
-      console.error('Failed to initialize Whop SDK:', error)
-      // Fallback to mock data
-      await this.initializeMockWhopSDK()
-    }
-  }
-
-  private async initializeRealWhopSDK(): Promise<void> {
-    try {
-      // In Whop iframe, try to get user data from URL parameters or postMessage
-      const urlParams = new URLSearchParams(window.location.search)
-      const userId = urlParams.get('user_id') || 'whop-user-1'
-      const userRole = urlParams.get('user_role') || 'member'
-      const isOwner = urlParams.get('is_owner') === 'true' || userRole === 'owner' || userRole === 'admin'
-      
-      // Try to get real permissions from Whop context
-      const whopPermissions = urlParams.get('permissions')?.split(',') || []
-      const hasAdminPerms = whopPermissions.includes('admin') || whopPermissions.includes('member:stats:export')
-      
-      // Create user data based on Whop context
-      this.user = {
-        id: userId,
-        username: urlParams.get('username') || 'whop_user',
-        email: urlParams.get('email') || 'user@example.com',
-        avatar: urlParams.get('avatar') || 'https://via.placeholder.com/40',
-        display_name: urlParams.get('display_name') || 'Whop User',
-        role: (isOwner || hasAdminPerms) ? 'owner' : 'member',
-        permissions: whopPermissions.length > 0 
-          ? whopPermissions 
-          : (isOwner || hasAdminPerms)
-            ? ['admin', 'member:stats:export', 'read_content', 'write_content', 'read_analytics']
-            : ['read_content', 'write_content', 'read_analytics']
-      }
-
-      // Create company data
-      this.company = {
-        id: urlParams.get('company_id') || 'whop-company-1',
-        name: urlParams.get('company_name') || 'Whop Community',
-        description: 'Brand-safe content rewards community'
-      }
-
-      this.isWhopMemberFlag = true
-      this.determineUserRole()
-
-      // Listen for Whop postMessage events
-      this.setupWhopMessageListener()
-      
-      // Additionally, attempt background sync to our API/Whop API for real data
-      // This won't block rendering; it will enrich user/company when available
-      this.syncWithWhop().catch(err => {
-        console.warn('Background sync with Whop failed:', err)
+      // Initialize the real Whop SDK
+      this.whopSDK = new WhopSDKType({
+        appId: import.meta.env.VITE_WHOP_APP_ID,
+        appSecret: import.meta.env.VITE_WHOP_APP_SECRET,
+        environment: import.meta.env.VITE_WHOP_APP_ENV || 'development'
       })
+
+      await this.whopSDK.init()
+      
+      // Get user and company data from the real SDK
+      this.user = await this.getUserFromWhop()
+      this.company = await this.getCompanyFromWhop()
+      
     } catch (error) {
       console.error('Failed to initialize real Whop SDK:', error)
-      // Fallback to mock data
-      await this.initializeMockWhopSDK()
+      // Fallback to mock data for development
+      await this.initializeMockData()
     }
-  }
-
-  private async initializeMockWhopSDK(): Promise<void> {
-    // Mock initialization for development
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    this.user = {
-      id: 'whop-user-1',
-      username: 'whop_user',
-      email: 'user@example.com',
-      avatar: 'https://via.placeholder.com/40',
-      display_name: 'Whop User',
-      role: 'member',
-      permissions: [
-        'read_content',
-        'write_content', 
-        'read_analytics'
-      ]
-    }
-    
-    this.company = {
-      id: 'whop-company-1',
-      name: 'Whop Community',
-      description: 'Brand-safe content rewards community'
-    }
-    
-    this.isWhopMemberFlag = true
-    this.determineUserRole()
-  }
-
-  private determineUserRole(): void {
-    if (!this.user) return
-    
-    // For Whop integration, check if user has owner permissions
-    // In a real Whop app, this would check actual Whop permissions
-    if (this.user.permissions.includes('admin') || this.user.permissions.includes('member:stats:export')) {
-      this.user.role = 'owner'
-    } 
-    // Default to member for all other users (including regular Whop members)
-    else {
-      this.user.role = 'member'
-    }
-  }
-
-  // Method to simulate different Whop permission scenarios for testing
-  public simulateWhopPermissions(permissions: string[]): void {
-    if (!this.user) return
-    
-    this.user.permissions = permissions
-    this.determineUserRole()
   }
 
   isAuthenticated(): boolean {
-    return true // Mock authentication
+    return this.whopSDK?.isAuthenticated() || false
   }
 
   isWhopMember(): boolean {
-    // In a real implementation, this would check if the user is a member of the Whop community
-    return this.isWhopMemberFlag
+    return this.whopSDK?.isWhopMember() || false
   }
 
   getUserRole(): 'member' | 'owner' | 'admin' | null {
-    if (!this.user) return null
-    return this.user.role
+    return this.user?.role || null
   }
 
   isOwner(): boolean {
@@ -292,742 +158,252 @@ export class WhopSDKWrapper implements WhopSDK {
   }
 
   hasPermission(permission: string): boolean {
-    if (!this.user) return false
-    return this.user.permissions.includes(permission)
+    return this.user?.permissions?.includes(permission) || false
   }
 
-  async getMemberStatistics(): Promise<MemberStatistics> {
-    // Mock member statistics data
-    return {
-      totalMembers: 2847,
-      activeMembers: 1923,
-      newMembers: 156,
-      memberEngagement: 78.5,
-      topContributors: [
-        {
-          id: 'user-1',
-          username: 'alice_creator',
-          submissions: 45,
-          approvedContent: 38,
-          totalEarnings: 1250.50,
-          engagementScore: 92.3
-        },
-        {
-          id: 'user-2',
-          username: 'bob_photographer',
-          submissions: 32,
-          approvedContent: 28,
-          totalEarnings: 890.25,
-          engagementScore: 88.7
-        },
-        {
-          id: 'user-3',
-          username: 'charlie_educator',
-          submissions: 28,
-          approvedContent: 25,
-          totalEarnings: 675.80,
-          engagementScore: 85.1
-        }
-      ],
-      contentStats: {
-        totalSubmissions: 156,
-        approvedContent: 89,
-        rejectedContent: 23,
-        pendingReview: 44
-      },
-      rewardStats: {
-        totalRewardsGiven: 15420,
-        averageReward: 2.15,
-        topEarners: [
-          {
-            id: 'user-1',
-            username: 'alice_creator',
-            totalEarnings: 1250.50
-          },
-          {
-            id: 'user-2',
-            username: 'bob_photographer',
-            totalEarnings: 890.25
-          },
-          {
-            id: 'user-3',
-            username: 'charlie_educator',
-            totalEarnings: 675.80
-          }
-        ]
+  private async getUserFromWhop(): Promise<WhopUser | null> {
+    if (!this.whopSDK) return null
+    
+    try {
+      const whopUser = await this.whopSDK.getUser()
+      return {
+        id: whopUser.id,
+        username: whopUser.username,
+        email: whopUser.email,
+        avatar: whopUser.avatar,
+        display_name: whopUser.display_name,
+        role: whopUser.role as 'member' | 'owner' | 'admin',
+        permissions: whopUser.permissions || []
       }
+    } catch (error) {
+      console.error('Error fetching user from Whop:', error)
+      return null
     }
   }
 
-  async exportMemberStats(options: ExportOptions): Promise<Blob> {
-    const stats = await this.getMemberStatistics()
+  private async getCompanyFromWhop(): Promise<WhopCompany | null> {
+    if (!this.whopSDK) return null
     
-    if (options.format === 'csv') {
-      const csvContent = this.generateCSV(stats, options)
-      return new Blob([csvContent], { type: 'text/csv' })
-    } else {
-      // For Excel format, we would use a library like xlsx
-      // For now, return CSV as fallback
-      const csvContent = this.generateCSV(stats, options)
-      return new Blob([csvContent], { type: 'text/csv' })
+    try {
+      const whopCompany = await this.whopSDK.getCompany()
+      return {
+        id: whopCompany.id,
+        name: whopCompany.name,
+        description: whopCompany.description,
+        logo: whopCompany.logo
+      }
+    } catch (error) {
+      console.error('Error fetching company from Whop:', error)
+      return null
     }
   }
 
-  private generateCSV(stats: MemberStatistics, options: ExportOptions): string {
-    const headers = ['Metric', 'Value', 'Date Range']
-    const rows = [
-      ['Total Members', stats.totalMembers.toString(), `${options.dateRange.start.toDateString()} - ${options.dateRange.end.toDateString()}`],
-      ['Active Members', stats.activeMembers.toString(), ''],
-      ['New Members', stats.newMembers.toString(), ''],
-      ['Member Engagement', `${stats.memberEngagement}%`, ''],
-      ['Total Submissions', stats.contentStats.totalSubmissions.toString(), ''],
-      ['Approved Content', stats.contentStats.approvedContent.toString(), ''],
-      ['Rejected Content', stats.contentStats.rejectedContent.toString(), ''],
-      ['Pending Review', stats.contentStats.pendingReview.toString(), ''],
-      ['Total Rewards Given', stats.rewardStats.totalRewardsGiven.toString(), ''],
-      ['Average Reward', `$${stats.rewardStats.averageReward}`, '']
-    ]
+  private async initializeMockData(): Promise<void> {
+    // Fallback mock data for development
+    this.user = {
+      id: 'demo-user-1',
+      username: 'demo_user',
+      email: 'demo@example.com',
+      avatar: 'https://via.placeholder.com/40',
+      display_name: 'Demo User',
+      role: 'member',
+      permissions: ['read_content', 'write_content', 'read_analytics']
+    }
 
-    // Add top contributors
-    rows.push(['', '', ''])
-    rows.push(['Top Contributors', '', ''])
-    rows.push(['Username', 'Submissions', 'Approved', 'Earnings', 'Engagement Score'])
-    
-    stats.topContributors.forEach(contributor => {
-      rows.push([
-        contributor.username,
-        contributor.submissions.toString(),
-        contributor.approvedContent.toString(),
-        `$${contributor.totalEarnings}`,
-        `${contributor.engagementScore}%`
-      ])
-    })
-
-    return [headers, ...rows].map(row => row.join(',')).join('\n')
+    this.company = {
+      id: 'demo-company-1',
+      name: 'Demo Brand Community',
+      description: 'A sample community for testing brand-safe content approval',
+      logo: 'https://via.placeholder.com/100'
+    }
   }
 
   async getContentRewards(): Promise<ContentReward[]> {
     try {
-      // Try to fetch from API first
-      const response = await fetch('/api/content-rewards?company_id=whop-company-1')
-      if (!response.ok) {
-        throw new Error('Failed to fetch content rewards')
-      }
-      const data = await response.json()
-      // Transform database format to interface format
-      return data.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        cpm: item.cpm,
-        status: item.status,
-        totalViews: item.total_views,
-        totalPaid: item.total_paid,
-        approvedSubmissions: item.approved_submissions,
-        totalSubmissions: item.total_submissions,
-        effectiveCPM: item.effective_cpm
-      }))
+      const response = await fetch('/api/content-rewards')
+      if (!response.ok) throw new Error('Failed to fetch content rewards')
+      return await response.json()
     } catch (error) {
       console.error('Error fetching content rewards:', error)
-      // Fallback to mock data
-      return [
-        {
-          id: '1',
-          name: 'Make videos different coaching businesses you can start',
-          description: 'Create content about coaching business opportunities',
-          cpm: 4.00,
-          status: 'active',
-          totalViews: 0,
-          totalPaid: 0,
-          approvedSubmissions: 0,
-          totalSubmissions: 0,
-          effectiveCPM: 0
-        }
-      ]
+      return []
     }
   }
 
-  // Real Whop API integration methods
-  private async makeWhopAPIRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
-    if (!this.whopAppId || !this.whopAppSecret) {
-      throw new Error('Whop credentials not configured')
-    }
-
-    const url = `https://api.whop.com/api/v2/${endpoint}`
-    const headers = {
-      'Authorization': `Bearer ${this.whopAppSecret}`,
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers
-    })
-
-    if (!response.ok) {
-      throw new Error(`Whop API error: ${response.status} ${response.statusText}`)
-    }
-
-    return response.json()
-  }
-
-  // Get current user from Whop API
-  private async getCurrentUserFromWhop(): Promise<any> {
+  async getSubmissions(filters?: { status?: string; user_id?: string }): Promise<Submission[]> {
     try {
-      // Try to get user from Whop API
-      const response = await fetch('/api/whop/user', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-
-      if (response.ok) {
-        return await response.json()
-      }
-    } catch (error) {
-      console.error('Error fetching user from Whop:', error)
-    }
-    return null
-  }
-
-  // Get current company from Whop API
-  private async getCurrentCompanyFromWhop(): Promise<any> {
-    try {
-      // Try to get company from Whop API
-      const response = await fetch('/api/whop/company', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-
-      if (response.ok) {
-        return await response.json()
-      }
-    } catch (error) {
-      console.error('Error fetching company from Whop:', error)
-    }
-    return null
-  }
-
-  // Enhanced methods for real Whop integration
-  async getWhopUser(): Promise<WhopUser | null> {
-    try {
-      // First try to get user from our API endpoint
-      const userData = await this.getCurrentUserFromWhop()
-      if (userData) {
-        return {
-          id: userData.id,
-          username: userData.username,
-          email: userData.email,
-          avatar: userData.avatar_url,
-          display_name: userData.display_name,
-          role: userData.role || 'member',
-          permissions: userData.permissions || ['read_content', 'write_content', 'read_analytics']
-        }
-      }
-
-      // Fallback to direct Whop API call
-      const whopUserData = await this.makeWhopAPIRequest('users/me')
-      return {
-        id: whopUserData.id,
-        username: whopUserData.username,
-        email: whopUserData.email,
-        avatar: whopUserData.avatar_url,
-        display_name: whopUserData.display_name,
-        role: whopUserData.role || 'member',
-        permissions: whopUserData.permissions || ['read_content', 'write_content', 'read_analytics']
-      }
-    } catch (error) {
-      console.error('Error fetching Whop user:', error)
-      return null
-    }
-  }
-
-  async getWhopCompany(): Promise<WhopCompany | null> {
-    try {
-      // First try to get company from our API endpoint
-      const companyData = await this.getCurrentCompanyFromWhop()
-      if (companyData) {
-        return {
-          id: companyData.id,
-          name: companyData.name,
-          description: companyData.description,
-          logo: companyData.logo_url
-        }
-      }
-
-      // Fallback to direct Whop API call
-      const whopCompanyData = await this.makeWhopAPIRequest('companies/me')
-      return {
-        id: whopCompanyData.id,
-        name: whopCompanyData.name,
-        description: whopCompanyData.description,
-        logo: whopCompanyData.logo_url
-      }
-    } catch (error) {
-      console.error('Error fetching Whop company:', error)
-      return null
-    }
-  }
-
-  private setupWhopMessageListener(): void {
-    if (typeof window === 'undefined') return
-    
-    window.addEventListener('message', (event) => {
-      // Only accept messages from Whop domains
-      if (!event.origin.includes('whop.com')) return
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.user_id) params.append('user_id', filters.user_id)
       
-      try {
-        const data = event.data
-        if (data && data.type === 'whop-user-data') {
-          console.log('Received Whop user data:', data)
-          
-          // Update user with real Whop data
-          if (data.user) {
-            this.user = {
-              id: data.user.id || this.user?.id || 'whop-user-1',
-              username: data.user.username || this.user?.username || 'whop_user',
-              email: data.user.email || this.user?.email || 'user@example.com',
-              avatar: data.user.avatar || this.user?.avatar || 'https://via.placeholder.com/40',
-              display_name: data.user.display_name || this.user?.display_name || 'Whop User',
-              role: data.user.role || 'member',
-              permissions: data.user.permissions || ['read_content', 'write_content', 'read_analytics']
-            }
-            
-            this.determineUserRole()
-            console.log('Updated user from Whop:', this.user)
-          }
-        }
-      } catch (error) {
-        console.warn('Error processing Whop message:', error)
-      }
-    })
-  }
-
-  async syncWithWhop(): Promise<void> {
-    try {
-      // Sync user data from Whop
-      const whopUser = await this.getWhopUser()
-      if (whopUser) {
-        this.user = whopUser
-        this.determineUserRole()
-      }
-
-      // Sync company data from Whop
-      const whopCompany = await this.getWhopCompany()
-      if (whopCompany) {
-        this.company = whopCompany
-      }
-    } catch (error) {
-      console.error('Error syncing with Whop:', error)
-    }
-  }
-
-  async getSubmissions(): Promise<Submission[]> {
-    try {
-      const response = await fetch('/api/submissions?company_id=whop-company-1')
-      if (!response.ok) {
-        throw new Error('Failed to fetch submissions')
-      }
-      const data = await response.json()
-      // Transform database format to interface format
-      return data.map((item: any) => ({
-        id: item.id,
-        user: item.username || 'Unknown User',
-        status: item.status,
-        paid: item.paid,
-        views: item.views,
-        likes: item.likes,
-        submissionDate: new Date(item.submission_date),
-        publishedDate: item.published_date ? new Date(item.published_date) : null,
-        content: {
-          title: item.title,
-          privateVideoLink: item.private_video_link,
-          publicVideoLink: item.public_video_link,
-          thumbnail: item.thumbnail_url,
-          platform: item.platform
-        }
-      }))
+      const response = await fetch(`/api/submissions?${params}`)
+      if (!response.ok) throw new Error('Failed to fetch submissions')
+      return await response.json()
     } catch (error) {
       console.error('Error fetching submissions:', error)
-      // Fallback to mock data
-      return [
-        {
-          id: '1',
-          user: 'creator123',
-          status: 'pending_approval',
-          paid: false,
-          views: 0,
-          likes: 0,
-          submissionDate: new Date(),
-          publishedDate: null,
-          content: {
-            title: 'Sample Video Title',
-            privateVideoLink: 'https://youtube.com/watch?v=sample',
-            publicVideoLink: null,
-            thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
-            platform: 'youtube'
-          }
-        }
-      ]
+      return []
     }
   }
 
-  async createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward> {
-    // Mock implementation - in production, this would call the real Whop API
-    const newReward: ContentReward = {
-      ...reward,
-      id: Date.now().toString()
-    }
-    return newReward
-  }
-
-  async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
-    // Mock implementation - in production, this would call the real Whop API
-    return { ...updates, id } as ContentReward
-  }
-
-  async approveSubmission(id: string): Promise<void> {
+  async createSubmission(submission: Partial<Submission>): Promise<Submission> {
     try {
-      const response = await fetch(`/api/submissions?id=${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'approve',
-          approved_by: this.user?.id || 'whop-user-1'
-        })
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission)
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to approve submission')
-      }
-      
-      console.log(`Submission ${id} approved successfully`)
+      if (!response.ok) throw new Error('Failed to create submission')
+      return await response.json()
+    } catch (error) {
+      console.error('Error creating submission:', error)
+      throw error
+    }
+  }
+
+  async approveSubmission(submissionId: string): Promise<void> {
+    try {
+      const response = await fetch(`/api/submissions?id=${submissionId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve', approved_by: this.user?.id })
+      })
+      if (!response.ok) throw new Error('Failed to approve submission')
     } catch (error) {
       console.error('Error approving submission:', error)
       throw error
     }
   }
 
-  async rejectSubmission(id: string, reason: string): Promise<void> {
+  async rejectSubmission(submissionId: string, reason: string): Promise<void> {
     try {
-      const response = await fetch(`/api/submissions?id=${id}`, {
+      const response = await fetch(`/api/submissions?id=${submissionId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'reject',
-          reason: reason,
-          approved_by: this.user?.id || 'whop-user-1'
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', reason, approved_by: this.user?.id })
       })
-      
-      if (!response.ok) {
-        throw new Error('Failed to reject submission')
-      }
-      
-      console.log(`Submission ${id} rejected: ${reason}`)
+      if (!response.ok) throw new Error('Failed to reject submission')
     } catch (error) {
       console.error('Error rejecting submission:', error)
       throw error
     }
   }
-}
-
-// Mock SDK for development when official SDK is not available
-export class MockWhopSDK implements WhopSDK {
-  user: WhopUser | null = null
-  company: WhopCompany | null = null
-  private isWhopMemberFlag: boolean = true // Simulate Whop membership
-
-  async init(): Promise<void> {
-    // Mock initialization
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Simulate Whop SDK user data with permissions
-    // In production, this would come from the actual Whop SDK
-      this.user = {
-      id: 'whop-user-1',
-      username: 'whop_user',
-      email: 'user@example.com',
-        avatar: 'https://via.placeholder.com/40',
-      display_name: 'Whop User',
-      role: 'member', // Default to member for Whop users
-      permissions: [
-        'read_content',
-        'write_content', 
-        'read_analytics'
-      ]
-      }
-      
-      this.company = {
-      id: 'whop-company-1',
-      name: 'Whop Community',
-      description: 'Brand-safe content rewards community'
-    }
-    
-    this.isWhopMemberFlag = true
-    
-    // Determine role based on permissions
-    this.determineUserRole()
-  }
-
-  private determineUserRole(): void {
-    if (!this.user) return
-    
-    // Determine role based on Whop permissions
-    // Owners have admin permissions or member:stats:export permission
-    if (this.user.permissions.includes('admin') || this.user.permissions.includes('member:stats:export')) {
-      this.user.role = 'owner'
-    } 
-    // Members have basic content permissions
-    else if (this.user.permissions.includes('read_content') && this.user.permissions.includes('write_content')) {
-      this.user.role = 'member'
-    } 
-    // Default to member if permissions are unclear
-    else {
-      this.user.role = 'member'
-    }
-  }
-
-  // Method to simulate different Whop permission scenarios for testing
-  public simulateWhopPermissions(permissions: string[]): void {
-    if (!this.user) return
-    
-    this.user.permissions = permissions
-    this.determineUserRole()
-  }
-
-  isAuthenticated(): boolean {
-    return true // Mock authentication
-  }
-
-  isWhopMember(): boolean {
-    // In a real implementation, this would check if the user is a member of the Whop community
-    return this.isWhopMemberFlag
-  }
-
-  getUserRole(): 'member' | 'owner' | 'admin' | null {
-    if (!this.user) return null
-    return this.user.role
-  }
-
-  isOwner(): boolean {
-    return this.user?.role === 'owner' || this.user?.role === 'admin'
-  }
-
-  isMember(): boolean {
-    return this.user?.role === 'member'
-  }
-
-  hasPermission(permission: string): boolean {
-    if (!this.user) return false
-    return this.user.permissions.includes(permission)
-  }
 
   async getMemberStatistics(): Promise<MemberStatistics> {
-    // Mock member statistics data
-    return {
-      totalMembers: 2847,
-      activeMembers: 1923,
-      newMembers: 156,
-      memberEngagement: 78.5,
-      topContributors: [
-        {
-          id: 'user-1',
-          username: 'alice_creator',
-          submissions: 45,
-          approvedContent: 38,
-          totalEarnings: 1250.50,
-          engagementScore: 92.3
+    try {
+      const response = await fetch('/api/analytics')
+      if (!response.ok) throw new Error('Failed to fetch member statistics')
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching member statistics:', error)
+      return {
+        totalMembers: 0,
+        activeMembers: 0,
+        newMembers: 0,
+        memberEngagement: 0,
+        topContributors: [],
+        contentStats: {
+          totalSubmissions: 0,
+          approvedContent: 0,
+          rejectedContent: 0,
+          pendingReview: 0
         },
-        {
-          id: 'user-2',
-          username: 'bob_photographer',
-          submissions: 32,
-          approvedContent: 28,
-          totalEarnings: 890.25,
-          engagementScore: 88.7
-        },
-        {
-          id: 'user-3',
-          username: 'charlie_educator',
-          submissions: 28,
-          approvedContent: 25,
-          totalEarnings: 675.80,
-          engagementScore: 85.1
-        }
-      ],
-      contentStats: {
-        totalSubmissions: 156,
-        approvedContent: 89,
-        rejectedContent: 23,
-        pendingReview: 44
-      },
-      rewardStats: {
-        totalRewardsGiven: 15420,
-        averageReward: 2.15,
-        topEarners: [
-          {
-            id: 'user-1',
-            username: 'alice_creator',
-            totalEarnings: 1250.50
-          },
-          {
-            id: 'user-2',
-            username: 'bob_photographer',
-            totalEarnings: 890.25
-          },
-          {
-            id: 'user-3',
-            username: 'charlie_educator',
-            totalEarnings: 675.80
-          }
-        ]
-      }
-    }
-  }
-
-  async exportMemberStats(options: ExportOptions): Promise<Blob> {
-    const stats = await this.getMemberStatistics()
-    
-    if (options.format === 'csv') {
-      const csvContent = this.generateCSV(stats, options)
-      return new Blob([csvContent], { type: 'text/csv' })
-    } else {
-      // For Excel format, we would use a library like xlsx
-      // For now, return CSV as fallback
-      const csvContent = this.generateCSV(stats, options)
-      return new Blob([csvContent], { type: 'text/csv' })
-    }
-  }
-
-  private generateCSV(stats: MemberStatistics, options: ExportOptions): string {
-    const headers = ['Metric', 'Value', 'Date Range']
-    const rows = [
-      ['Total Members', stats.totalMembers.toString(), `${options.dateRange.start.toDateString()} - ${options.dateRange.end.toDateString()}`],
-      ['Active Members', stats.activeMembers.toString(), ''],
-      ['New Members', stats.newMembers.toString(), ''],
-      ['Member Engagement', `${stats.memberEngagement}%`, ''],
-      ['Total Submissions', stats.contentStats.totalSubmissions.toString(), ''],
-      ['Approved Content', stats.contentStats.approvedContent.toString(), ''],
-      ['Rejected Content', stats.contentStats.rejectedContent.toString(), ''],
-      ['Pending Review', stats.contentStats.pendingReview.toString(), ''],
-      ['Total Rewards Given', stats.rewardStats.totalRewardsGiven.toString(), ''],
-      ['Average Reward', `$${stats.rewardStats.averageReward}`, '']
-    ]
-
-    // Add top contributors
-    rows.push(['', '', ''])
-    rows.push(['Top Contributors', '', ''])
-    rows.push(['Username', 'Submissions', 'Approved', 'Earnings', 'Engagement Score'])
-    
-    stats.topContributors.forEach(contributor => {
-      rows.push([
-        contributor.username,
-        contributor.submissions.toString(),
-        contributor.approvedContent.toString(),
-        `$${contributor.totalEarnings}`,
-        `${contributor.engagementScore}%`
-      ])
-    })
-
-    return [headers, ...rows].map(row => row.join(',')).join('\n')
-  }
-
-  async getContentRewards(): Promise<ContentReward[]> {
-    // Mock implementation for development
-    return [
-      {
-        id: '1',
-        name: 'Make videos different coaching businesses you can start',
-        description: 'Create content about coaching business opportunities',
-        cpm: 4.00,
-        status: 'active',
-        totalViews: 0,
-        totalPaid: 0,
-        approvedSubmissions: 0,
-        totalSubmissions: 0,
-        effectiveCPM: 0
-      }
-    ]
-  }
-
-  async getSubmissions(): Promise<Submission[]> {
-    // Mock implementation for development
-    return [
-      {
-        id: '1',
-        user: 'creator123',
-        status: 'pending_approval',
-        paid: false,
-        views: 0,
-        likes: 0,
-        submissionDate: new Date(),
-        publishedDate: null,
-        content: {
-          title: 'Sample Video Title',
-          privateVideoLink: 'https://youtube.com/watch?v=sample',
-          publicVideoLink: null,
-          thumbnail: 'https://img.youtube.com/vi/sample/maxresdefault.jpg',
-          platform: 'youtube'
+        rewardStats: {
+          totalRewardsGiven: 0,
+          averageReward: 0,
+          topEarners: []
         }
       }
-    ]
-  }
-
-  async createContentReward(reward: Omit<ContentReward, 'id'>): Promise<ContentReward> {
-    // Mock implementation for development
-    const newReward: ContentReward = {
-      ...reward,
-      id: Date.now().toString()
     }
-    return newReward
   }
 
-  async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
-    // Mock implementation for development
-    return { ...updates, id } as ContentReward
+  async exportData(options: ExportOptions): Promise<Blob> {
+    try {
+      const response = await fetch('/api/analytics/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options)
+      })
+      if (!response.ok) throw new Error('Failed to export data')
+      return await response.blob()
+    } catch (error) {
+      console.error('Error exporting data:', error)
+      throw error
+    }
   }
 
-  async approveSubmission(id: string): Promise<void> {
-    // Mock implementation for development
-    console.log(`Approving submission ${id}`)
-  }
-
-  async rejectSubmission(id: string, reason: string): Promise<void> {
-    // Mock implementation for development
-    console.log(`Rejecting submission ${id}: ${reason}`)
+  async syncWithWhop(): Promise<void> {
+    try {
+      // Sync user and company data with Whop
+      this.user = await this.getUserFromWhop()
+      this.company = await this.getCompanyFromWhop()
+    } catch (error) {
+      console.error('Error syncing with Whop:', error)
+      throw error
+    }
   }
 }
 
-// Context for React components
+// Context and Provider
+const WhopSDKContext = createContext<WhopSDK | null>(null)
 
-interface WhopContextType {
-  sdk: WhopSDK | null
-}
+export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
+  const [sdk, setSdk] = useState<WhopSDK | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-export const WhopContext = createContext<WhopContextType>({ sdk: null })
+  useEffect(() => {
+    const initSDK = async () => {
+      try {
+        const realSDK = new RealWhopSDK()
+        await realSDK.init()
+        setSdk(realSDK)
+      } catch (error) {
+        console.error('Failed to initialize Whop SDK:', error)
+        setError('Failed to initialize Whop SDK')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-export function useWhopSDK() {
-  const context = useContext(WhopContext)
-  if (!context.sdk) {
-    throw new Error('useWhopSDK must be used within a WhopApp provider')
+    initSDK()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <h1 className="text-2xl font-bold mb-2">Loading Brand Safe Content Rewards...</h1>
+          <p className="text-gray-300">Initializing Whop SDK...</p>
+        </div>
+      </div>
+    )
   }
-  return context.sdk
-}
 
-// Mock WhopApp component
-export function WhopApp({ sdk, children }: { sdk: WhopSDK; children: React.ReactNode }) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
+          <h1 className="text-2xl font-bold mb-4 text-whop-dragon-fire">Error</h1>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <WhopContext.Provider value={{ sdk }}>
+    <WhopSDKContext.Provider value={sdk}>
       {children}
-    </WhopContext.Provider>
+    </WhopSDKContext.Provider>
   )
 }
+
+export function useWhopSDK(): WhopSDK {
+  const sdk = useContext(WhopSDKContext)
+  if (!sdk) {
+    throw new Error('useWhopSDK must be used within a WhopSDKProvider')
+  }
+  return sdk
+}
+
+// Export the WhopApp component from the real SDK
+export { WhopApp } from '@whop-apps/sdk'

@@ -4,6 +4,15 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { pathname } = new URL(req.url || '', `http://${req.headers.host}`)
   
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+  
   // Route to appropriate API handler
   if (pathname.startsWith('/api/content-rewards')) {
     const contentRewardsHandler = await import('./content-rewards')
