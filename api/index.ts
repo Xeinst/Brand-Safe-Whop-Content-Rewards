@@ -44,6 +44,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (pathname.startsWith('/api/secure-content')) {
     const secureContentHandler = await import('./secure-content')
     return secureContentHandler.default(req, res)
+  } else if (pathname.startsWith('/api/admin/campaigns')) {
+    const campaignsHandler = await import('./admin/campaigns')
+    return campaignsHandler.default(req, res)
+  } else if (pathname.includes('/api/admin/campaigns/') && pathname.includes('/toggle')) {
+    const toggleHandler = await import('./admin/campaigns/[id]/toggle')
+    return toggleHandler.default(req, res)
+  } else if (pathname.startsWith('/api/me/submissions')) {
+    const mySubmissionsHandler = await import('./me/submissions')
+    return mySubmissionsHandler.default(req, res)
+  } else if (pathname.startsWith('/api/earnings/summary')) {
+    const earningsHandler = await import('./earnings/summary')
+    return earningsHandler.default(req, res)
+  } else if (pathname.startsWith('/api/payouts/run')) {
+    const runPayoutsHandler = await import('./payouts/run')
+    return runPayoutsHandler.default(req, res)
+  } else if (pathname.includes('/api/payouts/send/')) {
+    const sendPayoutHandler = await import('./payouts/send/[id]')
+    return sendPayoutHandler.default(req, res)
   } else {
     res.status(404).json({ error: 'API endpoint not found' })
   }

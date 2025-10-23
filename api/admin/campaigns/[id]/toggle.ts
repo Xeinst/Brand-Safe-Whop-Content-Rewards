@@ -1,12 +1,7 @@
-// API route for approving submissions
+// API route for toggling campaign active status
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from '../../../database'
 import { adminOnly } from '../../../../lib/whop-authz'
-import { z } from 'zod'
-
-const approveSubmissionSchema = z.object({
-  reviewNote: z.string().optional()
-})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req
@@ -26,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!id) {
-    return res.status(400).json({ error: 'Missing submission id' })
+    return res.status(400).json({ error: 'Missing campaign id' })
   }
 
   try {
@@ -37,30 +32,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin access required' })
     }
 
-    const body = approveSubmissionSchema.parse(req.body)
-
-    // Approve the submission: set status=APPROVED, visibility=PUBLIC, approvedAt=now()
+    // Toggle the active status
     const result = await query(`
-      UPDATE content_submissions 
-      SET 
-        status = 'approved',
-        visibility = 'public',
-        reviewed_by = $1,
-        approved_at = NOW(),
-        rejected_at = NULL,
-        review_note = $2,
-        updated_at = NOW()
-      WHERE id = $3
+      UPDATE campaigns 
+      SET active = NOT active, updated_at = NOW()
+      WHERE id = $1
       RETURNING *
-    `, [user.id, body.reviewNote, id])
+    `, [id])
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Submission not found' })
+      return res.status(404).json({ error: 'Campaign not found' })
     }
 
     return res.json(result.rows[0])
   } catch (error) {
-    console.error('Approve submission API error:', error)
+    console.error('Campaign toggle API error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

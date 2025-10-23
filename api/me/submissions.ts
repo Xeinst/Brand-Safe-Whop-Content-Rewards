@@ -1,7 +1,6 @@
-// API route for admin review queue
+// API route for member's own submissions
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from '../database'
-import { adminOnly } from '../../lib/whop-authz'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req
@@ -21,31 +20,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Mock user - replace with actual auth
-    const user = { id: 'user-123', role: 'owner', companyId: 'company-123' }
-    
-    if (!await adminOnly(user)) {
-      return res.status(403).json({ error: 'Admin access required' })
-    }
+    const userId = 'user-123'
 
-    // Get submissions that need review (PENDING_REVIEW or FLAGGED)
     const result = await query(`
       SELECT 
         cs.*,
-        u.username,
-        u.display_name,
-        u.avatar_url,
         c.name as campaign_name,
         c.cpm_cents
       FROM content_submissions cs
-      LEFT JOIN users u ON cs.creator_id = u.id
       LEFT JOIN campaigns c ON cs.campaign_id = c.id
-      WHERE cs.status IN ('pending_review', 'flagged')
-      ORDER BY cs.created_at ASC
-    `)
+      WHERE cs.creator_id = $1
+      ORDER BY cs.created_at DESC
+    `, [userId])
 
     return res.json(result.rows)
   } catch (error) {
-    console.error('Review queue API error:', error)
+    console.error('My submissions API error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

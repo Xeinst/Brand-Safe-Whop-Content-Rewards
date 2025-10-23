@@ -1,6 +1,12 @@
 // API route for rejecting submissions
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from '../../../database'
+import { adminOnly } from '../../../../lib/whop-authz'
+import { z } from 'zod'
+
+const rejectSubmissionSchema = z.object({
+  note: z.string().min(1)
+})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req
@@ -24,21 +30,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { reviewed_by, note } = req.body
-
-    if (!reviewed_by) {
-      return res.status(400).json({ error: 'Missing reviewed_by field' })
+    // Mock user - replace with actual auth
+    const user = { id: 'user-123', role: 'owner', companyId: 'company-123' }
+    
+    if (!await adminOnly(user)) {
+      return res.status(403).json({ error: 'Admin access required' })
     }
 
-    if (!note) {
-      return res.status(400).json({ error: 'Missing rejection note' })
-    }
+    const body = rejectSubmissionSchema.parse(req.body)
 
     // Reject the submission: set status=REJECTED, visibility=PRIVATE, rejectedAt=now()
-    const result = await query(
-      'UPDATE content_submissions SET status = $1, visibility = $2, reviewed_by = $3, rejected_at = NOW(), approved_at = NULL, review_note = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
-      ['rejected', 'private', reviewed_by, note, id]
-    )
+    const result = await query(`
+      UPDATE content_submissions 
+      SET 
+        status = 'rejected',
+        visibility = 'private',
+        reviewed_by = $1,
+        rejected_at = NOW(),
+        approved_at = NULL,
+        review_note = $2,
+        updated_at = NOW()
+      WHERE id = $3
+      RETURNING *
+    `, [user.id, body.note, id])
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Submission not found' })

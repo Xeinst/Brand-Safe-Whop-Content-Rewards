@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Check if user has permission to access this content
     const submission = await query(
-      'SELECT cs.*, u.username, u.display_name FROM content_submissions cs LEFT JOIN users u ON cs.user_id = u.id WHERE cs.id = $1',
+      'SELECT cs.*, u.username, u.display_name FROM content_submissions cs LEFT JOIN users u ON cs.creator_id = u.id WHERE cs.id = $1',
       [submissionId]
     )
 
@@ -48,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Private content - check if user is the creator or admin
-    if (userId && (sub.user_id === userId || sub.username === userId)) {
+    if (userId && (sub.creator_id === userId || sub.username === userId)) {
       // Creator can access their own content
       return res.json({
         url: sub.private_video_link,

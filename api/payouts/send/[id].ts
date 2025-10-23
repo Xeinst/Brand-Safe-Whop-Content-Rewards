@@ -1,12 +1,7 @@
-// API route for approving submissions
+// API route for sending payouts
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from '../../../database'
 import { adminOnly } from '../../../../lib/whop-authz'
-import { z } from 'zod'
-
-const approveSubmissionSchema = z.object({
-  reviewNote: z.string().optional()
-})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req
@@ -26,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!id) {
-    return res.status(400).json({ error: 'Missing submission id' })
+    return res.status(400).json({ error: 'Missing payout id' })
   }
 
   try {
@@ -37,30 +32,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin access required' })
     }
 
-    const body = approveSubmissionSchema.parse(req.body)
+    // Get payout details
+    const payout = await query(`
+      SELECT p.*, u.username, u.display_name
+      FROM payouts p
+      LEFT JOIN users u ON p.creator_id = u.id
+      WHERE p.id = $1
+    `, [id])
 
-    // Approve the submission: set status=APPROVED, visibility=PUBLIC, approvedAt=now()
-    const result = await query(`
-      UPDATE content_submissions 
-      SET 
-        status = 'approved',
-        visibility = 'public',
-        reviewed_by = $1,
-        approved_at = NOW(),
-        rejected_at = NULL,
-        review_note = $2,
-        updated_at = NOW()
-      WHERE id = $3
-      RETURNING *
-    `, [user.id, body.reviewNote, id])
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Submission not found' })
+    if (payout.rows.length === 0) {
+      return res.status(404).json({ error: 'Payout not found' })
     }
 
-    return res.json(result.rows[0])
+    const payoutData = payout.rows[0]
+
+    if (payoutData.status !== 'pending') {
+      return res.status(400).json({ error: 'Payout is not in pending status' })
+    }
+
+    // Mock external payout processing
+    // In real implementation, this would call Whop API or other payment provider
+    const externalRef = `whop_payout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+    // Update payout status
+    const result = await query(`
+      UPDATE payouts 
+      SET 
+        status = 'sent',
+        external_ref = $1,
+        updated_at = NOW()
+      WHERE id = $2
+      RETURNING *
+    `, [externalRef, id])
+
+    return res.json({
+      payout: result.rows[0],
+      externalRef,
+      message: 'Payout sent successfully'
+    })
   } catch (error) {
-    console.error('Approve submission API error:', error)
+    console.error('Send payout API error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

@@ -1,13 +1,32 @@
-// API route for content submissions operations
+// API route for submission management
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from './database'
+import { adminOnly } from '../lib/whop-authz'
+import { z } from 'zod'
+
+// Validation schemas
+const createSubmissionSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().optional(),
+  storageKey: z.string().min(1),
+  thumbKey: z.string().optional(),
+  campaignId: z.string().uuid().optional()
+})
+
+const approveSubmissionSchema = z.object({
+  reviewNote: z.string().optional()
+})
+
+const rejectSubmissionSchema = z.object({
+  note: z.string().min(1)
+})
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req
 
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (method === 'OPTIONS') {
@@ -20,11 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleGetSubmissions(req, res)
       case 'POST':
         return await handleCreateSubmission(req, res)
-      case 'PUT':
-        return await handleUpdateSubmission(req, res)
       default:
-        res.setHeader('Allow', ['GET', 'POST', 'PUT'])
-        return res.status(405).json({ error: `Method ${method} not allowed` })
+        return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
     console.error('Submissions API error:', error)
@@ -32,23 +48,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function handleGetSubmissions(req: any, res: any) {
-  const { status, user_id, company_id, public_only } = req.query
+async function handleGetSubmissions(req: VercelRequest, res: VercelResponse) {
+  const { userId, status, public_only } = req.query
 
   let queryText = `
-    SELECT cs.*, u.username, u.display_name, cr.name as reward_name 
+    SELECT 
+      cs.*,
+      u.username,
+      u.display_name,
+      c.name as campaign_name
     FROM content_submissions cs 
-    LEFT JOIN users u ON cs.user_id = u.id 
-    LEFT JOIN content_rewards cr ON cs.content_reward_id = cr.id 
+    LEFT JOIN users u ON cs.creator_id = u.id 
+    LEFT JOIN campaigns c ON cs.campaign_id = c.id
     WHERE 1=1
   `
   const params: any[] = []
   let paramCount = 0
 
-  if (user_id) {
+  if (userId) {
     paramCount++
-    queryText += ` AND cs.user_id = $${paramCount}`
-    params.push(user_id)
+    queryText += ` AND cs.creator_id = $${paramCount}`
+    params.push(userId)
   }
 
   if (status) {
@@ -57,67 +77,41 @@ async function handleGetSubmissions(req: any, res: any) {
     params.push(status)
   }
 
-  if (company_id) {
-    paramCount++
-    queryText += ` AND cr.company_id = $${paramCount}`
-    params.push(company_id)
-  }
-
   // Filter by visibility for public queries
   if (public_only === 'true') {
-    paramCount++
     queryText += ` AND cs.status = 'approved' AND cs.visibility = 'public'`
   }
 
-  queryText += ' ORDER BY cs.submission_date DESC'
+  queryText += ' ORDER BY cs.created_at DESC'
 
   const result = await query(queryText, params)
   return res.json(result.rows)
 }
 
-async function handleCreateSubmission(req: any, res: any) {
-  const { user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform } = req.body
-
-  if (!user_id || !title || !private_video_link) {
-    return res.status(400).json({ error: 'Missing required fields' })
-  }
+async function handleCreateSubmission(req: VercelRequest, res: VercelResponse) {
+  const body = createSubmissionSchema.parse(req.body)
+  
+  // Mock user - replace with actual auth
+  const userId = 'user-123'
 
   // Force new submissions to PENDING_REVIEW and PRIVATE
-  const result = await query(
-    'INSERT INTO content_submissions (user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform, status, visibility) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-    [user_id, content_reward_id, title, description, private_video_link, public_video_link, thumbnail_url, platform || 'youtube', 'pending_review', 'private']
-  )
+  const result = await query(`
+    INSERT INTO content_submissions (
+      creator_id, campaign_id, storage_key, thumb_key, title, description, 
+      status, visibility, private_video_link
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `, [
+    userId,
+    body.campaignId,
+    body.storageKey,
+    body.thumbKey,
+    body.title,
+    body.description,
+    'pending_review',
+    'private',
+    body.storageKey // Using storage key as private link for now
+  ])
 
   return res.status(201).json(result.rows[0])
-}
-
-async function handleUpdateSubmission(req: any, res: any) {
-  const { id } = req.query
-  const { action, reason, approved_by, review_note } = req.body
-
-  if (!id) {
-    return res.status(400).json({ error: 'Missing submission id' })
-  }
-
-  let result
-
-  if (action === 'approve') {
-    result = await query(
-      'UPDATE content_submissions SET status = $1, visibility = $2, reviewed_by = $3, approved_at = NOW(), rejected_at = NULL, review_note = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
-      ['approved', 'public', approved_by, review_note, id]
-    )
-  } else if (action === 'reject') {
-    result = await query(
-      'UPDATE content_submissions SET status = $1, visibility = $2, reviewed_by = $3, rejected_at = NOW(), approved_at = NULL, review_note = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
-      ['rejected', 'private', approved_by, reason, id]
-    )
-  } else {
-    return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject"' })
-  }
-
-  if (result.rows.length === 0) {
-    return res.status(404).json({ error: 'Submission not found' })
-  }
-
-  return res.json(result.rows[0])
 }

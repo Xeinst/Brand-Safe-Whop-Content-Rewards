@@ -43,11 +43,38 @@ CREATE TABLE content_rewards (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Content Submissions table
+-- Campaigns table
+CREATE TABLE campaigns (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    advertiser_id VARCHAR(255) NOT NULL,
+    cpm_cents INTEGER NOT NULL,
+    budget_cents INTEGER DEFAULT 0,
+    start_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    end_at TIMESTAMP WITH TIME ZONE,
+    active BOOLEAN DEFAULT TRUE,
+    rules_id UUID REFERENCES rule_sets(id),
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Rule Sets table (for campaign rules)
+CREATE TABLE rule_sets (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    rules JSONB NOT NULL DEFAULT '{}',
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Content Submissions table (updated)
 CREATE TABLE content_submissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    content_reward_id UUID REFERENCES content_rewards(id) ON DELETE SET NULL,
+    creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    campaign_id UUID REFERENCES campaigns(id) ON DELETE SET NULL,
+    storage_key VARCHAR(500) NOT NULL,
+    thumb_key VARCHAR(500),
     title VARCHAR(500) NOT NULL,
     description TEXT,
     private_video_link TEXT NOT NULL,
@@ -70,6 +97,56 @@ CREATE TABLE content_submissions (
     likes BIGINT DEFAULT 0,
     submission_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     published_date TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Impression Aggregates table
+CREATE TABLE impression_aggregates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    submission_id UUID NOT NULL REFERENCES content_submissions(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    region VARCHAR(10) NOT NULL,
+    device VARCHAR(20) NOT NULL,
+    verified_views INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Payouts table
+CREATE TABLE payouts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    period_start TIMESTAMP WITH TIME ZONE NOT NULL,
+    period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+    amount_cents INTEGER NOT NULL,
+    breakdown_json JSONB NOT NULL DEFAULT '{}',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'sent', 'failed')),
+    external_ref VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Experiences table (for Whop experiences)
+CREATE TABLE experiences (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    whop_experience_id VARCHAR(255) NOT NULL UNIQUE,
+    company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Memberships table (for Whop memberships)
+CREATE TABLE memberships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    experience_id UUID NOT NULL REFERENCES experiences(id) ON DELETE CASCADE,
+    whop_membership_id VARCHAR(255) NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive', 'cancelled', 'expired')),
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -149,11 +226,25 @@ CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_companies_whop_company_id ON companies(whop_company_id);
 CREATE INDEX idx_content_rewards_company_id ON content_rewards(company_id);
 CREATE INDEX idx_content_rewards_status ON content_rewards(status);
-CREATE INDEX idx_content_submissions_user_id ON content_submissions(user_id);
+CREATE INDEX idx_campaigns_company_id ON campaigns(company_id);
+CREATE INDEX idx_campaigns_active ON campaigns(active);
+CREATE INDEX idx_campaigns_start_at ON campaigns(start_at);
+CREATE INDEX idx_content_submissions_creator_id ON content_submissions(creator_id);
+CREATE INDEX idx_content_submissions_campaign_id ON content_submissions(campaign_id);
 CREATE INDEX idx_content_submissions_status ON content_submissions(status);
 CREATE INDEX idx_content_submissions_visibility ON content_submissions(visibility);
 CREATE INDEX idx_content_submissions_submission_date ON content_submissions(submission_date);
 CREATE INDEX idx_content_submissions_approved_at ON content_submissions(approved_at);
+CREATE INDEX idx_impression_aggregates_submission_id ON impression_aggregates(submission_id);
+CREATE INDEX idx_impression_aggregates_date ON impression_aggregates(date);
+CREATE INDEX idx_payouts_creator_id ON payouts(creator_id);
+CREATE INDEX idx_payouts_period ON payouts(period_start, period_end);
+CREATE INDEX idx_payouts_status ON payouts(status);
+CREATE INDEX idx_experiences_company_id ON experiences(company_id);
+CREATE INDEX idx_experiences_whop_experience_id ON experiences(whop_experience_id);
+CREATE INDEX idx_memberships_user_id ON memberships(user_id);
+CREATE INDEX idx_memberships_experience_id ON memberships(experience_id);
+CREATE INDEX idx_memberships_status ON memberships(status);
 CREATE INDEX idx_member_statistics_company_id ON member_statistics(company_id);
 CREATE INDEX idx_member_statistics_recorded_at ON member_statistics(recorded_at);
 CREATE INDEX idx_top_contributors_company_id ON top_contributors(company_id);
