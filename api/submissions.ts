@@ -1,7 +1,5 @@
 // API route for submission management
-import { VercelRequest, VercelResponse } from '@vercel/node'
 import { query } from './database'
-import { adminOnly } from '../lib/whop-authz'
 import { z } from 'zod'
 
 // Validation schemas
@@ -13,15 +11,7 @@ const createSubmissionSchema = z.object({
   campaignId: z.string().uuid().optional()
 })
 
-const approveSubmissionSchema = z.object({
-  reviewNote: z.string().optional()
-})
-
-const rejectSubmissionSchema = z.object({
-  note: z.string().min(1)
-})
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   const { method } = req
 
   // Set CORS headers
@@ -48,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-async function handleGetSubmissions(req: VercelRequest, res: VercelResponse) {
+async function handleGetSubmissions(req: any, res: any) {
   const { userId, status, public_only } = req.query
 
   let queryText = `
@@ -88,7 +78,7 @@ async function handleGetSubmissions(req: VercelRequest, res: VercelResponse) {
   return res.json(result.rows)
 }
 
-async function handleCreateSubmission(req: VercelRequest, res: VercelResponse) {
+async function handleCreateSubmission(req: any, res: any) {
   const body = createSubmissionSchema.parse(req.body)
   
   // Mock user - replace with actual auth

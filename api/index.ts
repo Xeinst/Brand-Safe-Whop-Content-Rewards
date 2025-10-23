@@ -29,39 +29,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (pathname.startsWith('/api/youtube-meta')) {
     const youtubeHandler = await import('./youtube-meta')
     return youtubeHandler.default(req, res)
-  } else if (pathname.startsWith('/api/admin/review-queue')) {
-    const reviewQueueHandler = await import('./admin/review-queue')
-    return reviewQueueHandler.default(req, res)
-  } else if (pathname.includes('/api/admin/submissions/') && pathname.includes('/approve')) {
-    const approveHandler = await import('./admin/submissions/[id]/approve')
-    return approveHandler.default(req, res)
-  } else if (pathname.includes('/api/admin/submissions/') && pathname.includes('/reject')) {
-    const rejectHandler = await import('./admin/submissions/[id]/reject')
-    return rejectHandler.default(req, res)
   } else if (pathname.startsWith('/api/events/view')) {
     const viewHandler = await import('./events/view')
     return viewHandler.default(req, res)
   } else if (pathname.startsWith('/api/secure-content')) {
     const secureContentHandler = await import('./secure-content')
     return secureContentHandler.default(req, res)
-  } else if (pathname.startsWith('/api/admin/campaigns')) {
-    const campaignsHandler = await import('./admin/campaigns')
-    return campaignsHandler.default(req, res)
-  } else if (pathname.includes('/api/admin/campaigns/') && pathname.includes('/toggle')) {
-    const toggleHandler = await import('./admin/campaigns/[id]/toggle')
-    return toggleHandler.default(req, res)
-  } else if (pathname.startsWith('/api/me/submissions')) {
-    const mySubmissionsHandler = await import('./me/submissions')
-    return mySubmissionsHandler.default(req, res)
-  } else if (pathname.startsWith('/api/earnings/summary')) {
-    const earningsHandler = await import('./earnings/summary')
-    return earningsHandler.default(req, res)
-  } else if (pathname.startsWith('/api/payouts/run')) {
-    const runPayoutsHandler = await import('./payouts/run')
-    return runPayoutsHandler.default(req, res)
-  } else if (pathname.includes('/api/payouts/send/')) {
-    const sendPayoutHandler = await import('./payouts/send/[id]')
-    return sendPayoutHandler.default(req, res)
+  } else if (pathname.startsWith('/api/admin/') || pathname.startsWith('/api/me/') || pathname.startsWith('/api/earnings/') || pathname.startsWith('/api/payouts/')) {
+    // Route all new Whop app endpoints to consolidated handler
+    const consolidatedHandler = await import('./consolidated')
+    return consolidatedHandler.default(req, res)
   } else {
     res.status(404).json({ error: 'API endpoint not found' })
   }
