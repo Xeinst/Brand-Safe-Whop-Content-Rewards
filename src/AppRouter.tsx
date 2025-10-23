@@ -20,6 +20,18 @@ export function AppRouter() {
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
+  // Fallback if SDK is not available
+  if (!sdk) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
+          <p className="text-gray-600">Loading application...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Handle routing based on current path
   useEffect(() => {
     const handleRouteChange = () => {
