@@ -225,7 +225,7 @@ async function handleSubmissions(req: any, res: any) {
 }
 
 // My submissions handler
-async function handleMySubmissions(req: any, res: any) {
+async function handleMySubmissions(_req: any, res: any) {
   const userId = 'user-123' // Mock user
 
   const result = await query(`
