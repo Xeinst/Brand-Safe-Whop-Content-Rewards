@@ -1,7 +1,7 @@
 // Main API handler for Vercel
-import { VercelRequest, VercelResponse } from '@vercel/node'
+// Remove Vercel types for compatibility
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   const { pathname } = new URL(req.url || '', `http://${req.headers.host}`)
   
   // Set CORS headers
@@ -23,20 +23,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } else if (pathname.startsWith('/api/users')) {
     const usersHandler = await import('./users')
     return usersHandler.default(req, res)
-  } else if (pathname.startsWith('/api/analytics')) {
-    const analyticsHandler = await import('./analytics')
-    return analyticsHandler.default(req, res)
   } else if (pathname.startsWith('/api/youtube-meta')) {
     const youtubeHandler = await import('./youtube-meta')
     return youtubeHandler.default(req, res)
-  } else if (pathname.startsWith('/api/events/view')) {
-    const viewHandler = await import('./events/view')
-    return viewHandler.default(req, res)
-  } else if (pathname.startsWith('/api/secure-content')) {
-    const secureContentHandler = await import('./secure-content')
-    return secureContentHandler.default(req, res)
-  } else if (pathname.startsWith('/api/admin/') || pathname.startsWith('/api/me/') || pathname.startsWith('/api/earnings/') || pathname.startsWith('/api/payouts/')) {
-    // Route all new Whop app endpoints to consolidated handler
+  } else if (pathname.startsWith('/api/admin/') || pathname.startsWith('/api/me/') || pathname.startsWith('/api/earnings/') || pathname.startsWith('/api/payouts/') || pathname.startsWith('/api/analytics') || pathname.startsWith('/api/content-rewards') || pathname.startsWith('/api/users') || pathname.startsWith('/api/secure-content') || pathname.startsWith('/api/events/view')) {
+    // Route all consolidated endpoints to consolidated handler
     const consolidatedHandler = await import('./consolidated')
     return consolidatedHandler.default(req, res)
   } else {

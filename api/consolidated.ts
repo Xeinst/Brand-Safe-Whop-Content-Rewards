@@ -33,7 +33,7 @@ const rejectSubmissionSchema = z.object({
 
 export default async function handler(req: any, res: any) {
   const { method } = req
-  const { pathname } = req.url ? new URL(req.url, 'http://localhost').pathname : ''
+  const pathname = req.url ? new URL(req.url, 'http://localhost').pathname : ''
 
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -64,6 +64,16 @@ export default async function handler(req: any, res: any) {
       return await handleRunPayouts(req, res)
     } else if (pathname.includes('/api/payouts/send/')) {
       return await handleSendPayout(req, res)
+    } else if (pathname.startsWith('/api/analytics')) {
+      return await handleAnalytics(req, res)
+    } else if (pathname.startsWith('/api/content-rewards')) {
+      return await handleContentRewards(req, res)
+    } else if (pathname.startsWith('/api/users')) {
+      return await handleUsers(req, res)
+    } else if (pathname.startsWith('/api/secure-content')) {
+      return await handleSecureContent(req, res)
+    } else if (pathname.startsWith('/api/events/view')) {
+      return await handleViewEvent(req, res)
     } else {
       return res.status(404).json({ error: 'API endpoint not found' })
     }
@@ -124,7 +134,7 @@ async function handleCampaigns(req: any, res: any) {
 }
 
 // Review queue handler
-async function handleReviewQueue(req: any, res: any) {
+async function handleReviewQueue(_req: any, res: any) {
   const user = { id: 'user-123', role: 'owner' as const, companyId: 'company-123' }
   
   if (!await adminOnly(user)) {
@@ -155,7 +165,7 @@ async function handleSubmissions(req: any, res: any) {
 
   switch (method) {
     case 'GET':
-      const { userId, status, public_only } = req.query
+      const { userId: queryUserId, status, public_only } = req.query
 
       let queryText = `
         SELECT 
@@ -171,10 +181,10 @@ async function handleSubmissions(req: any, res: any) {
       const params: any[] = []
       let paramCount = 0
 
-      if (userId) {
+      if (queryUserId) {
         paramCount++
         queryText += ` AND cs.creator_id = $${paramCount}`
-        params.push(userId)
+        params.push(queryUserId)
       }
 
       if (status) {
@@ -194,7 +204,7 @@ async function handleSubmissions(req: any, res: any) {
 
     case 'POST':
       const body = createSubmissionSchema.parse(req.body)
-      const userId = 'user-123' // Mock user
+      const mockUserId = 'user-123' // Mock user
 
       const submission = await query(`
         INSERT INTO content_submissions (
@@ -203,7 +213,7 @@ async function handleSubmissions(req: any, res: any) {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
       `, [
-        userId, body.campaignId, body.storageKey, body.thumbKey,
+        mockUserId, body.campaignId, body.storageKey, body.thumbKey,
         body.title, body.description, 'pending_review', 'private', body.storageKey
       ])
 
@@ -465,4 +475,168 @@ async function handleSendPayout(req: any, res: any) {
     externalRef,
     message: 'Payout sent successfully'
   })
+}
+
+// Additional consolidated handlers
+async function handleAnalytics(req: any, res: any) {
+  const { method } = req
+  
+  if (method === 'GET') {
+    const { company_id, start_date, end_date } = req.query
+    
+    if (!company_id) {
+      return res.status(400).json({ error: 'Missing company_id parameter' })
+    }
+    
+    const result = await query(`
+      SELECT 
+        COUNT(*) as total_submissions,
+        COUNT(CASE WHEN status = 'approved' AND visibility = 'public' THEN 1 END) as approved_submissions,
+        SUM(CASE WHEN status = 'approved' AND visibility = 'public' THEN views ELSE 0 END) as total_views,
+        AVG(CASE WHEN status = 'approved' AND visibility = 'public' THEN views ELSE 0 END) as avg_views
+      FROM content_submissions cs
+      WHERE cs.campaign_id IN (
+        SELECT id FROM campaigns WHERE company_id = $1
+      )
+      ${start_date ? 'AND cs.created_at >= $2' : ''}
+      ${end_date ? 'AND cs.created_at <= $3' : ''}
+    `, [company_id, start_date, end_date].filter(Boolean))
+    
+    return res.json(result.rows[0])
+  } else {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+}
+
+async function handleContentRewards(req: any, res: any) {
+  const { method } = req
+  
+  switch (method) {
+    case 'GET':
+      const rewards = await query('SELECT * FROM content_rewards ORDER BY created_at DESC')
+      return res.json(rewards.rows)
+      
+    case 'POST':
+      const body = req.body
+      const result = await query(`
+        INSERT INTO content_rewards (name, description, reward_amount, requirements, active)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [body.name, body.description, body.reward_amount, body.requirements, body.active])
+      
+      return res.status(201).json(result.rows[0])
+      
+    default:
+      return res.status(405).json({ error: 'Method not allowed' })
+  }
+}
+
+async function handleUsers(req: any, res: any) {
+  const { method } = req
+  
+  switch (method) {
+    case 'GET':
+      const users = await query('SELECT * FROM users ORDER BY created_at DESC')
+      return res.json(users.rows)
+      
+    case 'POST':
+      const body = req.body
+      const result = await query(`
+        INSERT INTO users (username, display_name, email, role, whop_user_id)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING *
+      `, [body.username, body.display_name, body.email, body.role, body.whop_user_id])
+      
+      return res.status(201).json(result.rows[0])
+      
+    default:
+      return res.status(405).json({ error: 'Method not allowed' })
+  }
+}
+
+async function handleSecureContent(req: any, res: any) {
+  const { method } = req
+  
+  if (method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+  
+  const { submissionId, userId } = req.query
+  
+  if (!submissionId) {
+    return res.status(400).json({ error: 'Missing submissionId' })
+  }
+  
+  const submission = await query(
+    'SELECT cs.*, u.username, u.display_name FROM content_submissions cs LEFT JOIN users u ON cs.creator_id = u.id WHERE cs.id = $1',
+    [submissionId]
+  )
+  
+  if (submission.rows.length === 0) {
+    return res.status(404).json({ error: 'Submission not found' })
+  }
+  
+  const sub = submission.rows[0]
+  
+  if (sub.status === 'approved' && sub.visibility === 'public') {
+    return res.json({
+      url: sub.private_video_link,
+      thumbnail: sub.thumbnail_url,
+      isPublic: true
+    })
+  }
+  
+  if (userId && (sub.creator_id === userId || sub.username === userId)) {
+    return res.json({
+      url: sub.private_video_link,
+      thumbnail: sub.thumbnail_url,
+      isPublic: false,
+      isOwner: true
+    })
+  }
+  
+  return res.status(403).json({
+    error: 'Access denied',
+    message: 'This content is private and not yet approved for public viewing'
+  })
+}
+
+async function handleViewEvent(req: any, res: any) {
+  const { method } = req
+  
+  if (method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
+  
+  const { submissionId, userId, timestamp } = req.body
+  
+  if (!submissionId) {
+    return res.status(400).json({ error: 'Missing submissionId' })
+  }
+  
+  // Only track views for approved, public content
+  const submission = await query(
+    'SELECT status, visibility FROM content_submissions WHERE id = $1',
+    [submissionId]
+  )
+  
+  if (submission.rows.length === 0) {
+    return res.status(404).json({ error: 'Submission not found' })
+  }
+  
+  const sub = submission.rows[0]
+  
+  if (sub.status !== 'approved' || sub.visibility !== 'public') {
+    return res.status(403).json({ error: 'Content not available for viewing' })
+  }
+  
+  // Record the view
+  await query(`
+    INSERT INTO impression_aggregates (submission_id, date, region, device, verified_views)
+    VALUES ($1, $2, $3, $4, 1)
+    ON CONFLICT (submission_id, date, region, device)
+    DO UPDATE SET verified_views = impression_aggregates.verified_views + 1
+  `, [submissionId, new Date().toISOString().split('T')[0], 'unknown', 'unknown'])
+  
+  return res.json({ success: true })
 }

@@ -7,7 +7,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { code, state } = req.query
+    const { code, state: _state } = req.query
 
     if (!code) {
       // Redirect to Whop OAuth

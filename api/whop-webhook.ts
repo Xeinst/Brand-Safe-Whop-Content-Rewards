@@ -48,7 +48,7 @@ export default async function handler(req: any, res: any) {
   }
 }
 
-function verifyWebhookSignature(payload: any, signature: string): boolean {
+function verifyWebhookSignature(_payload: any, _signature: string): boolean {
   // In production, verify the webhook signature using Whop's webhook secret
   const webhookSecret = process.env.WHOP_WEBHOOK_SECRET
   if (!webhookSecret) {
@@ -103,7 +103,7 @@ async function handleCompanyUpdated(data: any) {
 }
 
 async function handleMemberJoined(data: any) {
-  const { user_id, company_id } = data
+  const { user_id, company_id: _company_id } = data
   
   // Update user role to member
   await query(
@@ -115,7 +115,7 @@ async function handleMemberJoined(data: any) {
 }
 
 async function handleMemberLeft(data: any) {
-  const { user_id, company_id } = data
+  const { user_id, company_id: _company_id } = data
   
   // Update user role or handle member leaving
   await query(
