@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
 import { Upload, Eye, DollarSign, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react'
 
 interface Submission {
@@ -36,8 +35,8 @@ interface EarningsSummary {
 }
 
 export default function MemberExperience() {
-  const router = useRouter()
-  const { experienceId } = router.query
+  // Get experienceId from URL path
+  const experienceId = window.location.pathname.split('/')[2]
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [earnings, setEarnings] = useState<EarningsSummary | null>(null)
   const [loading, setLoading] = useState(true)

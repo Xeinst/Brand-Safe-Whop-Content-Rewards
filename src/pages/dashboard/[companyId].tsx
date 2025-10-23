@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/router'
 import { Plus, Play, Pause, Edit, Eye, CheckCircle, XCircle } from 'lucide-react'
 
 interface Campaign {
@@ -32,8 +31,8 @@ interface ReviewSubmission {
 }
 
 export default function OwnerDashboard() {
-  const router = useRouter()
-  const { companyId } = router.query
+  // Get companyId from URL path
+  const companyId = window.location.pathname.split('/')[2]
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [reviewQueue, setReviewQueue] = useState<ReviewSubmission[]>([])
   const [loading, setLoading] = useState(true)
