@@ -430,7 +430,7 @@ async function handleRunPayouts(req: any, res: any) {
 
 // Send payout handler
 async function handleSendPayout(_req: any, res: any) {
-  const { id } = req.query
+  const { id } = _req.query
   const user = { id: 'user-123', role: 'owner' as const, companyId: 'company-123' }
   
   if (!await adminOnly(user)) {
