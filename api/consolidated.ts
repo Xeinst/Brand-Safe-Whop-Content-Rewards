@@ -429,7 +429,7 @@ async function handleRunPayouts(req: any, res: any) {
 }
 
 // Send payout handler
-async function handleSendPayout(req: any, res: any) {
+async function handleSendPayout(_req: any, res: any) {
   const { id } = req.query
   const user = { id: 'user-123', role: 'owner' as const, companyId: 'company-123' }
   
@@ -608,7 +608,7 @@ async function handleViewEvent(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
   
-  const { submissionId, userId, timestamp } = req.body
+  const { submissionId, userId: _userId, timestamp: _timestamp } = req.body
   
   if (!submissionId) {
     return res.status(400).json({ error: 'Missing submissionId' })
