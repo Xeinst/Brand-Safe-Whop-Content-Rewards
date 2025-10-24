@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { errorHandler } from '../lib/error-handler'
+import { privacySafeAnalytics } from '../lib/privacy-safe-analytics'
 
 export function DebugPanel() {
   const sdk = useWhopSDK()
   const [status, setStatus] = useState<any>(null)
   const [healthCheck, setHealthCheck] = useState<any>(null)
+  const [analytics, setAnalytics] = useState<any>(null)
   const [errorReports, setErrorReports] = useState<any[]>([])
   const [isVisible, setIsVisible] = useState(false)
 
@@ -15,6 +17,7 @@ export function DebugPanel() {
       const currentStatus = sdk.getStatus()
       setStatus(currentStatus)
       setErrorReports(errorHandler.getErrorReports())
+      setAnalytics(privacySafeAnalytics.getAnalytics())
     }
   }, [sdk])
 
@@ -106,6 +109,35 @@ export function DebugPanel() {
               Fallback: {healthCheck.fallbackMode ? 'Active' : 'Inactive'}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Analytics Section */}
+      <div className="mb-4">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-semibold">Analytics ({analytics?.summary?.totalEvents || 0})</h4>
+          <button
+            onClick={() => {
+              privacySafeAnalytics.clearAnalytics()
+              setAnalytics(privacySafeAnalytics.getAnalytics())
+            }}
+            className="bg-orange-500 hover:bg-orange-600 px-2 py-1 rounded text-xs"
+          >
+            Clear
+          </button>
+        </div>
+        
+        {analytics ? (
+          <div className="text-xs space-y-1">
+            <div>Events: {analytics.summary.totalEvents}</div>
+            <div>Errors: {analytics.summary.totalErrors}</div>
+            <div>Page Views: {analytics.summary.totalPageViews}</div>
+            {analytics.summary.lastActivity && (
+              <div>Last Activity: {new Date(analytics.summary.lastActivity).toLocaleTimeString()}</div>
+            )}
+          </div>
+        ) : (
+          <div className="text-gray-400 text-sm">No analytics data</div>
         )}
       </div>
 

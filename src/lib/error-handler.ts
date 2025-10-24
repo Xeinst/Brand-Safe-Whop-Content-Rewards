@@ -1,4 +1,5 @@
 // Comprehensive error handling and feedback system
+import { privacySafeAnalytics } from './privacy-safe-analytics'
 export interface ErrorReport {
   id: string
   timestamp: Date
@@ -53,6 +54,9 @@ class ErrorHandler {
 
     console.error('🚨 [ERROR HANDLER] Error detected:', error)
     console.error('📊 [ERROR HANDLER] Context:', errorReport.context)
+
+    // Track error with privacy-safe analytics
+    privacySafeAnalytics.trackError(error, errorReport.context)
 
     // Check if it's a network/API error
     if (this.isNetworkError(error)) {
@@ -123,7 +127,7 @@ class ErrorHandler {
     }
   }
 
-  // Test Whop API connectivity
+  // Test Whop API connectivity with shorter timeout
   async testWhopConnectivity(): Promise<boolean> {
     try {
       console.log('🔍 [ERROR HANDLER] Testing Whop API connectivity...')
@@ -140,7 +144,7 @@ class ErrorHandler {
       // Test with a simple request to avoid CORS issues
       const testUrl = 'https://api.whop.com/api/v2/health'
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 200) // Reduced to 200ms
 
       await fetch(testUrl, {
         method: 'HEAD',
