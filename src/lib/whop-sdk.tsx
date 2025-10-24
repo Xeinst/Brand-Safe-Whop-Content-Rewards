@@ -1,5 +1,6 @@
 // Real Whop SDK implementation for brand-safe content approval app
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { errorHandler, ErrorReport } from './error-handler'
 
 export interface WhopUser {
   id: string
@@ -123,6 +124,8 @@ export class RealWhopSDK implements WhopSDK {
   public user: WhopUser | null = null
   public company: WhopCompany | null = null
   private whopSDK: any = null
+  private fallbackMode: boolean = false
+  private errorReports: ErrorReport[] = []
 
   async init(): Promise<void> {
     try {
@@ -133,6 +136,15 @@ export class RealWhopSDK implements WhopSDK {
       console.log('🔗 [WHOP SDK] User Agent:', navigator.userAgent)
       console.log('📱 [WHOP SDK] Screen:', `${window.screen.width}x${window.screen.height}`)
       
+      // Test Whop API connectivity first
+      console.log('🔍 [WHOP SDK] Testing Whop API connectivity...')
+      const isWhopApiAvailable = await errorHandler.testWhopConnectivity()
+      this.fallbackMode = !isWhopApiAvailable
+      
+      if (this.fallbackMode) {
+        console.log('⚠️ [WHOP SDK] Whop API not available, using fallback mode')
+      }
+      
       // Check if we're in a Whop iframe environment
       const isWhopEnvironment = window.parent !== window || 
                                 window.location.hostname.includes('whop.com') ||
@@ -142,7 +154,7 @@ export class RealWhopSDK implements WhopSDK {
       console.log('🔍 [WHOP SDK] Window object keys:', Object.keys(window))
       console.log('🔍 [WHOP SDK] Document ready state:', document.readyState)
       
-      if (isWhopEnvironment) {
+      if (isWhopEnvironment && !this.fallbackMode) {
         // In production Whop environment, try to get real user data
         console.log('🔍 [WHOP SDK] Checking for Whop SDK in window object...')
         try {
@@ -152,29 +164,41 @@ export class RealWhopSDK implements WhopSDK {
             console.log('🔍 [WHOP SDK] Whop SDK methods:', Object.keys((window as any).whop))
             this.whopSDK = (window as any).whop
             
-            // Initialize Whop SDK
+            // Initialize Whop SDK with retry mechanism
             console.log('🔄 [WHOP SDK] Initializing Whop SDK...')
-            await this.whopSDK.init()
+            await errorHandler.retryWithBackoff(async () => {
+              await this.whopSDK.init()
+            })
             console.log('✅ [WHOP SDK] Whop SDK initialized successfully')
             
-            // Get user data from Whop SDK
+            // Get user data from Whop SDK with error handling
             console.log('👤 [WHOP SDK] Getting user data from Whop SDK...')
-            const userData = await this.getUserFromWhop()
-            if (userData) {
-              console.log('✅ [WHOP SDK] User data retrieved:', userData)
-              this.user = userData
-            } else {
-              console.log('❌ [WHOP SDK] No user data from Whop SDK')
+            try {
+              const userData = await this.getUserFromWhop()
+              if (userData) {
+                console.log('✅ [WHOP SDK] User data retrieved:', userData)
+                this.user = userData
+              } else {
+                console.log('❌ [WHOP SDK] No user data from Whop SDK')
+              }
+            } catch (error) {
+              console.error('❌ [WHOP SDK] Error getting user data:', error)
+              await errorHandler.handleError(error as Error, { action: 'get_user_data' })
             }
             
-            // Get company data from Whop SDK
+            // Get company data from Whop SDK with error handling
             console.log('🏢 [WHOP SDK] Getting company data from Whop SDK...')
-            const companyData = await this.getCompanyFromWhop()
-            if (companyData) {
-              console.log('✅ [WHOP SDK] Company data retrieved:', companyData)
-              this.company = companyData
-            } else {
-              console.log('❌ [WHOP SDK] No company data from Whop SDK')
+            try {
+              const companyData = await this.getCompanyFromWhop()
+              if (companyData) {
+                console.log('✅ [WHOP SDK] Company data retrieved:', companyData)
+                this.company = companyData
+              } else {
+                console.log('❌ [WHOP SDK] No company data from Whop SDK')
+              }
+            } catch (error) {
+              console.error('❌ [WHOP SDK] Error getting company data:', error)
+              await errorHandler.handleError(error as Error, { action: 'get_company_data' })
             }
           } else {
             console.log('❌ [WHOP SDK] No Whop SDK found in window object')
@@ -182,10 +206,13 @@ export class RealWhopSDK implements WhopSDK {
           }
         } catch (error) {
           console.error('❌ [WHOP SDK] Error accessing Whop SDK:', error)
+          await errorHandler.handleError(error as Error, { action: 'access_whop_sdk' })
           console.log('🔄 [WHOP SDK] Using fallback data')
+          this.fallbackMode = true
         }
       } else {
-        console.log('🔄 [WHOP SDK] Not in Whop environment, using fallback data')
+        console.log('🔄 [WHOP SDK] Not in Whop environment or API unavailable, using fallback data')
+        this.fallbackMode = true
       }
       
       // If no user data from Whop, use fallback
@@ -206,7 +233,7 @@ export class RealWhopSDK implements WhopSDK {
       // If no company data from Whop, use fallback
       if (!this.company) {
         console.log('🔄 [WHOP SDK] Using fallback company data')
-      this.company = {
+        this.company = {
           id: 'demo-company-1',
           name: 'Demo Brand Community',
           description: 'A sample community for testing brand-safe content approval',
@@ -221,8 +248,11 @@ export class RealWhopSDK implements WhopSDK {
       console.log('🔐 [WHOP SDK] Authentication status:', this.isAuthenticated())
       console.log('👑 [WHOP SDK] Is owner:', this.isOwner())
       console.log('👥 [WHOP SDK] Is member:', this.isMember())
+      console.log('🔄 [WHOP SDK] Fallback mode:', this.fallbackMode)
     } catch (error) {
       console.error('Failed to initialize Whop SDK:', error)
+      await errorHandler.handleError(error as Error, { action: 'sdk_initialization' })
+      this.fallbackMode = true
       throw error
     }
   }
