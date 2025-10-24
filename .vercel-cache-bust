@@ -1,4 +1,0 @@
-# This file forces Vercel to use the latest commit
-# Updated: 2024-01-15
-# Commit: 9dbb8f8
-# Purpose: Force fresh build without middleware cache issues
