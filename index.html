@@ -5,9 +5,32 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brand Safe Content Rewards</title>
+    <style>
+      body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+      #root { min-height: 100vh; }
+      .loading { 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        min-height: 100vh; 
+        background: #000; 
+        color: white; 
+        flex-direction: column;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loading">
+        <h1>Loading Brand Safe Content Rewards...</h1>
+        <p>Initializing application...</p>
+      </div>
+    </div>
+    <script>
+      console.log('🚀 [HTML] HTML loaded, starting script execution')
+      console.log('🪟 [HTML] Window location:', window.location.href)
+      console.log('🪟 [HTML] Document ready state:', document.readyState)
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
