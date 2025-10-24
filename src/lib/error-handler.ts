@@ -128,12 +128,21 @@ class ErrorHandler {
     try {
       console.log('🔍 [ERROR HANDLER] Testing Whop API connectivity...')
       
+      // First check if WHOP SDK is available in window
+      if ((window as any).whop) {
+        console.log('✅ [ERROR HANDLER] WHOP SDK found in window object')
+        this.networkStatus.whopApi = 'available'
+        this.networkStatus.fallbackMode = false
+        this.networkStatus.retryCount = 0
+        return true
+      }
+      
       // Test with a simple request to avoid CORS issues
       const testUrl = 'https://api.whop.com/api/v2/health'
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 3000) // 3 second timeout
 
-      const response = await fetch(testUrl, {
+      await fetch(testUrl, {
         method: 'HEAD',
         signal: controller.signal,
         mode: 'no-cors' // Avoid CORS issues
@@ -268,4 +277,3 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Export types and utilities
 export { ErrorHandler }
-export type { ErrorReport, NetworkStatus }

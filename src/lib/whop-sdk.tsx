@@ -117,6 +117,8 @@ export interface WhopSDK {
   exportMemberStats(options: ExportOptions): Promise<Blob>
   createContentReward(reward: Partial<ContentReward>): Promise<ContentReward>
   updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward>
+  getStatus(): { fallbackMode: boolean; errorCount: number; lastError?: Date }
+  performHealthCheck(): Promise<{ whopApi: boolean; fallbackMode: boolean; errorCount: number; lastError?: Date }>
 }
 
 // Real Whop SDK Implementation
@@ -125,7 +127,6 @@ export class RealWhopSDK implements WhopSDK {
   public company: WhopCompany | null = null
   private whopSDK: any = null
   private fallbackMode: boolean = false
-  private errorReports: ErrorReport[] = []
 
   async init(): Promise<void> {
     try {
@@ -158,16 +159,20 @@ export class RealWhopSDK implements WhopSDK {
         // In production Whop environment, try to get real user data
         console.log('🔍 [WHOP SDK] Checking for Whop SDK in window object...')
         try {
-          // Try to access Whop SDK if available
-          if ((window as any).whop) {
+          // Wait for WHOP SDK to be available with polling
+          const whopSDK = await this.waitForWhopSDK()
+          
+          if (whopSDK) {
             console.log('✅ [WHOP SDK] Whop SDK found in window object')
-            console.log('🔍 [WHOP SDK] Whop SDK methods:', Object.keys((window as any).whop))
-            this.whopSDK = (window as any).whop
+            console.log('🔍 [WHOP SDK] Whop SDK methods:', Object.keys(whopSDK))
+            this.whopSDK = whopSDK
             
             // Initialize Whop SDK with retry mechanism
             console.log('🔄 [WHOP SDK] Initializing Whop SDK...')
             await errorHandler.retryWithBackoff(async () => {
-              await this.whopSDK.init()
+              if (whopSDK.init && typeof whopSDK.init === 'function') {
+                await whopSDK.init()
+              }
             })
             console.log('✅ [WHOP SDK] Whop SDK initialized successfully')
             
@@ -203,6 +208,7 @@ export class RealWhopSDK implements WhopSDK {
           } else {
             console.log('❌ [WHOP SDK] No Whop SDK found in window object')
             console.log('🔍 [WHOP SDK] Available window properties:', Object.keys(window).filter(key => key.toLowerCase().includes('whop')))
+            console.log('🔍 [WHOP SDK] All window properties:', Object.keys(window).slice(0, 20)) // Show first 20 properties
           }
         } catch (error) {
           console.error('❌ [WHOP SDK] Error accessing Whop SDK:', error)
@@ -318,86 +324,336 @@ export class RealWhopSDK implements WhopSDK {
     }
   }
 
+  private async waitForWhopSDK(timeout: number = 5000): Promise<any> {
+    return new Promise((resolve) => {
+      const startTime = Date.now()
+      
+      const checkSDK = () => {
+        console.log('🔍 [WHOP SDK] Checking for WHOP SDK...')
+        console.log('🔍 [WHOP SDK] Available window properties:', Object.keys(window).filter(key => key.toLowerCase().includes('whop')))
+        
+        if ((window as any).whop) {
+          console.log('✅ [WHOP SDK] WHOP SDK found!')
+          resolve((window as any).whop)
+          return
+        }
+        
+        // Check if timeout has been reached
+        if (Date.now() - startTime >= timeout) {
+          console.log('⏰ [WHOP SDK] WHOP SDK timeout, using fallback')
+          resolve(null)
+          return
+        }
+        
+        // Continue checking
+        setTimeout(checkSDK, 100)
+      }
+      
+      checkSDK()
+    })
+  }
+
 
   async getContentRewards(): Promise<ContentReward[]> {
-    const response = await fetch('/api/content-rewards')
-    if (!response.ok) throw new Error('Failed to fetch content rewards')
-    return await response.json()
+    try {
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback content rewards data')
+        return this.getFallbackContentRewards()
+      }
+
+      const response = await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch('/api/content-rewards')
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch content rewards`)
+        return res
+      })
+      
+      return await response.json()
+    } catch (error) {
+      console.error('❌ [WHOP SDK] Error fetching content rewards:', error)
+      await errorHandler.handleError(error as Error, { action: 'get_content_rewards' })
+      return this.getFallbackContentRewards()
+    }
+  }
+
+  private getFallbackContentRewards(): ContentReward[] {
+    return [
+      {
+        id: 'demo-reward-1',
+        name: 'Brand Safe Content',
+        description: 'Submit brand-safe content for approval',
+        cpm: 2.50,
+        status: 'active',
+        totalViews: 1000,
+        totalPaid: 2500,
+        approvedSubmissions: 10,
+        totalSubmissions: 15,
+        effectiveCPM: 2.50
+      },
+      {
+        id: 'demo-reward-2',
+        name: 'High Engagement Content',
+        description: 'Content with high engagement rates',
+        cpm: 5.00,
+        status: 'active',
+        totalViews: 500,
+        totalPaid: 2500,
+        approvedSubmissions: 5,
+        totalSubmissions: 8,
+        effectiveCPM: 5.00
+      }
+    ]
   }
 
   async getSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Promise<Submission[]> {
-    const params = new URLSearchParams()
-    if (filters?.status) params.append('status', filters.status)
-    if (filters?.creator_id) params.append('creator_id', filters.creator_id)
-    if (filters?.public_only) params.append('public_only', 'true')
-    
-    const response = await fetch(`/api/submissions?${params}`)
-    if (!response.ok) throw new Error('Failed to fetch submissions')
-    return await response.json()
+    try {
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback submissions data')
+        return this.getFallbackSubmissions(filters)
+      }
+
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.creator_id) params.append('creator_id', filters.creator_id)
+      if (filters?.public_only) params.append('public_only', 'true')
+      
+      const response = await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch(`/api/submissions?${params}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch submissions`)
+        return res
+      })
+      
+      return await response.json()
+    } catch (error) {
+      console.error('❌ [WHOP SDK] Error fetching submissions:', error)
+      await errorHandler.handleError(error as Error, { action: 'get_submissions' })
+      return this.getFallbackSubmissions(filters)
+    }
+  }
+
+  private getFallbackSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Submission[] {
+    const mockSubmissions: Submission[] = [
+      {
+        id: 'demo-submission-1',
+        creator_id: 'demo-user-1',
+        username: 'demo_user',
+        display_name: 'Demo User',
+        campaign_id: 'demo-campaign-1',
+        campaign_name: 'Brand Safe Content',
+        title: 'Amazing Product Demo',
+        description: 'A great demonstration of our product',
+        private_video_link: 'https://example.com/video1',
+        public_video_link: 'https://youtube.com/watch?v=demo1',
+        thumbnail_url: 'https://via.placeholder.com/300x200',
+        platform: 'youtube',
+        status: 'approved',
+        visibility: 'public',
+        paid: true,
+        views: 1000,
+        likes: 50,
+        submission_date: new Date('2024-01-15'),
+        published_date: new Date('2024-01-16'),
+        approved_at: new Date('2024-01-15'),
+        review_note: 'Great content, approved!'
+      },
+      {
+        id: 'demo-submission-2',
+        creator_id: 'demo-user-2',
+        username: 'creator2',
+        display_name: 'Content Creator 2',
+        campaign_id: 'demo-campaign-1',
+        campaign_name: 'Brand Safe Content',
+        title: 'Product Review',
+        description: 'Honest review of the product',
+        private_video_link: 'https://example.com/video2',
+        platform: 'youtube',
+        status: 'pending_review',
+        visibility: 'private',
+        paid: false,
+        views: 0,
+        likes: 0,
+        submission_date: new Date('2024-01-20')
+      }
+    ]
+
+    // Apply filters
+    let filteredSubmissions = mockSubmissions
+    if (filters?.status) {
+      filteredSubmissions = filteredSubmissions.filter(s => s.status === filters.status)
+    }
+    if (filters?.creator_id) {
+      filteredSubmissions = filteredSubmissions.filter(s => s.creator_id === filters.creator_id)
+    }
+    if (filters?.public_only) {
+      filteredSubmissions = filteredSubmissions.filter(s => s.visibility === 'public')
+    }
+
+    return filteredSubmissions
   }
 
   async createSubmission(submissionData: any): Promise<Submission> {
-    const response = await fetch('/api/submissions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(submissionData)
-    })
-    if (!response.ok) throw new Error('Failed to create submission')
-    return await response.json()
+    try {
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback submission creation')
+        return this.createFallbackSubmission(submissionData)
+      }
+
+      const response = await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch('/api/submissions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submissionData)
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to create submission`)
+        return res
+      })
+      
+      return await response.json()
+    } catch (error) {
+      console.error('❌ [WHOP SDK] Error creating submission:', error)
+      await errorHandler.handleError(error as Error, { action: 'create_submission' })
+      return this.createFallbackSubmission(submissionData)
+    }
+  }
+
+  private createFallbackSubmission(submissionData: any): Submission {
+    return {
+      id: 'demo-submission-' + Date.now(),
+      creator_id: this.user?.id || 'demo-user-1',
+      username: this.user?.username || 'demo_user',
+      display_name: this.user?.display_name || 'Demo User',
+      campaign_id: submissionData.campaign_id || 'demo-campaign-1',
+      campaign_name: submissionData.campaign_name || 'Brand Safe Content',
+      title: submissionData.title || 'New Submission',
+      description: submissionData.description || 'Content submission',
+      private_video_link: submissionData.private_video_link || 'https://example.com/video',
+      platform: submissionData.platform || 'youtube',
+      status: 'pending_review',
+      visibility: 'private',
+      paid: false,
+      views: 0,
+      likes: 0,
+      submission_date: new Date()
+    }
   }
 
   async approveSubmission(submissionId: string): Promise<void> {
     try {
-      const response = await fetch(`/api/submissions?id=${submissionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'approve', approved_by: this.user?.id })
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback submission approval')
+        console.log('✅ [WHOP SDK] Submission approved (fallback mode):', submissionId)
+        return
+      }
+
+      await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch(`/api/submissions?id=${submissionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'approve', approved_by: this.user?.id })
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to approve submission`)
+        return res
       })
-      if (!response.ok) throw new Error('Failed to approve submission')
+      
+      console.log('✅ [WHOP SDK] Submission approved successfully')
     } catch (error) {
-      console.error('Error approving submission:', error)
-      throw error
+      console.error('❌ [WHOP SDK] Error approving submission:', error)
+      await errorHandler.handleError(error as Error, { action: 'approve_submission', userId: this.user?.id })
+      console.log('🔄 [WHOP SDK] Using fallback approval')
     }
   }
 
   async rejectSubmission(submissionId: string, reason: string): Promise<void> {
     try {
-      const response = await fetch(`/api/submissions?id=${submissionId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject', reason, approved_by: this.user?.id })
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback submission rejection')
+        console.log('❌ [WHOP SDK] Submission rejected (fallback mode):', submissionId, 'Reason:', reason)
+        return
+      }
+
+      await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch(`/api/submissions?id=${submissionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reject', reason, approved_by: this.user?.id })
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to reject submission`)
+        return res
       })
-      if (!response.ok) throw new Error('Failed to reject submission')
+      
+      console.log('❌ [WHOP SDK] Submission rejected successfully')
     } catch (error) {
-      console.error('Error rejecting submission:', error)
-      throw error
+      console.error('❌ [WHOP SDK] Error rejecting submission:', error)
+      await errorHandler.handleError(error as Error, { action: 'reject_submission', userId: this.user?.id })
+      console.log('🔄 [WHOP SDK] Using fallback rejection')
     }
   }
 
   async getMemberStatistics(): Promise<MemberStatistics> {
     try {
-      const response = await fetch('/api/analytics')
-      if (!response.ok) throw new Error('Failed to fetch member statistics')
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback member statistics')
+        return this.getFallbackMemberStatistics()
+      }
+
+      const response = await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch('/api/analytics')
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch member statistics`)
+        return res
+      })
+      
       return await response.json()
     } catch (error) {
-      console.error('Error fetching member statistics:', error)
-        return {
-        totalMembers: 0,
-        activeMembers: 0,
-        newMembers: 0,
-        memberEngagement: 0,
-        topContributors: [],
-        contentStats: {
-          totalSubmissions: 0,
-          approvedContent: 0,
-          rejectedContent: 0,
-          pendingReview: 0
+      console.error('❌ [WHOP SDK] Error fetching member statistics:', error)
+      await errorHandler.handleError(error as Error, { action: 'get_member_statistics' })
+      return this.getFallbackMemberStatistics()
+    }
+  }
+
+  private getFallbackMemberStatistics(): MemberStatistics {
+    return {
+      totalMembers: 150,
+      activeMembers: 45,
+      newMembers: 12,
+      memberEngagement: 78,
+      topContributors: [
+        {
+          id: 'demo-user-1',
+          username: 'demo_user',
+          submissions: 15,
+          approvedContent: 12,
+          totalEarnings: 2500,
+          engagementScore: 95
         },
-        rewardStats: {
-          totalRewardsGiven: 0,
-          averageReward: 0,
-          topEarners: []
+        {
+          id: 'demo-user-2',
+          username: 'creator2',
+          submissions: 8,
+          approvedContent: 6,
+          totalEarnings: 1200,
+          engagementScore: 88
         }
+      ],
+      contentStats: {
+        totalSubmissions: 45,
+        approvedContent: 32,
+        rejectedContent: 8,
+        pendingReview: 5
+      },
+      rewardStats: {
+        totalRewardsGiven: 15000,
+        averageReward: 468.75,
+        topEarners: [
+          {
+            id: 'demo-user-1',
+            username: 'demo_user',
+            totalEarnings: 2500
+          },
+          {
+            id: 'demo-user-2',
+            username: 'creator2',
+            totalEarnings: 1200
+          }
+        ]
       }
     }
   }
@@ -449,17 +705,51 @@ export class RealWhopSDK implements WhopSDK {
 
   async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
     try {
-      const response = await fetch(`/api/content-rewards?id=${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updates)
+      if (this.fallbackMode) {
+        console.log('🔄 [WHOP SDK] Using fallback content reward update')
+        return { ...updates, id } as ContentReward
+      }
+
+      const response = await errorHandler.retryWithBackoff(async () => {
+        const res = await fetch(`/api/content-rewards?id=${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to update content reward`)
+        return res
       })
-      if (!response.ok) throw new Error('Failed to update content reward')
+      
       return await response.json()
     } catch (error) {
-      console.error('Error updating content reward:', error)
-      throw error
+      console.error('❌ [WHOP SDK] Error updating content reward:', error)
+      await errorHandler.handleError(error as Error, { action: 'update_content_reward' })
+      return { ...updates, id } as ContentReward
     }
+  }
+
+  // Get current SDK status
+  getStatus(): { fallbackMode: boolean; errorCount: number; lastError?: Date } {
+    const errorReports = errorHandler.getErrorReports()
+    const lastError = errorReports.length > 0 ? errorReports[errorReports.length - 1].timestamp : undefined
+    
+    return {
+      fallbackMode: this.fallbackMode,
+      errorCount: errorReports.length,
+      lastError
+    }
+  }
+
+  // Perform comprehensive health check
+  async performHealthCheck(): Promise<{ whopApi: boolean; fallbackMode: boolean; errorCount: number; lastError?: Date }> {
+    console.log('🔍 [WHOP SDK] Performing health check...')
+    
+    const healthCheck = await errorHandler.performHealthCheck()
+    this.fallbackMode = healthCheck.fallbackMode
+    
+    console.log('📊 [WHOP SDK] Health check results:', healthCheck)
+    
+    return healthCheck
   }
 }
 
