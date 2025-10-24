@@ -5,19 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Brand Safe Content Rewards</title>
-    <style>
-      body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-      #root { min-height: 100vh; }
-      .loading { 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        min-height: 100vh; 
-        background: #000; 
-        color: white; 
-        flex-direction: column;
-      }
-    </style>
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
     <div id="root">
@@ -27,21 +15,7 @@
       </div>
     </div>
     
-    <!-- Modern Whop SDK Integration -->
-    <script>
-      console.log('🚀 [HTML] HTML loaded, starting modern script execution')
-      console.log('🪟 [HTML] Window location:', window.location.href)
-      console.log('🪟 [HTML] Document ready state:', document.readyState)
-      
-      // Check if we're in a WHOP environment
-      const isWhopEnvironment = window.parent !== window || 
-                                window.location.hostname.includes('whop.com') ||
-                                window.location.hostname.includes('vercel.app')
-      
-      console.log('🎯 [HTML] WHOP environment detected:', isWhopEnvironment)
-      console.log('🔄 [HTML] Modern Whop SDK will be initialized by React app')
-    </script>
-    
     <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/init.js"></script>
   </body>
 </html>

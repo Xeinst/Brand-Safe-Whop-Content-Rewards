@@ -26,7 +26,7 @@ console.log('🎯 [MAIN] Root element:', rootElement)
 
 if (!rootElement) {
   console.error('❌ [MAIN] Root element not found!')
-  document.body.innerHTML = '<div style="padding: 20px; color: red; font-family: Arial;">Error: Root element not found</div>'
+  document.body.innerHTML = '<div class="error-message">Error: Root element not found</div>'
 } else {
   console.log('✅ [MAIN] Root element found, creating React root')
   try {
@@ -42,6 +42,6 @@ if (!rootElement) {
     console.log('✅ [MAIN] App component rendered successfully')
   } catch (error) {
     console.error('❌ [MAIN] Error creating React root:', error)
-    document.body.innerHTML = '<div style="padding: 20px; color: red; font-family: Arial;">Error: ' + error + '</div>'
+    document.body.innerHTML = '<div class="error-message">Error: ' + error + '</div>'
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getWidthStyle } from '../lib/style-utils'
 import { 
   Users, 
   TrendingUp, 
@@ -233,7 +234,9 @@ export function MemberStatsView() {
                 <span className="text-sm font-medium text-gray-900">{memberStats.contentStats.totalSubmissions}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-500 h-2 rounded-full" style={{ width: '100%' }}></div>
+                <div className="progress-bar progress-bar-blue">
+                  <div className="progress-bar-fill" style={{ width: '100%' }}></div>
+                </div>
               </div>
               
               <div className="flex items-center justify-between">
@@ -241,7 +244,9 @@ export function MemberStatsView() {
                 <span className="text-sm font-medium text-gray-900">{memberStats.contentStats.approvedContent}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full" style={{ width: `${(memberStats.contentStats.approvedContent / memberStats.contentStats.totalSubmissions) * 100}%` }}></div>
+                <div className="progress-bar progress-bar-green">
+                  <div className="progress-bar-fill" style={getWidthStyle((memberStats.contentStats.approvedContent / memberStats.contentStats.totalSubmissions) * 100)}></div>
+                </div>
               </div>
               
               <div className="flex items-center justify-between">

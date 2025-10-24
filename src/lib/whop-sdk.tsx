@@ -157,9 +157,12 @@ export class ModernWhopSDK implements WhopSDK {
       
       console.log('✅ [WHOP SDK] Whop SDKs initialized')
       
-      // Test Whop API connectivity
+      // Test Whop API connectivity with shorter timeout
       console.log('🔍 [WHOP SDK] Testing Whop API connectivity...')
-      const isWhopApiAvailable = await errorHandler.testWhopConnectivity()
+      const isWhopApiAvailable = await Promise.race([
+        errorHandler.testWhopConnectivity(),
+        new Promise<boolean>(resolve => setTimeout(() => resolve(false), 200)) // 200ms timeout
+      ])
       this.fallbackMode = !isWhopApiAvailable
       
       if (this.fallbackMode) {
@@ -778,7 +781,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Add timeout to prevent infinite loading
+    // Add timeout to prevent infinite loading - reduced to 500ms for faster fallback
     const timeout = setTimeout(() => {
       if (isMounted && !sdk) {
         console.log('⏰ [WHOP PROVIDER] SDK initialization timeout, using fallback')
@@ -787,9 +790,9 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         }
       }
-    }, 1000)
+    }, 500)
 
-    // Force load after 2 seconds if still loading
+    // Force load after 1 second if still loading - reduced from 2 seconds
     const forceTimeout = setTimeout(() => {
       if (isMounted && loading) {
         console.log('🔄 [WHOP PROVIDER] Force loading app without SDK')
@@ -798,7 +801,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         }
       }
-    }, 2000)
+    }, 1000)
 
     initSDK()
 

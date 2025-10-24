@@ -54,3 +54,51 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* CSP-compliant loading styles moved from index.html */
+#root { 
+  min-height: 100vh; 
+}
+
+.loading { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  min-height: 100vh; 
+  background: #000; 
+  color: white; 
+  flex-direction: column;
+}
+
+/* CSP-compliant progress bar styles */
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-blue { background-color: #3b82f6; }
+.progress-bar-green { background-color: #10b981; }
+.progress-bar-red { background-color: #ef4444; }
+.progress-bar-yellow { background-color: #f59e0b; }
+
+/* Error message styles */
+.error-message {
+  padding: 20px;
+  color: red;
+  font-family: Arial, sans-serif;
+}
+
+/* Dynamic width classes for progress bars */
+.width-100 { width: 100%; }
+.width-85 { width: 85%; }
+.width-70 { width: 70%; }
+.width-60 { width: 60%; }
+.width-30 { width: 30%; }
+.width-15 { width: 15%; }
+.width-90 { width: 90%; }
