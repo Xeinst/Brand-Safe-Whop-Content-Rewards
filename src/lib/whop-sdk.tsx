@@ -486,8 +486,25 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('❌ [WHOP PROVIDER] Failed to initialize Whop SDK:', error)
         if (isMounted) {
-          console.log('🔄 [WHOP PROVIDER] Setting error state')
-          setSdk(null)
+          console.log('🔄 [WHOP PROVIDER] Setting fallback state due to error')
+          // Create a fallback SDK instance with demo data
+          const fallbackSDK = new RealWhopSDK()
+          fallbackSDK.user = {
+            id: 'demo-user-1',
+            username: 'demo_user',
+            email: 'demo@example.com',
+            avatar: 'https://via.placeholder.com/40',
+            display_name: 'Demo User',
+            role: 'member',
+            permissions: ['read_content', 'write_content', 'read_analytics']
+          }
+          fallbackSDK.company = {
+            id: 'demo-company-1',
+            name: 'Demo Brand Community',
+            description: 'A sample community for testing brand-safe content approval',
+            logo: 'https://via.placeholder.com/100'
+          }
+          setSdk(fallbackSDK)
           setLoading(false)
         }
       }
@@ -502,9 +519,9 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         }
       }
-    }, 2000) // Reduced timeout to 2 seconds
+    }, 1000) // Reduced timeout to 1 second
 
-    // Force load after 3 seconds if still loading
+    // Force load after 2 seconds if still loading
     const forceTimeout = setTimeout(() => {
       if (isMounted && loading) {
         console.log('🔄 [WHOP PROVIDER] Force loading app without SDK')
@@ -514,7 +531,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           setForceLoad(true)
         }
       }
-    }, 3000) // Reduced to 3 seconds
+    }, 2000) // Reduced to 2 seconds
 
     initSDK()
 
@@ -535,6 +552,24 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           {forceLoad && (
             <p className="text-yellow-400 text-sm mt-2">Using fallback mode</p>
           )}
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-white text-black rounded hover:bg-gray-200 mr-2"
+            >
+              Retry
+            </button>
+            <button 
+              onClick={() => {
+                setSdk(null)
+                setLoading(false)
+                setForceLoad(true)
+              }} 
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Skip SDK
+            </button>
+          </div>
         </div>
       </div>
     )

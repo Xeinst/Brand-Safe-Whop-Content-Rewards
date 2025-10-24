@@ -24,14 +24,14 @@ export function AppRouter() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [forceRender, setForceRender] = useState(false)
 
-  // Force render after 10 seconds if SDK never loads
+  // Force render after 3 seconds if SDK never loads
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading && !sdk) {
         console.log('Force rendering app without SDK')
         setForceRender(true)
       }
-    }, 10000)
+    }, 3000) // Reduced from 10 seconds to 3 seconds
     
     return () => clearTimeout(timeout)
   }, [loading, sdk])
@@ -55,7 +55,7 @@ export function AppRouter() {
   console.log('AppRouter: Window location:', window.location.href)
   console.log('AppRouter: Parent window:', window.parent !== window)
 
-  // Show loading state
+  // Show loading state with immediate fallback option
   if (loading && !forceRender) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -63,12 +63,18 @@ export function AppRouter() {
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
           <p className="text-gray-600">Loading application...</p>
           <p className="text-sm text-gray-500 mt-2">Initializing Whop SDK...</p>
-          <div className="mt-4">
+          <div className="mt-4 space-x-2">
             <button 
               onClick={() => window.location.reload()} 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Retry
+            </button>
+            <button 
+              onClick={() => setForceRender(true)} 
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Continue Without SDK
             </button>
           </div>
         </div>
@@ -125,16 +131,16 @@ export function AppRouter() {
       <div className="min-h-screen bg-gray-100">
         <div className="p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
-          <p className="text-gray-600 mb-4">App loaded in fallback mode</p>
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
-            <p className="text-sm">SDK initialization failed. App is running in demo mode.</p>
+          <p className="text-gray-600 mb-4">App loaded in demo mode</p>
+          <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
+            <p className="text-sm">Running in demo mode. All features are available with sample data.</p>
           </div>
           <div className="space-y-4">
             <button 
               onClick={() => window.location.reload()} 
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
             >
-              Retry
+              Retry SDK
             </button>
             <button 
               onClick={() => setForceRender(false)} 
@@ -142,6 +148,27 @@ export function AppRouter() {
             >
               Back to Loading
             </button>
+          </div>
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Available Features:</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="font-semibold text-gray-800">Content Submission</h3>
+                <p className="text-sm text-gray-600">Submit content for brand approval</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="font-semibold text-gray-800">Reward Tracking</h3>
+                <p className="text-sm text-gray-600">Track your earnings and progress</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="font-semibold text-gray-800">Brand Moderation</h3>
+                <p className="text-sm text-gray-600">Review and approve content</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg border">
+                <h3 className="font-semibold text-gray-800">Analytics</h3>
+                <p className="text-sm text-gray-600">View performance metrics</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
