@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react'
 import { campaignService } from '../services/campaignService'
 import { Campaign, CampaignSubmission } from '../types/campaign'
 import { 
+  Button,
+  EmptyState
+} from '@whop/frosted-ui'
+import { 
   Upload, 
-  Award, 
   Clock, 
   CheckCircle, 
   XCircle, 
@@ -134,13 +137,14 @@ export function ContentCreatorExperience() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <button
+              <Button
                 onClick={() => setShowCampaignSelector(true)}
-                className="px-4 py-2 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors flex items-center space-x-2"
+                variant="primary"
+                size="md"
               >
-                <Upload className="w-4 h-4" />
-                <span>Upload Content</span>
-              </button>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Content
+              </Button>
             </div>
           </div>
         </div>
@@ -235,11 +239,10 @@ export function ContentCreatorExperience() {
               </div>
               <div className="p-6">
                 {campaigns.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No active campaigns</h3>
-                    <p className="text-gray-600">Check back later for new campaigns to participate in.</p>
-                  </div>
+                  <EmptyState
+                    title="No active campaigns"
+                    description="Check back later for new campaigns to participate in."
+                  />
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {campaigns.map((campaign) => (
@@ -279,13 +282,15 @@ export function ContentCreatorExperience() {
                           </ul>
                         </div>
                         
-                        <button
+                        <Button
                           onClick={() => handleCampaignSelect(campaign)}
-                          className="w-full mt-4 px-4 py-2 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
+                          variant="primary"
+                          size="md"
+                          className="w-full mt-4"
                         >
-                          <Upload className="w-4 h-4" />
-                          <span>Upload Content</span>
-                        </button>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Content
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -302,11 +307,10 @@ export function ContentCreatorExperience() {
               <p className="text-gray-600 mb-6">Choose a campaign to upload your content to.</p>
               
               {campaigns.length === 0 ? (
-                <div className="text-center py-8">
-                  <Award className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No active campaigns</h3>
-                  <p className="text-gray-600">Check back later for new campaigns to participate in.</p>
-                </div>
+                <EmptyState
+                  title="No active campaigns"
+                  description="Check back later for new campaigns to participate in."
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {campaigns.map((campaign) => (
@@ -337,17 +341,15 @@ export function ContentCreatorExperience() {
         {activeTab === 'my-content' && (
           <div className="space-y-6">
             {submissions.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-12 text-center">
-                <Upload className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No content submitted yet</h3>
-                <p className="text-gray-600 mb-4">Start by uploading content to available campaigns.</p>
-                <button
-                  onClick={() => setActiveTab('upload')}
-                  className="px-6 py-3 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors"
-                >
-                  Upload Content
-                </button>
-              </div>
+              <EmptyState
+                title="No content submitted yet"
+                description="Start by uploading content to available campaigns."
+                primaryButton={{
+                  children: 'Upload Content',
+                  onClick: () => setActiveTab('upload'),
+                  variant: 'primary'
+                }}
+              />
             ) : (
               <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -413,11 +415,10 @@ export function ContentCreatorExperience() {
               </div>
 
               {submissions.length === 0 ? (
-                <div className="text-center py-8">
-                  <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No earnings yet</h3>
-                  <p className="text-gray-600">Start submitting content to earn rewards.</p>
-                </div>
+                <EmptyState
+                  title="No earnings yet"
+                  description="Start submitting content to earn rewards."
+                />
               ) : (
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-900">Recent Earnings</h3>

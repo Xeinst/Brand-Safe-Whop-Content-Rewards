@@ -3,6 +3,17 @@ import { useWhopSDK } from '../lib/whop-sdk'
 import { campaignService } from '../services/campaignService'
 import { Campaign, CampaignSubmission } from '../types/campaign'
 import { 
+  Button,
+  Modal,
+  ModalHeader,
+  ModalBody,
+  ModalDefaultFooter,
+  Input,
+  TextArea,
+  Label,
+  EmptyState
+} from '@whop/frosted-ui'
+import { 
   Plus, 
   TrendingUp, 
   Users, 
@@ -158,13 +169,14 @@ export function OwnerDashboard() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <button
+              <Button
                 onClick={() => setShowCreateCampaign(true)}
-                className="px-4 py-2 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors flex items-center space-x-2"
+                variant="primary"
+                size="md"
               >
-                <Plus className="w-4 h-4" />
-                <span>Create Campaign</span>
-              </button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
             </div>
           </div>
         </div>
@@ -319,17 +331,15 @@ export function OwnerDashboard() {
         {activeTab === 'campaigns' && (
           <div className="space-y-6">
             {campaigns.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-12 text-center">
-                <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No campaigns yet</h3>
-                <p className="text-gray-600 mb-4">Create your first campaign to start rewarding content creators.</p>
-                <button
-                  onClick={() => setShowCreateCampaign(true)}
-                  className="px-6 py-3 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors"
-                >
-                  Create Campaign
-                </button>
-              </div>
+              <EmptyState
+                title="No campaigns yet"
+                description="Create your first campaign to start rewarding content creators."
+                primaryButton={{
+                  children: 'Create Campaign',
+                  onClick: () => setShowCreateCampaign(true),
+                  variant: 'primary'
+                }}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {campaigns.map((campaign) => (
@@ -509,60 +519,54 @@ function CreateCampaignModal({ onClose, onSubmit }: { onClose: () => void; onSub
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Create Campaign</h3>
-        
+    <Modal open onClose={onClose}>
+      <ModalHeader title="Create Campaign" />
+      
+      <ModalBody>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Name</label>
-            <input
-              type="text"
+            <Label htmlFor="name">Campaign Name</Label>
+            <Input
+              id="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-whop-primary focus:border-transparent"
+              placeholder="Enter campaign name"
               required
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
+            <Label htmlFor="description">Description</Label>
+            <TextArea
+              id="description"
+              name="description"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-whop-primary focus:border-transparent"
+              placeholder="Enter campaign description"
               rows={3}
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Reward Per Upload (points)</label>
-            <input
+            <Label htmlFor="reward">Reward Per Upload (points)</Label>
+            <Input
+              id="reward"
               type="number"
               value={formData.rewardPerUpload}
               onChange={(e) => setFormData(prev => ({ ...prev, rewardPerUpload: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-whop-primary focus:border-transparent"
               required
             />
           </div>
-          
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-whop-primary hover:bg-whop-secondary text-white rounded-md transition-colors"
-            >
-              Create Campaign
-            </button>
-          </div>
         </form>
-      </div>
-    </div>
+      </ModalBody>
+      
+      <ModalDefaultFooter
+        primaryButton={{
+          children: 'Create Campaign',
+          onClick: handleSubmit,
+          variant: 'primary'
+        }}
+      />
+    </Modal>
   )
 }
