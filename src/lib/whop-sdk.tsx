@@ -319,18 +319,25 @@ export class ModernWhopSDK implements WhopSDK {
 
   async getContentRewards(): Promise<ContentReward[]> {
     try {
-      if (this.fallbackMode) {
-        console.log('🔄 [WHOP SDK] Using fallback content rewards data')
-        return this.getFallbackContentRewards()
-      }
-
-      const response = await errorHandler.retryWithBackoff(async () => {
-        const res = await fetch('/api/content-rewards')
-        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch content rewards`)
-        return res
-      })
+      // Use the campaign service instead of API call
+      const campaignServiceModule = await import('../services/campaignService')
+      const campaigns = await campaignServiceModule.campaignService.getCampaigns()
       
-      return await response.json()
+      // Convert Campaign[] to ContentReward[]
+      const contentRewards: ContentReward[] = campaigns.map(campaign => ({
+        id: campaign.id,
+        name: campaign.name,
+        description: campaign.description,
+        cpm: campaign.rewardPerUpload / 10, // Convert points back to CPM
+        status: campaign.status === 'active' ? 'active' : 'paused',
+        totalViews: Math.floor(Math.random() * 10000), // Mock data
+        totalPaid: Math.floor(Math.random() * 5000), // Mock data
+        approvedSubmissions: Math.floor(Math.random() * 100), // Mock data
+        totalSubmissions: Math.floor(Math.random() * 150), // Mock data
+        effectiveCPM: campaign.rewardPerUpload / 10 // Mock data
+      }))
+      
+      return contentRewards
     } catch (error) {
       console.error('❌ [WHOP SDK] Error fetching content rewards:', error)
       await errorHandler.handleError(error as Error, { action: 'get_content_rewards' })
@@ -653,13 +660,49 @@ export class ModernWhopSDK implements WhopSDK {
 
   async createContentReward(reward: Partial<ContentReward>): Promise<ContentReward> {
     try {
-      const response = await fetch('/api/content-rewards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reward)
-      })
-      if (!response.ok) throw new Error('Failed to create content reward')
-      return await response.json()
+      // Use the campaign service instead of API call
+      const campaignServiceModule = await import('../services/campaignService')
+      
+      // Convert ContentReward to Campaign format
+      const campaignData = {
+        name: reward.name || 'New Campaign',
+        description: reward.description || '',
+        status: 'active' as const,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        brandGuidelines: ['No inappropriate content', 'Must align with brand values'],
+        rewardPerUpload: Math.round((reward.cpm || 0) * 10), // Convert CPM to points
+        maxUploadsPerUser: 10,
+        allowedContentTypes: ['image', 'video'] as ('image' | 'video' | 'text')[],
+        companyId: this.company?.id || 'demo-company-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      // Create campaign using the service
+      const newCampaign = {
+        id: `campaign-${Date.now()}`,
+        ...campaignData
+      }
+      
+      // Add to campaigns array using the service
+      campaignServiceModule.campaignService.addCampaign(newCampaign)
+      
+      // Convert back to ContentReward format
+      const contentReward: ContentReward = {
+        id: newCampaign.id,
+        name: newCampaign.name,
+        description: newCampaign.description,
+        cpm: reward.cpm || 0,
+        status: 'active',
+        totalViews: 0,
+        totalPaid: 0,
+        approvedSubmissions: 0,
+        totalSubmissions: 0,
+        effectiveCPM: reward.cpm || 0
+      }
+      
+      return contentReward
     } catch (error) {
       console.error('Error creating content reward:', error)
       throw error
@@ -668,22 +711,36 @@ export class ModernWhopSDK implements WhopSDK {
 
   async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
     try {
-      if (this.fallbackMode) {
-        console.log('🔄 [WHOP SDK] Using fallback content reward update')
-        return { ...updates, id } as ContentReward
-      }
-
-      const response = await errorHandler.retryWithBackoff(async () => {
-        const res = await fetch(`/api/content-rewards?id=${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updates)
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to update content reward`)
-        return res
+      // Use the campaign service instead of API call
+      const campaignServiceModule = await import('../services/campaignService')
+      
+      // Find and update the campaign
+      const updatedCampaign = campaignServiceModule.campaignService.updateCampaign(id, {
+        name: updates.name,
+        description: updates.description,
+        status: updates.status === 'active' ? 'active' : 'inactive',
+        rewardPerUpload: updates.cpm ? Math.round(updates.cpm * 10) : undefined
       })
       
-      return await response.json()
+      if (!updatedCampaign) {
+        throw new Error('Campaign not found')
+      }
+      
+      // Convert back to ContentReward format
+      const contentReward: ContentReward = {
+        id: updatedCampaign.id,
+        name: updatedCampaign.name,
+        description: updatedCampaign.description,
+        cpm: updates.cpm || (updatedCampaign.rewardPerUpload / 10),
+        status: updatedCampaign.status === 'active' ? 'active' : 'paused',
+        totalViews: Math.floor(Math.random() * 10000), // Mock data
+        totalPaid: Math.floor(Math.random() * 5000), // Mock data
+        approvedSubmissions: Math.floor(Math.random() * 100), // Mock data
+        totalSubmissions: Math.floor(Math.random() * 150), // Mock data
+        effectiveCPM: updatedCampaign.rewardPerUpload / 10 // Mock data
+      }
+      
+      return contentReward
     } catch (error) {
       console.error('❌ [WHOP SDK] Error updating content reward:', error)
       await errorHandler.handleError(error as Error, { action: 'update_content_reward' })
