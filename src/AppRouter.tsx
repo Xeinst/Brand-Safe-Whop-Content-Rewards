@@ -36,6 +36,16 @@ export function AppRouter() {
     return () => clearTimeout(timeout)
   }, [loading, sdk])
 
+  // Handle routing based on current path
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setCurrentPath(window.location.pathname)
+    }
+
+    window.addEventListener('popstate', handleRouteChange)
+    return () => window.removeEventListener('popstate', handleRouteChange)
+  }, [])
+
   // Debug logging
   console.log('AppRouter: SDK available:', !!sdk)
   console.log('AppRouter: Loading:', loading)
@@ -137,16 +147,6 @@ export function AppRouter() {
       </div>
     )
   }
-
-  // Handle routing based on current path
-  useEffect(() => {
-    const handleRouteChange = () => {
-      setCurrentPath(window.location.pathname)
-    }
-
-    window.addEventListener('popstate', handleRouteChange)
-    return () => window.removeEventListener('popstate', handleRouteChange)
-  }, [])
 
   // Route to appropriate component based on path and user role
   const renderCurrentView = () => {

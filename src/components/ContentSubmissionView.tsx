@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Upload, Link, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Upload, Link, CheckCircle, XCircle, AlertCircle, Video, Globe, Lock } from 'lucide-react'
 import { useWhopSDK, ContentReward } from '../lib/whop-sdk'
 
 interface SubmissionForm {
@@ -8,6 +8,7 @@ interface SubmissionForm {
   videoUrl: string
   platform: string
   contentRewardId: string
+  videoType: 'public' | 'unlisted' | 'private'
 }
 
 export function ContentSubmissionView() {
@@ -21,7 +22,8 @@ export function ContentSubmissionView() {
     description: '',
     videoUrl: '',
     platform: 'youtube',
-    contentRewardId: ''
+    contentRewardId: '',
+    videoType: 'public'
   })
 
   useEffect(() => {
@@ -95,7 +97,8 @@ export function ContentSubmissionView() {
         description: '',
         videoUrl: '',
         platform: 'youtube',
-        contentRewardId: activeRewards[0]?.id || ''
+        contentRewardId: activeRewards[0]?.id || '',
+        videoType: 'public'
       })
     } catch (error) {
       console.error('Submission error:', error)
@@ -108,7 +111,10 @@ export function ContentSubmissionView() {
   const extractVideoId = (url: string): string | null => {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/shorts\/([^&\n?#]+)/
+      /youtube\.com\/shorts\/([^&\n?#]+)/,
+      // Support for unlisted videos with additional parameters
+      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/
     ]
     
     for (const pattern of patterns) {
@@ -116,6 +122,15 @@ export function ContentSubmissionView() {
       if (match) return match[1]
     }
     return null
+  }
+
+  const detectVideoType = (url: string): 'public' | 'unlisted' | 'private' => {
+    // For now, we'll assume all submitted videos are unlisted for brand safety
+    // In a real implementation, you might check video metadata or ask the user
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return 'unlisted'
+    }
+    return 'public'
   }
 
   if (loading) {
@@ -127,13 +142,13 @@ export function ContentSubmissionView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-r from-whop-dragon-fire to-orange-500 shadow-lg">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
               <h1 className="text-xl font-semibold">Submit Content</h1>
@@ -144,8 +159,13 @@ export function ContentSubmissionView() {
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h2 className="text-2xl font-bold mb-6">Submit Your Content for Review</h2>
+        <div className="bg-gray-800/60 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-gray-700/50">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              Submit Your Content for Review
+            </h2>
+            <p className="text-gray-400 text-lg">Share your videos and earn rewards for brand-safe content</p>
+          </div>
           
           {submissionStatus === 'success' && (
             <div className="mb-6 p-4 bg-green-900/20 border border-green-500 rounded-lg flex items-center space-x-3">
@@ -161,10 +181,10 @@ export function ContentSubmissionView() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Content Reward Selection */}
-            <div>
-              <label htmlFor="content-reward" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="content-reward" className="block text-sm font-medium text-gray-300">
                 Content Reward
               </label>
               <select
@@ -172,7 +192,7 @@ export function ContentSubmissionView() {
                 name="contentRewardId"
                 value={formData.contentRewardId}
                 onChange={(e) => setFormData(prev => ({ ...prev, contentRewardId: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent transition-all duration-200 hover:bg-gray-700/70"
                 required
               >
                 <option value="">Select a content reward</option>
@@ -185,8 +205,8 @@ export function ContentSubmissionView() {
             </div>
 
             {/* Title */}
-            <div>
-              <label htmlFor="content-title" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="content-title" className="block text-sm font-medium text-gray-300">
                 Content Title *
               </label>
               <input
@@ -195,15 +215,15 @@ export function ContentSubmissionView() {
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent transition-all duration-200 hover:bg-gray-700/70"
                 placeholder="Enter your content title"
                 required
               />
             </div>
 
             {/* Description */}
-            <div>
-              <label htmlFor="content-description" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="content-description" className="block text-sm font-medium text-gray-300">
                 Description
               </label>
               <textarea
@@ -211,15 +231,65 @@ export function ContentSubmissionView() {
                 name="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent transition-all duration-200 hover:bg-gray-700/70 resize-none"
                 rows={4}
                 placeholder="Describe your content..."
               />
             </div>
 
+            {/* Video Type Selection */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-300">
+                Video Type
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, videoType: 'public' }))}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                    formData.videoType === 'public'
+                      ? 'border-whop-dragon-fire bg-whop-dragon-fire/10 text-whop-dragon-fire'
+                      : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <Globe className="w-6 h-6" />
+                  <span className="text-sm font-medium">Public</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, videoType: 'unlisted' }))}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                    formData.videoType === 'unlisted'
+                      ? 'border-whop-dragon-fire bg-whop-dragon-fire/10 text-whop-dragon-fire'
+                      : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <Link className="w-6 h-6" />
+                  <span className="text-sm font-medium">Unlisted</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, videoType: 'private' }))}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                    formData.videoType === 'private'
+                      ? 'border-whop-dragon-fire bg-whop-dragon-fire/10 text-whop-dragon-fire'
+                      : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-gray-500'
+                  }`}
+                >
+                  <Lock className="w-6 h-6" />
+                  <span className="text-sm font-medium">Private</span>
+                </button>
+              </div>
+              <p className="text-sm text-gray-400">
+                {formData.videoType === 'public' && 'Video is publicly visible and searchable'}
+                {formData.videoType === 'unlisted' && 'Video is accessible via direct link only'}
+                {formData.videoType === 'private' && 'Video is only visible to you'}
+              </p>
+            </div>
+
             {/* Video URL */}
-            <div>
-              <label htmlFor="video-url" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="video-url" className="block text-sm font-medium text-gray-300">
                 Video URL *
               </label>
               <div className="relative">
@@ -228,21 +298,28 @@ export function ContentSubmissionView() {
                   name="videoUrl"
                   type="url"
                   value={formData.videoUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                  onChange={(e) => {
+                    const url = e.target.value
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      videoUrl: url,
+                      videoType: detectVideoType(url)
+                    }))
+                  }}
+                  className="w-full px-4 py-3 pl-12 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent transition-all duration-200 hover:bg-gray-700/70"
                   placeholder="https://youtube.com/watch?v=..."
                   required
                 />
-                <Link className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Video className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
-              <p className="mt-1 text-sm text-gray-400">
-                Supported platforms: YouTube, YouTube Shorts
+              <p className="text-sm text-gray-400">
+                Supported platforms: YouTube, YouTube Shorts (including unlisted videos)
               </p>
             </div>
 
             {/* Platform */}
-            <div>
-              <label htmlFor="platform" className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="platform" className="block text-sm font-medium text-gray-300">
                 Platform
               </label>
               <select
@@ -250,7 +327,7 @@ export function ContentSubmissionView() {
                 name="platform"
                 value={formData.platform}
                 onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value }))}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+                className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent transition-all duration-200 hover:bg-gray-700/70"
               >
                 <option value="youtube">YouTube</option>
                 <option value="youtube_shorts">YouTube Shorts</option>
@@ -258,20 +335,20 @@ export function ContentSubmissionView() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-center pt-6">
               <button
                 type="submit"
                 disabled={submitting || !formData.title || !formData.videoUrl || !formData.contentRewardId}
-                className="px-6 py-3 bg-whop-dragon-fire hover:bg-orange-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center space-x-2"
+                className="px-8 py-4 bg-gradient-to-r from-whop-dragon-fire to-orange-600 hover:from-orange-600 hover:to-whop-dragon-fire disabled:from-gray-600 disabled:to-gray-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none disabled:scale-100"
               >
                 {submitting ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-5 h-5" />
                     <span>Submit Content</span>
                   </>
                 )}
