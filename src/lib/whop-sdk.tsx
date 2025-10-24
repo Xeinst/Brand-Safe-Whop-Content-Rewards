@@ -208,8 +208,8 @@ export class ModernWhopSDK implements WhopSDK {
         email: 'demo@example.com',
         avatar: 'https://via.placeholder.com/40',
         display_name: 'Demo User',
-        role: 'member',
-        permissions: ['read_content', 'write_content', 'read_analytics']
+        role: 'owner', // Changed to owner for testing
+        permissions: ['read_content', 'write_content', 'read_analytics', 'admin_access']
       }
 
       console.log('🔄 [WHOP SDK] Setting fallback company data')
@@ -239,8 +239,8 @@ export class ModernWhopSDK implements WhopSDK {
         email: 'demo@example.com',
         avatar: 'https://via.placeholder.com/40',
         display_name: 'Demo User',
-        role: 'member',
-        permissions: ['read_content', 'write_content', 'read_analytics']
+        role: 'owner', // Changed to owner for testing
+        permissions: ['read_content', 'write_content', 'read_analytics', 'admin_access']
       }
       
       this.company = {
