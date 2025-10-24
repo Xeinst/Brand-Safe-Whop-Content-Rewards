@@ -357,19 +357,41 @@ export function ContentSubmissionView() {
           </form>
 
           {/* Guidelines */}
-          <div className="mt-8 p-4 bg-gray-700 rounded-lg">
-            <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <AlertCircle className="w-5 h-5 mr-2" />
+          <div className="mt-12 p-6 bg-gray-700/30 backdrop-blur-sm rounded-2xl border border-gray-600/30">
+            <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-200">
+              <AlertCircle className="w-6 h-6 mr-3 text-whop-dragon-fire" />
               Submission Guidelines
             </h3>
-            <ul className="space-y-2 text-sm text-gray-300">
-              <li>• Content must be brand-safe and appropriate for all audiences</li>
-              <li>• Videos should be high quality and engaging</li>
-              <li>• Include relevant hashtags and descriptions</li>
-              <li>• Content will be reviewed by admins before going public</li>
-              <li>• You'll earn CPM rewards only for approved and published content</li>
-              <li>• Private content is not visible to the public until approved</li>
-            </ul>
+            <div className="grid md:grid-cols-2 gap-4">
+              <ul className="space-y-3 text-sm text-gray-300">
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>Content must be brand-safe and appropriate for all audiences</span>
+                </li>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>Videos should be high quality and engaging</span>
+                </li>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>Include relevant hashtags and descriptions</span>
+                </li>
+              </ul>
+              <ul className="space-y-3 text-sm text-gray-300">
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>Content will be reviewed by admins before going public</span>
+                </li>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>You'll earn CPM rewards only for approved and published content</span>
+                </li>
+                <li className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-whop-dragon-fire rounded-full mt-2 flex-shrink-0"></div>
+                  <span>Unlisted videos are perfect for brand-safe submissions</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
