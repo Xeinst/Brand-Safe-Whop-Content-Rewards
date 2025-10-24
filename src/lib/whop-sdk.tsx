@@ -145,10 +145,20 @@ export class RealWhopSDK implements WhopSDK {
           if ((window as any).whop) {
             console.log('Whop SDK found in window object')
             this.whopSDK = (window as any).whop
+            
+            // Initialize Whop SDK
+            await this.whopSDK.init()
+            
             // Get user data from Whop SDK
             const userData = await this.getUserFromWhop()
             if (userData) {
               this.user = userData
+            }
+            
+            // Get company data from Whop SDK
+            const companyData = await this.getCompanyFromWhop()
+            if (companyData) {
+              this.company = companyData
             }
           }
         } catch (error) {
@@ -170,12 +180,14 @@ export class RealWhopSDK implements WhopSDK {
         }
       }
 
-      // Set company data
+      // If no company data from Whop, use fallback
+      if (!this.company) {
       this.company = {
-        id: 'demo-company-1',
-        name: 'Demo Brand Community',
-        description: 'A sample community for testing brand-safe content approval',
-        logo: 'https://via.placeholder.com/100'
+          id: 'demo-company-1',
+          name: 'Demo Brand Community',
+          description: 'A sample community for testing brand-safe content approval',
+          logo: 'https://via.placeholder.com/100'
+        }
       }
 
       console.log('Whop SDK initialized successfully')
@@ -188,11 +200,11 @@ export class RealWhopSDK implements WhopSDK {
   }
 
   isAuthenticated(): boolean {
-    return this.whopSDK?.isAuthenticated() || false
+    return this.whopSDK?.isAuthenticated() || !!this.user
   }
 
   isWhopMember(): boolean {
-    return this.whopSDK?.isWhopMember() || false
+    return this.whopSDK?.isWhopMember() || this.user?.role === 'member'
   }
 
   getUserRole(): 'member' | 'owner' | 'admin' | null {

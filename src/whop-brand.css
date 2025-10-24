@@ -61,3 +61,143 @@
 /* Focus States */
 .focus\:ring-whop-dragon-fire:focus { --tw-ring-color: var(--whop-dragon-fire); }
 .focus\:ring-whop-byzantine-blue:focus { --tw-ring-color: var(--whop-byzantine-blue); }
+
+/* Whop App Specific Styles */
+.whop-app {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.5;
+  color: var(--whop-midnight);
+  background-color: var(--whop-snow);
+}
+
+/* Whop Button Styles */
+.btn-whop {
+  background-color: var(--whop-dragon-fire);
+  color: var(--whop-snow);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-whop:hover {
+  background-color: var(--whop-orange);
+  transform: translateY(-1px);
+}
+
+.btn-whop-secondary {
+  background-color: transparent;
+  color: var(--whop-dragon-fire);
+  border: 2px solid var(--whop-dragon-fire);
+  border-radius: 8px;
+  padding: 10px 22px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-whop-secondary:hover {
+  background-color: var(--whop-dragon-fire);
+  color: var(--whop-snow);
+}
+
+/* Whop Card Styles */
+.card-whop {
+  background-color: var(--whop-snow);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.card-whop:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Whop Input Styles */
+.input-whop {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  background-color: var(--whop-snow);
+}
+
+.input-whop:focus {
+  outline: none;
+  border-color: var(--whop-dragon-fire);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+/* Whop Navigation Styles */
+.nav-whop {
+  background-color: var(--whop-snow);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 24px;
+}
+
+.nav-whop-item {
+  color: var(--whop-midnight);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-whop-item:hover {
+  background-color: var(--whop-light-orange);
+  color: var(--whop-dragon-fire);
+}
+
+.nav-whop-item.active {
+  background-color: var(--whop-dragon-fire);
+  color: var(--whop-snow);
+}
+
+/* Whop Status Badges */
+.badge-whop-pending {
+  background-color: var(--whop-light-yellow);
+  color: var(--whop-brown);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-whop-approved {
+  background-color: var(--whop-light-green);
+  color: var(--whop-teal);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-whop-rejected {
+  background-color: var(--whop-light-pink);
+  color: var(--whop-red);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Whop Loading Spinner */
+.spinner-whop {
+  border: 3px solid var(--whop-light-blue);
+  border-top: 3px solid var(--whop-dragon-fire);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
