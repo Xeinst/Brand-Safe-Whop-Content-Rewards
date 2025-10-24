@@ -3,7 +3,6 @@ import { useWhopSDKContext } from './lib/whop-sdk'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'
 import { MemberStatsView } from './components/MemberStatsView'
-import { ContentRewardsDashboard } from './components/ContentRewardsDashboard'
 import { ContentCreatorView } from './components/ContentCreatorView'
 import { ContentSubmissionView } from './components/ContentSubmissionView'
 import { BrandModerationView } from './components/BrandModerationView'
@@ -14,9 +13,9 @@ import { CampaignAnalytics } from './components/CampaignAnalytics'
 import { ContentApprovalWorkflow } from './components/ContentApprovalWorkflow'
 import { ToastNotification } from './components/NotificationSystem'
 import { DebugInfo } from './components/DebugInfo'
+import { OwnerDashboard } from './components/OwnerDashboard'
+import { ContentCreatorExperience } from './components/ContentCreatorExperience'
 import { UserSubmissionTracking } from './components/UserSubmissionTracking'
-import OwnerDashboard from './pages/dashboard/[companyId]'
-import MemberExperience from './pages/experiences/[experienceId]'
 
 export function AppRouter() {
   const { sdk, loading, error } = useWhopSDKContext()
@@ -209,7 +208,7 @@ export function AppRouter() {
       console.log('👥 [APP ROUTER] Experience path detected - showing member experience')
       if (sdk?.isAuthenticated?.()) {
         console.log('✅ [APP ROUTER] User is authenticated, showing MemberExperience')
-        return <MemberExperience />
+        return <ContentCreatorExperience />
       } else {
         console.log('❌ [APP ROUTER] User is not authenticated, showing auth required')
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -230,12 +229,12 @@ export function AppRouter() {
     // If no specific path, route based on user role
     if (currentPath === '/' || currentPath === '/dashboard') {
       if (sdk?.isOwner?.()) {
-        return <ContentRewardsDashboard />
+        return <OwnerDashboard />
       } else if (sdk?.isMember?.()) {
-        return <ContentCreatorView />
+        return <ContentCreatorExperience />
       } else {
-        // Default to member view if role is unclear
-        return <ContentCreatorView />
+        // Default to creator experience if role is unclear
+        return <ContentCreatorExperience />
       }
     }
 
@@ -245,14 +244,14 @@ export function AppRouter() {
       case '/dashboard':
         // Only owners can access owner dashboard
         if (sdk?.isOwner?.()) {
-          return <ContentRewardsDashboard />
+          return <OwnerDashboard />
         } else {
-          return <ContentCreatorView />
+          return <ContentCreatorExperience />
         }
       case '/creator':
       case '/member':
-        // Both owners and members can access creator view
-        return <ContentCreatorView />
+        // Both owners and members can access creator experience
+        return <ContentCreatorExperience />
       case '/submit':
         // Both owners and members can submit content
         return <ContentSubmissionView />
@@ -317,11 +316,11 @@ export function AppRouter() {
       default:
         // Default based on user role
         if (sdk?.isOwner?.()) {
-          return <ContentRewardsDashboard />
+          return <OwnerDashboard />
         } else if (sdk?.isMember?.()) {
-          return <ContentCreatorView />
+          return <ContentCreatorExperience />
         } else {
-          return <ContentCreatorView />
+          return <ContentCreatorExperience />
         }
     }
   }
