@@ -80,21 +80,11 @@ export function ContentSubmissionView() {
 
       // Create submission using SDK - now defaults to PENDING_REVIEW and PRIVATE
       const submission = {
-        user: sdk.user?.id || 'demo-user',
-        content: {
-          title: formData.title,
-          privateVideoLink: formData.videoUrl,
-          publicVideoLink: null,
-          thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-          platform: formData.platform
-        },
-        status: 'pending_review' as const,
-        visibility: 'private' as const,
-        paid: false,
-        views: 0,
-        likes: 0,
-        submissionDate: new Date(),
-        publishedDate: null
+        title: formData.title,
+        description: formData.description,
+        storageKey: formData.videoUrl,
+        thumbKey: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        campaignId: formData.contentRewardId || null
       }
 
       await sdk.createSubmission(submission)

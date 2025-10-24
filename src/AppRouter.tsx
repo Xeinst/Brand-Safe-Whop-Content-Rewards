@@ -20,6 +20,11 @@ export function AppRouter() {
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
 
+  // Debug logging
+  console.log('AppRouter: SDK available:', !!sdk)
+  console.log('AppRouter: Current path:', currentPath)
+  console.log('AppRouter: SDK methods:', sdk ? Object.keys(sdk) : 'No SDK')
+
   // Fallback if SDK is not available
   if (!sdk) {
     return (
@@ -27,6 +32,7 @@ export function AppRouter() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
           <p className="text-gray-600">Loading application...</p>
+          <p className="text-sm text-gray-500 mt-2">SDK not available yet</p>
         </div>
       </div>
     )

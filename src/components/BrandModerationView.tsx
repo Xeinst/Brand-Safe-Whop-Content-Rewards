@@ -178,7 +178,7 @@ export function BrandModerationView() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         {getStatusIcon(submission.status)}
-                        <h3 className="text-lg font-semibold text-white">{submission.content.title}</h3>
+                        <h3 className="text-lg font-semibold text-white">{submission.title}</h3>
                       </div>
                       
                       <p className="text-gray-400 text-sm mb-3">No description provided</p>
@@ -186,7 +186,7 @@ export function BrandModerationView() {
                       <div className="flex items-center space-x-6 text-sm text-gray-400">
                         <div className="flex items-center space-x-1">
                           <User className="w-4 h-4" />
-                          <span>{submission.user}</span>
+                          <span>{submission.username || submission.display_name}</span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Eye className="w-4 h-4" />
@@ -220,17 +220,17 @@ export function BrandModerationView() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm text-gray-400">Title</label>
-                      <p className="text-white font-medium">{selectedSubmission.content.title}</p>
+                      <p className="text-white font-medium">{selectedSubmission.title}</p>
                     </div>
                     
                     <div>
                       <label className="text-sm text-gray-400">Creator</label>
-                      <p className="text-white">{selectedSubmission.user}</p>
+                      <p className="text-white">{selectedSubmission.username || selectedSubmission.display_name}</p>
                     </div>
                     
                     <div>
                       <label className="text-sm text-gray-400">Platform</label>
-                      <p className="text-white capitalize">{selectedSubmission.content.platform}</p>
+                      <p className="text-white capitalize">{selectedSubmission.platform}</p>
                     </div>
                     
                     <div>

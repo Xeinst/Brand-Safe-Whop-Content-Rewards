@@ -42,12 +42,13 @@ export function CPMPayoutView() {
         // Calculate top earners
         const userEarnings = approvedSubmissions.reduce((acc, submission) => {
           const earnings = submission.views * 4.00 / 1000
-          if (!acc[submission.user]) {
-            acc[submission.user] = { earnings: 0, views: 0, submissions: 0 }
+          const userKey = submission.username || submission.display_name || submission.creator_id
+          if (!acc[userKey]) {
+            acc[userKey] = { earnings: 0, views: 0, submissions: 0 }
           }
-          acc[submission.user].earnings += earnings
-          acc[submission.user].views += submission.views
-          acc[submission.user].submissions += 1
+          acc[userKey].earnings += earnings
+          acc[userKey].views += submission.views
+          acc[userKey].submissions += 1
           return acc
         }, {} as Record<string, { earnings: number; views: number; submissions: number }>)
         
@@ -209,8 +210,8 @@ export function CPMPayoutView() {
                         <div key={submission.id} className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <h4 className="text-white font-medium">{submission.content.title}</h4>
-                              <p className="text-gray-400 text-sm">{submission.user}</p>
+                              <h4 className="text-white font-medium">{submission.title}</h4>
+                              <p className="text-gray-400 text-sm">{submission.username || submission.display_name}</p>
                               <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
                                 <span>{submission.views.toLocaleString()} views</span>
                                 <span>${earnings.toFixed(2)} earnings</span>

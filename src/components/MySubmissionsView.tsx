@@ -17,9 +17,9 @@ export function MySubmissionsView() {
         const allSubmissions = await sdk.getSubmissions()
         // Filter to only show current user's submissions
         const mySubmissions = allSubmissions.filter(submission => 
-          submission.user === sdk.user?.username || 
-          submission.user === sdk.user?.display_name ||
-          submission.user === sdk.user?.id
+          submission.username === sdk.user?.username || 
+          submission.display_name === sdk.user?.display_name ||
+          submission.creator_id === sdk.user?.id
         )
         setSubmissions(mySubmissions)
       } catch (error) {
@@ -202,7 +202,7 @@ export function MySubmissionsView() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       {getStatusIcon(submission.status)}
-                      <h3 className="text-lg font-semibold text-white">{submission.content.title}</h3>
+                      <h3 className="text-lg font-semibold text-white">{submission.title}</h3>
                     </div>
                     
                     <div className="flex items-center space-x-6 text-sm text-gray-400 mb-3">
@@ -221,7 +221,7 @@ export function MySubmissionsView() {
                     </div>
                     
                     <div className="text-sm text-gray-400">
-                      Submitted: {new Date(submission.submissionDate).toLocaleDateString()}
+                      Submitted: {new Date(submission.submission_date).toLocaleDateString()}
                     </div>
                   </div>
                   

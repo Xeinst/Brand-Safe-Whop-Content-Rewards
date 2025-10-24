@@ -72,21 +72,27 @@ export interface ContentReward {
 
 export interface Submission {
   id: string
-  user: string
+  creator_id: string
+  username?: string
+  display_name?: string
+  campaign_id?: string
+  campaign_name?: string
+  title: string
+  description?: string
+  private_video_link: string
+  public_video_link?: string
+  thumbnail_url?: string
+  platform: string
   status: 'pending_review' | 'approved' | 'rejected' | 'flagged' | 'published'
   visibility: 'private' | 'public'
   paid: boolean
   views: number
   likes: number
-  submissionDate: Date
-  publishedDate: Date | null
-  content: {
-    title: string
-    privateVideoLink: string
-    publicVideoLink: string | null
-    thumbnail: string
-    platform: string
-  }
+  submission_date: Date
+  published_date?: Date
+  approved_at?: Date
+  rejected_at?: Date
+  review_note?: string
 }
 
 export interface WhopSDK {
@@ -100,7 +106,7 @@ export interface WhopSDK {
   isMember(): boolean
   hasPermission(permission: string): boolean
   getContentRewards(): Promise<ContentReward[]>
-  getSubmissions(filters?: { status?: string; user_id?: string; public_only?: boolean }): Promise<Submission[]>
+  getSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Promise<Submission[]>
   createSubmission(submission: Partial<Submission>): Promise<Submission>
   approveSubmission(submissionId: string): Promise<void>
   rejectSubmission(submissionId: string, reason: string): Promise<void>
@@ -223,11 +229,11 @@ export class RealWhopSDK implements WhopSDK {
     }
   }
 
-  async getSubmissions(filters?: { status?: string; user_id?: string; public_only?: boolean }): Promise<Submission[]> {
+  async getSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Promise<Submission[]> {
     try {
       const params = new URLSearchParams()
       if (filters?.status) params.append('status', filters.status)
-      if (filters?.user_id) params.append('user_id', filters.user_id)
+      if (filters?.creator_id) params.append('creator_id', filters.creator_id)
       if (filters?.public_only) params.append('public_only', 'true')
       
       const response = await fetch(`/api/submissions?${params}`)
@@ -239,12 +245,12 @@ export class RealWhopSDK implements WhopSDK {
     }
   }
 
-  async createSubmission(submission: Partial<Submission>): Promise<Submission> {
+  async createSubmission(submissionData: any): Promise<Submission> {
     try {
       const response = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submission)
+        body: JSON.stringify(submissionData)
       })
       if (!response.ok) throw new Error('Failed to create submission')
       return await response.json()
@@ -378,40 +384,68 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
   const [sdk, setSdk] = useState<WhopSDK | null>(null)
   const [loading, setLoading] = useState(true)
   const [error] = useState<string | null>(null)
+  const [forceLoad, setForceLoad] = useState(false)
 
   useEffect(() => {
+    let isMounted = true
+
     const initSDK = async () => {
       try {
         const realSDK = new RealWhopSDK()
         await realSDK.init()
-        setSdk(realSDK)
+        if (isMounted) {
+          setSdk(realSDK)
+          setLoading(false)
+        }
       } catch (error) {
         console.error('Failed to initialize Whop SDK:', error)
         // Don't set error, just use mock data
         const mockSDK = new RealWhopSDK()
         await mockSDK.initializeMockData()
-        setSdk(mockSDK)
-      } finally {
-        setLoading(false)
+        if (isMounted) {
+          setSdk(mockSDK)
+          setLoading(false)
+        }
       }
     }
 
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      if (loading) {
+      if (isMounted) {
         console.log('SDK initialization timeout, using mock data')
         const mockSDK = new RealWhopSDK()
         mockSDK.initializeMockData().then(() => {
-          setSdk(mockSDK)
-          setLoading(false)
+          if (isMounted) {
+            setSdk(mockSDK)
+            setLoading(false)
+          }
         })
       }
-    }, 5000)
+    }, 3000) // Reduced timeout to 3 seconds
+
+    // Force load after 10 seconds if still loading
+    const forceTimeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.log('Force loading app with mock data')
+        const mockSDK = new RealWhopSDK()
+        mockSDK.initializeMockData().then(() => {
+          if (isMounted) {
+            setSdk(mockSDK)
+            setLoading(false)
+            setForceLoad(true)
+          }
+        })
+      }
+    }, 10000)
 
     initSDK()
 
-    return () => clearTimeout(timeout)
-  }, [loading])
+    return () => {
+      isMounted = false
+      clearTimeout(timeout)
+      clearTimeout(forceTimeout)
+    }
+  }, []) // Remove loading dependency to prevent infinite loop
 
   if (loading) {
     return (
@@ -420,6 +454,9 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <h1 className="text-2xl font-bold mb-2">Loading Brand Safe Content Rewards...</h1>
           <p className="text-gray-300">Initializing Whop SDK...</p>
+          {forceLoad && (
+            <p className="text-yellow-400 text-sm mt-2">Using fallback mode</p>
+          )}
         </div>
       </div>
     )
