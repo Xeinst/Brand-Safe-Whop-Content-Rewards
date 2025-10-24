@@ -1,0 +1,5 @@
+# Ignore build cache to force fresh builds
+.vercel
+node_modules
+dist
+*.log
