@@ -5,15 +5,15 @@ let pool: Pool | null = null
 
 export function getDatabase() {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL
+    const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL
     
     if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is not set')
+      throw new Error('DATABASE_URL or POSTGRES_URL environment variable is not set')
     }
 
     pool = new Pool({
       connectionString,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: { rejectUnauthorized: false }, // Always use SSL for Supabase
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
