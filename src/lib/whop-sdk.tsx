@@ -792,40 +792,11 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Add timeout to prevent infinite loading - reduced to 500ms for faster fallback
-    const timeout = setTimeout(() => {
-      if (isMounted && !sdk) {
-        console.log('⏰ [WHOP PROVIDER] SDK initialization timeout, using fallback')
-        if (isMounted) {
-          // Don't set SDK to null if it's already initialized
-          if (!sdk) {
-            setSdk(null)
-            setLoading(false)
-          }
-        }
-      }
-    }, 500)
-
-    // Force load after 1 second if still loading - reduced from 2 seconds
-    const forceTimeout = setTimeout(() => {
-      if (isMounted && loading) {
-        console.log('🔄 [WHOP PROVIDER] Force loading app without SDK')
-        if (isMounted) {
-          // Only set to null if SDK is still not available
-          if (!sdk) {
-            setSdk(null)
-            setLoading(false)
-          }
-        }
-      }
-    }, 1000)
-
+    // Initialize SDK without timeout interference
     initSDK()
 
     return () => {
       isMounted = false
-      clearTimeout(timeout)
-      clearTimeout(forceTimeout)
     }
   }, []) // Empty dependency array to prevent re-initialization
 
