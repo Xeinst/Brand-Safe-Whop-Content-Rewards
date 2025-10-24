@@ -14,6 +14,9 @@ import { MySubmissionsView } from './components/MySubmissionsView'
 import { AdminReviewView } from './components/AdminReviewView'
 import { ToastNotification } from './components/NotificationSystem'
 import { DebugInfo } from './components/DebugInfo'
+// Import the dedicated pages
+import OwnerDashboard from './pages/dashboard/[companyId]'
+import MemberExperience from './pages/experiences/[experienceId]'
 
 export function AppRouter() {
   const sdk = useWhopSDK()
@@ -114,10 +117,10 @@ export function AppRouter() {
     // Handle Whop app specific paths
     if (currentPath.startsWith('/dashboard/')) {
       // Dashboard path - Owner view
-      console.log('🏢 [APP ROUTER] Dashboard path detected - showing owner view')
+      console.log('🏢 [APP ROUTER] Dashboard path detected - showing owner dashboard')
       if (sdk?.isOwner()) {
-        console.log('✅ [APP ROUTER] User is owner, showing ContentRewardsDashboard')
-        return <ContentRewardsDashboard />
+        console.log('✅ [APP ROUTER] User is owner, showing OwnerDashboard')
+        return <OwnerDashboard />
       } else {
         console.log('❌ [APP ROUTER] User is not owner, showing access denied')
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -132,10 +135,10 @@ export function AppRouter() {
     
     if (currentPath.startsWith('/experiences/')) {
       // Experience path - Member view
-      console.log('👥 [APP ROUTER] Experience path detected - showing member view')
+      console.log('👥 [APP ROUTER] Experience path detected - showing member experience')
       if (sdk?.isAuthenticated()) {
-        console.log('✅ [APP ROUTER] User is authenticated, showing ContentCreatorView')
-        return <ContentCreatorView />
+        console.log('✅ [APP ROUTER] User is authenticated, showing MemberExperience')
+        return <MemberExperience />
       } else {
         console.log('❌ [APP ROUTER] User is not authenticated, showing auth required')
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">
