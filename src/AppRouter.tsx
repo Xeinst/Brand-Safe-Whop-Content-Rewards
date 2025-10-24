@@ -103,18 +103,23 @@ export function AppRouter() {
 
   // Route to appropriate component based on path and user role
   const renderCurrentView = () => {
-    console.log('Rendering view for path:', currentPath)
-    console.log('User role - isOwner:', sdk?.isOwner(), 'isMember:', sdk?.isMember())
-    console.log('User authenticated:', sdk?.isAuthenticated())
-    console.log('User data:', sdk?.user)
+    console.log('🎯 [APP ROUTER] Rendering view for path:', currentPath)
+    console.log('👤 [APP ROUTER] User role - isOwner:', sdk?.isOwner(), 'isMember:', sdk?.isMember())
+    console.log('🔐 [APP ROUTER] User authenticated:', sdk?.isAuthenticated())
+    console.log('👤 [APP ROUTER] User data:', sdk?.user)
+    console.log('🏢 [APP ROUTER] Company data:', sdk?.company)
+    console.log('🪟 [APP ROUTER] Window location:', window.location.href)
+    console.log('🪟 [APP ROUTER] Document ready state:', document.readyState)
     
     // Handle Whop app specific paths
     if (currentPath.startsWith('/dashboard/')) {
       // Dashboard path - Owner view
-      console.log('Dashboard path detected - showing owner view')
+      console.log('🏢 [APP ROUTER] Dashboard path detected - showing owner view')
       if (sdk?.isOwner()) {
+        console.log('✅ [APP ROUTER] User is owner, showing ContentRewardsDashboard')
         return <ContentRewardsDashboard />
       } else {
+        console.log('❌ [APP ROUTER] User is not owner, showing access denied')
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h1>
@@ -127,10 +132,12 @@ export function AppRouter() {
     
     if (currentPath.startsWith('/experiences/')) {
       // Experience path - Member view
-      console.log('Experience path detected - showing member view')
+      console.log('👥 [APP ROUTER] Experience path detected - showing member view')
       if (sdk?.isAuthenticated()) {
+        console.log('✅ [APP ROUTER] User is authenticated, showing ContentCreatorView')
         return <ContentCreatorView />
       } else {
+        console.log('❌ [APP ROUTER] User is not authenticated, showing auth required')
         return <div className="min-h-screen flex items-center justify-center bg-gray-100">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Authentication Required</h1>
@@ -142,7 +149,7 @@ export function AppRouter() {
     
     if (currentPath.startsWith('/discover')) {
       // Discover path - Public view
-      console.log('Discover path detected - showing discover view')
+      console.log('🌍 [APP ROUTER] Discover path detected - showing discover view')
       return <DiscoverView />
     }
 

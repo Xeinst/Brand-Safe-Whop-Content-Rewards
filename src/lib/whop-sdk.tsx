@@ -126,49 +126,71 @@ export class RealWhopSDK implements WhopSDK {
 
   async init(): Promise<void> {
     try {
-      console.log('Initializing Whop SDK...')
-      console.log('Environment:', process.env.NODE_ENV)
-      console.log('Window parent:', window.parent !== window)
-      console.log('Location:', window.location.href)
+      console.log('🚀 [WHOP SDK] Initializing Whop SDK...')
+      console.log('🌍 [WHOP SDK] Environment:', process.env.NODE_ENV)
+      console.log('🪟 [WHOP SDK] Window parent:', window.parent !== window)
+      console.log('📍 [WHOP SDK] Location:', window.location.href)
+      console.log('🔗 [WHOP SDK] User Agent:', navigator.userAgent)
+      console.log('📱 [WHOP SDK] Screen:', `${window.screen.width}x${window.screen.height}`)
       
       // Check if we're in a Whop iframe environment
       const isWhopEnvironment = window.parent !== window || 
                                 window.location.hostname.includes('whop.com') ||
                                 window.location.hostname.includes('vercel.app')
       
-      console.log('Whop environment detected:', isWhopEnvironment)
+      console.log('🎯 [WHOP SDK] Whop environment detected:', isWhopEnvironment)
+      console.log('🔍 [WHOP SDK] Window object keys:', Object.keys(window))
+      console.log('🔍 [WHOP SDK] Document ready state:', document.readyState)
       
       if (isWhopEnvironment) {
         // In production Whop environment, try to get real user data
+        console.log('🔍 [WHOP SDK] Checking for Whop SDK in window object...')
         try {
           // Try to access Whop SDK if available
           if ((window as any).whop) {
-            console.log('Whop SDK found in window object')
+            console.log('✅ [WHOP SDK] Whop SDK found in window object')
+            console.log('🔍 [WHOP SDK] Whop SDK methods:', Object.keys((window as any).whop))
             this.whopSDK = (window as any).whop
             
             // Initialize Whop SDK
+            console.log('🔄 [WHOP SDK] Initializing Whop SDK...')
             await this.whopSDK.init()
+            console.log('✅ [WHOP SDK] Whop SDK initialized successfully')
             
             // Get user data from Whop SDK
+            console.log('👤 [WHOP SDK] Getting user data from Whop SDK...')
             const userData = await this.getUserFromWhop()
             if (userData) {
+              console.log('✅ [WHOP SDK] User data retrieved:', userData)
               this.user = userData
+            } else {
+              console.log('❌ [WHOP SDK] No user data from Whop SDK')
             }
             
             // Get company data from Whop SDK
+            console.log('🏢 [WHOP SDK] Getting company data from Whop SDK...')
             const companyData = await this.getCompanyFromWhop()
             if (companyData) {
+              console.log('✅ [WHOP SDK] Company data retrieved:', companyData)
               this.company = companyData
+            } else {
+              console.log('❌ [WHOP SDK] No company data from Whop SDK')
             }
+          } else {
+            console.log('❌ [WHOP SDK] No Whop SDK found in window object')
+            console.log('🔍 [WHOP SDK] Available window properties:', Object.keys(window).filter(key => key.toLowerCase().includes('whop')))
           }
         } catch (error) {
-          console.log('Could not access Whop SDK, using fallback')
+          console.error('❌ [WHOP SDK] Error accessing Whop SDK:', error)
+          console.log('🔄 [WHOP SDK] Using fallback data')
         }
+      } else {
+        console.log('🔄 [WHOP SDK] Not in Whop environment, using fallback data')
       }
       
       // If no user data from Whop, use fallback
       if (!this.user) {
-        console.log('Using fallback user data')
+        console.log('🔄 [WHOP SDK] Using fallback user data')
         this.user = {
           id: 'demo-user-1',
           username: 'demo_user',
@@ -178,21 +200,27 @@ export class RealWhopSDK implements WhopSDK {
           role: 'member',
           permissions: ['read_content', 'write_content', 'read_analytics']
         }
+        console.log('✅ [WHOP SDK] Fallback user data set:', this.user)
       }
 
       // If no company data from Whop, use fallback
       if (!this.company) {
-      this.company = {
+        console.log('🔄 [WHOP SDK] Using fallback company data')
+        this.company = {
           id: 'demo-company-1',
           name: 'Demo Brand Community',
           description: 'A sample community for testing brand-safe content approval',
           logo: 'https://via.placeholder.com/100'
         }
+        console.log('✅ [WHOP SDK] Fallback company data set:', this.company)
       }
 
-      console.log('Whop SDK initialized successfully')
-      console.log('User:', this.user)
-      console.log('Company:', this.company)
+      console.log('🎉 [WHOP SDK] Whop SDK initialized successfully!')
+      console.log('👤 [WHOP SDK] Final user data:', this.user)
+      console.log('🏢 [WHOP SDK] Final company data:', this.company)
+      console.log('🔐 [WHOP SDK] Authentication status:', this.isAuthenticated())
+      console.log('👑 [WHOP SDK] Is owner:', this.isOwner())
+      console.log('👥 [WHOP SDK] Is member:', this.isMember())
     } catch (error) {
       console.error('Failed to initialize Whop SDK:', error)
       throw error
@@ -416,22 +444,35 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true
+    console.log('🚀 [WHOP PROVIDER] WhopSDKProvider mounted')
+    console.log('🔄 [WHOP PROVIDER] Initial state - loading:', loading, 'sdk:', !!sdk)
 
     const initSDK = async () => {
       try {
+        console.log('🔄 [WHOP PROVIDER] Starting SDK initialization...')
         // Check if we're in Whop environment
         const isWhopEnvironment = window.parent !== window || window.location.hostname.includes('whop.com')
-        console.log('Whop environment detected:', isWhopEnvironment)
+        console.log('🎯 [WHOP PROVIDER] Whop environment detected:', isWhopEnvironment)
+        console.log('🪟 [WHOP PROVIDER] Window parent check:', window.parent !== window)
+        console.log('🌐 [WHOP PROVIDER] Hostname:', window.location.hostname)
         
         const realSDK = new RealWhopSDK()
+        console.log('🔄 [WHOP PROVIDER] Created RealWhopSDK instance')
         await realSDK.init()
+        console.log('✅ [WHOP PROVIDER] SDK initialization completed')
+        
         if (isMounted) {
+          console.log('✅ [WHOP PROVIDER] Setting SDK and stopping loading')
           setSdk(realSDK)
           setLoading(false)
+          console.log('🎉 [WHOP PROVIDER] SDK state updated successfully')
+        } else {
+          console.log('⚠️ [WHOP PROVIDER] Component unmounted, skipping state update')
         }
       } catch (error) {
-        console.error('Failed to initialize Whop SDK:', error)
+        console.error('❌ [WHOP PROVIDER] Failed to initialize Whop SDK:', error)
         if (isMounted) {
+          console.log('🔄 [WHOP PROVIDER] Setting error state')
           setSdk(null)
           setLoading(false)
         }
