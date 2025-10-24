@@ -27,9 +27,9 @@
       </div>
     </div>
     
-    <!-- WHOP SDK Script -->
+    <!-- Modern Whop SDK Integration -->
     <script>
-      console.log('🚀 [HTML] HTML loaded, starting script execution')
+      console.log('🚀 [HTML] HTML loaded, starting modern script execution')
       console.log('🪟 [HTML] Window location:', window.location.href)
       console.log('🪟 [HTML] Document ready state:', document.readyState)
       
@@ -39,46 +39,7 @@
                                 window.location.hostname.includes('vercel.app')
       
       console.log('🎯 [HTML] WHOP environment detected:', isWhopEnvironment)
-      
-      if (isWhopEnvironment) {
-        console.log('🔄 [HTML] Loading WHOP SDK...')
-        
-        // Wait for WHOP SDK to be available
-        const waitForWhopSDK = () => {
-          return new Promise((resolve) => {
-            const checkSDK = () => {
-              console.log('🔍 [HTML] Checking for WHOP SDK...')
-              console.log('🔍 [HTML] Window properties:', Object.keys(window))
-              
-              if (window.whop) {
-                console.log('✅ [HTML] WHOP SDK found!')
-                resolve(window.whop)
-              } else {
-                console.log('⏳ [HTML] WHOP SDK not found, waiting...')
-                setTimeout(checkSDK, 100)
-              }
-            }
-            checkSDK()
-            
-            // Timeout after 5 seconds
-            setTimeout(() => {
-              console.log('⏰ [HTML] WHOP SDK timeout, using fallback')
-              resolve(null)
-            }, 5000)
-          })
-        }
-        
-        // Start checking for WHOP SDK
-        waitForWhopSDK().then((whopSDK) => {
-          if (whopSDK) {
-            console.log('🎉 [HTML] WHOP SDK ready!')
-          } else {
-            console.log('⚠️ [HTML] WHOP SDK not available, will use fallback')
-          }
-        })
-      } else {
-        console.log('🔄 [HTML] Not in WHOP environment, using fallback mode')
-      }
+      console.log('🔄 [HTML] Modern Whop SDK will be initialized by React app')
     </script>
     
     <script type="module" src="/src/main.tsx"></script>

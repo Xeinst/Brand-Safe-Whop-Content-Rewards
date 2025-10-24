@@ -1,6 +1,6 @@
 // Modern Whop SDK implementation for brand-safe content approval app
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { errorHandler, ErrorReport } from './error-handler'
+import { errorHandler } from './error-handler'
 
 // Import the official Whop SDK packages
 import { WhopServerSdk } from '@whop/api'
@@ -129,10 +129,8 @@ export interface WhopSDK {
 export class ModernWhopSDK implements WhopSDK {
   public user: WhopUser | null = null
   public company: WhopCompany | null = null
-  private whopServerSdk: any = null
   private iframeSdk: any = null
   private fallbackMode: boolean = false
-  private errorReports: ErrorReport[] = []
 
   async init(): Promise<void> {
     try {
@@ -141,17 +139,20 @@ export class ModernWhopSDK implements WhopSDK {
       console.log('🪟 [WHOP SDK] Window parent:', window.parent !== window)
       console.log('📍 [WHOP SDK] Location:', window.location.href)
       
-      // Initialize Whop Server SDK
-      this.whopServerSdk = WhopServerSdk({
-        appId: import.meta.env.VITE_WHOP_APP_ID || process.env.NEXT_PUBLIC_WHOP_APP_ID,
-        appApiKey: import.meta.env.VITE_WHOP_API_KEY || process.env.WHOP_API_KEY,
-        onBehalfOfUserId: import.meta.env.VITE_WHOP_AGENT_USER_ID || process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
-        companyId: import.meta.env.VITE_WHOP_COMPANY_ID || process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
+      // Initialize Whop Server SDK (for server-side operations)
+      const whopServerSdk = WhopServerSdk({
+        appId: (import.meta as any).env?.VITE_WHOP_APP_ID || process.env.NEXT_PUBLIC_WHOP_APP_ID,
+        appApiKey: (import.meta as any).env?.VITE_WHOP_API_KEY || process.env.WHOP_API_KEY,
+        onBehalfOfUserId: (import.meta as any).env?.VITE_WHOP_AGENT_USER_ID || process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID,
+        companyId: (import.meta as any).env?.VITE_WHOP_COMPANY_ID || process.env.NEXT_PUBLIC_WHOP_COMPANY_ID,
       })
+      
+      // Store server SDK for potential future use
+      console.log('✅ [WHOP SDK] Whop Server SDK initialized:', !!whopServerSdk)
       
       // Initialize Whop iFrame SDK for embedded apps
       this.iframeSdk = createSdk({
-        appId: import.meta.env.VITE_WHOP_APP_ID || process.env.NEXT_PUBLIC_WHOP_APP_ID,
+        appId: (import.meta as any).env?.VITE_WHOP_APP_ID || process.env.NEXT_PUBLIC_WHOP_APP_ID,
       })
       
       console.log('✅ [WHOP SDK] Whop SDKs initialized')
@@ -492,7 +493,7 @@ export class ModernWhopSDK implements WhopSDK {
         return
       }
 
-      const response = await errorHandler.retryWithBackoff(async () => {
+      await errorHandler.retryWithBackoff(async () => {
         const res = await fetch(`/api/submissions?id=${submissionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -518,7 +519,7 @@ export class ModernWhopSDK implements WhopSDK {
         return
       }
 
-      const response = await errorHandler.retryWithBackoff(async () => {
+      await errorHandler.retryWithBackoff(async () => {
         const res = await fetch(`/api/submissions?id=${submissionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
