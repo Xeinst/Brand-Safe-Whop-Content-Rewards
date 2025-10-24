@@ -1,5 +1,5 @@
 // Debug panel for monitoring SDK status and errors
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
 import { errorHandler } from '../lib/error-handler'
 
@@ -147,7 +147,7 @@ export function DebugPanel() {
         <h4 className="font-semibold mb-2">Network Status</h4>
         <div className="text-sm">
           <div>Online: {navigator.onLine ? '✅' : '❌'}</div>
-          <div>Connection: {navigator.connection?.effectiveType || 'Unknown'}</div>
+          <div>Connection: {('connection' in navigator && (navigator as any).connection?.effectiveType) || 'Unknown'}</div>
         </div>
       </div>
 

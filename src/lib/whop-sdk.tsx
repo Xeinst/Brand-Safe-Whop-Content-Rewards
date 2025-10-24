@@ -1,6 +1,6 @@
 // Real Whop SDK implementation for brand-safe content approval app
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { errorHandler, ErrorReport } from './error-handler'
+import { errorHandler } from './error-handler'
 
 export interface WhopUser {
   id: string
