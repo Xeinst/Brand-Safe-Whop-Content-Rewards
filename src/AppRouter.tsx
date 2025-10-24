@@ -103,6 +103,37 @@ export function AppRouter() {
 
   // Route to appropriate component based on path and user role
   const renderCurrentView = () => {
+    console.log('Rendering view for path:', currentPath)
+    console.log('User role - isOwner:', sdk?.isOwner(), 'isMember:', sdk?.isMember())
+    
+    // Handle Whop app specific paths
+    if (currentPath.startsWith('/dashboard/')) {
+      // Dashboard path - Owner view
+      console.log('Dashboard path detected - showing owner view')
+      if (sdk?.isOwner()) {
+        return <ContentRewardsDashboard />
+      } else {
+        return <div className="min-h-screen flex items-center justify-center bg-gray-100">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Access Denied</h1>
+            <p className="text-gray-600">You need owner permissions to access this dashboard.</p>
+          </div>
+        </div>
+      }
+    }
+    
+    if (currentPath.startsWith('/experiences/')) {
+      // Experience path - Member view
+      console.log('Experience path detected - showing member view')
+      return <ContentCreatorView />
+    }
+    
+    if (currentPath.startsWith('/discover')) {
+      // Discover path - Public view
+      console.log('Discover path detected - showing discover view')
+      return <DiscoverView />
+    }
+
     // If no specific path, route based on user role
     if (currentPath === '/' || currentPath === '/dashboard') {
       if (sdk?.isOwner()) {

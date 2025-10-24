@@ -122,20 +122,68 @@ export interface WhopSDK {
 export class RealWhopSDK implements WhopSDK {
   public user: WhopUser | null = null
   public company: WhopCompany | null = null
-  public contentRewards: ContentReward[] = []
-  public submissions: Submission[] = []
   private whopSDK: any = null
 
   async init(): Promise<void> {
     try {
-      // For now, use mock data since the real Whop SDK needs proper setup
-        // In production, this would initialize the actual Whop SDK
-      await this.initializeMockData()
+      console.log('Initializing Whop SDK...')
+      console.log('Environment:', process.env.NODE_ENV)
+      console.log('Window parent:', window.parent !== window)
+      console.log('Location:', window.location.href)
       
+      // Check if we're in a Whop iframe environment
+      const isWhopEnvironment = window.parent !== window || 
+                                window.location.hostname.includes('whop.com') ||
+                                window.location.hostname.includes('vercel.app')
+      
+      console.log('Whop environment detected:', isWhopEnvironment)
+      
+      if (isWhopEnvironment) {
+        // In production Whop environment, try to get real user data
+        try {
+          // Try to access Whop SDK if available
+          if ((window as any).whop) {
+            console.log('Whop SDK found in window object')
+            this.whopSDK = (window as any).whop
+            // Get user data from Whop SDK
+            const userData = await this.getUserFromWhop()
+            if (userData) {
+              this.user = userData
+            }
+          }
+        } catch (error) {
+          console.log('Could not access Whop SDK, using fallback')
+        }
+      }
+      
+      // If no user data from Whop, use fallback
+      if (!this.user) {
+        console.log('Using fallback user data')
+        this.user = {
+          id: 'demo-user-1',
+          username: 'demo_user',
+          email: 'demo@example.com',
+          avatar: 'https://via.placeholder.com/40',
+          display_name: 'Demo User',
+          role: 'member',
+          permissions: ['read_content', 'write_content', 'read_analytics']
+        }
+      }
+
+      // Set company data
+      this.company = {
+        id: 'demo-company-1',
+        name: 'Demo Brand Community',
+        description: 'A sample community for testing brand-safe content approval',
+        logo: 'https://via.placeholder.com/100'
+      }
+
+      console.log('Whop SDK initialized successfully')
+      console.log('User:', this.user)
+      console.log('Company:', this.company)
     } catch (error) {
       console.error('Failed to initialize Whop SDK:', error)
-      // Fallback to mock data for development
-      await this.initializeMockData()
+      throw error
     }
   }
 
@@ -200,265 +248,32 @@ export class RealWhopSDK implements WhopSDK {
     }
   }
 
-  async initializeMockData(): Promise<void> {
-    console.log('Initializing mock data...')
-    
-    // Fallback mock data for development
-            this.user = {
-      id: 'demo-user-1',
-      username: 'demo_user',
-      email: 'demo@example.com',
-      avatar: 'https://via.placeholder.com/40',
-      display_name: 'Demo User',
-      role: 'member',
-      permissions: ['read_content', 'write_content', 'read_analytics']
-    }
-
-    this.company = {
-      id: 'demo-company-1',
-      name: 'Demo Brand Community',
-      description: 'A sample community for testing brand-safe content approval',
-      logo: 'https://via.placeholder.com/100'
-    }
-
-    // Initialize mock content rewards
-    this.contentRewards = [
-      {
-        id: 'reward-1',
-        name: 'Tech Review Campaign',
-        description: 'Review the latest tech products and earn rewards',
-        cpm: 4.00,
-        status: 'active',
-        totalViews: 15000,
-        totalPaid: 60.00,
-        approvedSubmissions: 5,
-        totalSubmissions: 8,
-        effectiveCPM: 4.00
-      },
-      {
-        id: 'reward-2',
-        name: 'Fashion Haul Campaign',
-        description: 'Create fashion content and showcase new trends',
-        cpm: 3.50,
-        status: 'active',
-        totalViews: 25000,
-        totalPaid: 87.50,
-        approvedSubmissions: 7,
-        totalSubmissions: 10,
-        effectiveCPM: 3.50
-      }
-    ]
-
-    // Initialize mock submissions
-    this.submissions = [
-      {
-        id: 'sub-1',
-        creator_id: 'demo-user-1',
-        username: 'demo_user',
-        display_name: 'Demo User',
-        campaign_id: 'reward-1',
-        campaign_name: 'Tech Review Campaign',
-        title: 'iPhone 15 Pro Review',
-        description: 'Comprehensive review of the new iPhone 15 Pro',
-        private_video_link: 'https://youtube.com/watch?v=demo1',
-        public_video_link: 'https://youtube.com/watch?v=demo1',
-        thumbnail_url: 'https://img.youtube.com/vi/demo1/maxresdefault.jpg',
-        platform: 'youtube',
-        status: 'approved',
-        visibility: 'public',
-        paid: true,
-        views: 5000,
-        likes: 250,
-        submission_date: new Date('2024-01-10'),
-        published_date: new Date('2024-01-12'),
-        approved_at: new Date('2024-01-12'),
-        rejected_at: undefined,
-        review_note: 'Great content, approved!'
-      },
-      {
-        id: 'sub-2',
-        creator_id: 'demo-user-1',
-        username: 'demo_user',
-        display_name: 'Demo User',
-        campaign_id: 'reward-2',
-        campaign_name: 'Fashion Haul Campaign',
-        title: 'Fall Fashion Haul',
-        description: 'Latest fall fashion trends and styling tips',
-        private_video_link: 'https://youtube.com/watch?v=demo2',
-        public_video_link: undefined,
-        thumbnail_url: 'https://img.youtube.com/vi/demo2/maxresdefault.jpg',
-        platform: 'youtube',
-        status: 'pending_review',
-        visibility: 'private',
-        paid: false,
-        views: 0,
-        likes: 0,
-        submission_date: new Date('2024-01-20'),
-        published_date: undefined,
-        approved_at: undefined,
-        rejected_at: undefined,
-        review_note: undefined
-      }
-    ]
-
-    console.log('Mock data initialized successfully')
-  }
 
   async getContentRewards(): Promise<ContentReward[]> {
-    try {
-      const response = await fetch('/api/content-rewards')
-      if (!response.ok) throw new Error('Failed to fetch content rewards')
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching content rewards:', error)
-      console.log('Using mock content rewards data')
-      // Always return mock data for now since database might not be set up
-      return this.contentRewards || [
-        {
-          id: 'reward-1',
-          name: 'Tech Review Campaign',
-          description: 'Review the latest tech products and earn rewards',
-          cpm: 4.00,
-          status: 'active',
-          total_views: 15000,
-          total_paid: 60.00,
-          approved_submissions: 5,
-          total_submissions: 8,
-          effective_cpm: 4.00,
-          created_by: 'demo-user-1',
-          created_at: new Date('2024-01-01'),
-          updated_at: new Date('2024-01-15')
-        }
-      ]
-    }
+    const response = await fetch('/api/content-rewards')
+    if (!response.ok) throw new Error('Failed to fetch content rewards')
+    return await response.json()
   }
 
   async getSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Promise<Submission[]> {
-    try {
-      const params = new URLSearchParams()
-      if (filters?.status) params.append('status', filters.status)
-      if (filters?.creator_id) params.append('creator_id', filters.creator_id)
-      if (filters?.public_only) params.append('public_only', 'true')
-      
-      const response = await fetch(`/api/submissions?${params}`)
-      if (!response.ok) throw new Error('Failed to fetch submissions')
-      return await response.json()
-    } catch (error) {
-      console.error('Error fetching submissions:', error)
-      console.log('Using mock submissions data')
-      // Always return mock data for now since database might not be set up
-      let mockSubmissions = this.submissions || [
-        {
-          id: 'sub-1',
-          creator_id: 'demo-user-1',
-          username: 'demo_user',
-          display_name: 'Demo User',
-          campaign_id: 'reward-1',
-          campaign_name: 'Tech Review Campaign',
-          title: 'iPhone 15 Pro Review',
-          description: 'Comprehensive review of the new iPhone 15 Pro',
-          private_video_link: 'https://youtube.com/watch?v=demo1',
-          public_video_link: 'https://youtube.com/watch?v=demo1',
-          thumbnail_url: 'https://img.youtube.com/vi/demo1/maxresdefault.jpg',
-          platform: 'youtube',
-          status: 'approved',
-          visibility: 'public',
-          paid: true,
-          views: 5000,
-          likes: 250,
-          submission_date: new Date('2024-01-10'),
-          published_date: new Date('2024-01-12'),
-          approved_at: new Date('2024-01-12'),
-          rejected_at: null,
-          review_note: 'Great content, approved!'
-        },
-        {
-          id: 'sub-2',
-          creator_id: 'demo-user-1',
-          username: 'demo_user',
-          display_name: 'Demo User',
-          campaign_id: 'reward-2',
-          campaign_name: 'Fashion Haul Campaign',
-          title: 'Fall Fashion Haul',
-          description: 'Latest fall fashion trends and styling tips',
-          private_video_link: 'https://youtube.com/watch?v=demo2',
-          public_video_link: null,
-          thumbnail_url: 'https://img.youtube.com/vi/demo2/maxresdefault.jpg',
-          platform: 'youtube',
-          status: 'pending_review',
-          visibility: 'private',
-          paid: false,
-          views: 0,
-          likes: 0,
-          submission_date: new Date('2024-01-20'),
-          published_date: null,
-          approved_at: null,
-          rejected_at: null,
-          review_note: null
-        }
-      ]
-      
-      // Apply filters to mock data
-      if (filters?.status) {
-        mockSubmissions = mockSubmissions.filter((sub: Submission) => sub.status === filters.status)
-      }
-      if (filters?.creator_id) {
-        mockSubmissions = mockSubmissions.filter((sub: Submission) => sub.creator_id === filters.creator_id)
-      }
-      if (filters?.public_only) {
-        mockSubmissions = mockSubmissions.filter((sub: Submission) => sub.status === 'approved' && sub.visibility === 'public')
-      }
-      
-      return mockSubmissions
-    }
+    const params = new URLSearchParams()
+    if (filters?.status) params.append('status', filters.status)
+    if (filters?.creator_id) params.append('creator_id', filters.creator_id)
+    if (filters?.public_only) params.append('public_only', 'true')
+    
+    const response = await fetch(`/api/submissions?${params}`)
+    if (!response.ok) throw new Error('Failed to fetch submissions')
+    return await response.json()
   }
 
   async createSubmission(submissionData: any): Promise<Submission> {
-    try {
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
-      })
-      if (!response.ok) throw new Error('Failed to create submission')
-        return await response.json()
-    } catch (error) {
-      console.error('Error creating submission:', error)
-      console.log('Creating mock submission')
-      
-      // Create mock submission
-      const mockSubmission: Submission = {
-        id: `sub-${Date.now()}`,
-        creator_id: this.user?.id || 'demo-user-1',
-        username: this.user?.username || 'demo_user',
-        display_name: this.user?.display_name || 'Demo User',
-        campaign_id: submissionData.campaignId,
-        campaign_name: 'Mock Campaign',
-        title: submissionData.title,
-        description: submissionData.description,
-        private_video_link: submissionData.storageKey,
-        public_video_link: undefined,
-        thumbnail_url: submissionData.thumbKey,
-        platform: 'youtube',
-        status: 'pending_review',
-        visibility: 'private',
-        paid: false,
-        views: 0,
-        likes: 0,
-        submission_date: new Date(),
-        published_date: undefined,
-        approved_at: undefined,
-        rejected_at: undefined,
-        review_note: undefined
-      }
-      
-      // Add to mock submissions
-      if (this.submissions) {
-        this.submissions.push(mockSubmission)
-      }
-      
-      return mockSubmission
-    }
+    const response = await fetch('/api/submissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submissionData)
+    })
+    if (!response.ok) throw new Error('Failed to create submission')
+    return await response.json()
   }
 
   async approveSubmission(submissionId: string): Promise<void> {
@@ -496,7 +311,7 @@ export class RealWhopSDK implements WhopSDK {
       return await response.json()
     } catch (error) {
       console.error('Error fetching member statistics:', error)
-      return {
+        return {
         totalMembers: 0,
         activeMembers: 0,
         newMembers: 0,
@@ -604,12 +419,8 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Failed to initialize Whop SDK:', error)
-        console.log('Falling back to mock data...')
-        // Don't set error, just use mock data
-        const mockSDK = new RealWhopSDK()
-        await mockSDK.initializeMockData()
         if (isMounted) {
-          setSdk(mockSDK)
+          setSdk(null)
           setLoading(false)
         }
       }
@@ -618,29 +429,23 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (isMounted) {
-        console.log('SDK initialization timeout, using mock data')
-        const mockSDK = new RealWhopSDK()
-        mockSDK.initializeMockData().then(() => {
-          if (isMounted) {
-            setSdk(mockSDK)
-            setLoading(false)
-          }
-        })
+        console.log('SDK initialization timeout')
+        if (isMounted) {
+          setSdk(null)
+          setLoading(false)
+        }
       }
     }, 3000) // Reduced timeout to 3 seconds
 
     // Force load after 5 seconds if still loading (reduced for production)
     const forceTimeout = setTimeout(() => {
       if (isMounted && loading) {
-        console.log('Force loading app with mock data')
-        const mockSDK = new RealWhopSDK()
-        mockSDK.initializeMockData().then(() => {
-          if (isMounted) {
-            setSdk(mockSDK)
-            setLoading(false)
-            setForceLoad(true)
-          }
-        })
+        console.log('Force loading app without SDK')
+        if (isMounted) {
+          setSdk(null)
+          setLoading(false)
+          setForceLoad(true)
+        }
       }
     }, 5000) // Reduced to 5 seconds for production
 
