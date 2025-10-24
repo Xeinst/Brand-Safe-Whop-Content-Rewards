@@ -1,6 +1,6 @@
 {
   "name": "content-rewards",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Content Rewards - A comprehensive Whop app for brand-safe content approval and CPM-based rewards",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "rm -rf dist && tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",

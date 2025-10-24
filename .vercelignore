@@ -1,5 +1,9 @@
-# Ignore build cache to force fresh builds
+# Force fresh builds - ignore all cache
 .vercel
 node_modules
 dist
 *.log
+.cache
+.vite
+.next
+.turbo
