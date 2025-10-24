@@ -1,5 +1,6 @@
 import { WhopSDKProvider } from './lib/whop-sdk'
 import { AppRouter } from './AppRouter'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import './whop-brand.css'
 
 function App() {
@@ -11,9 +12,13 @@ function App() {
   
   return (
     <div className="whop-app">
-      <WhopSDKProvider>
-        <AppRouter />
-      </WhopSDKProvider>
+      <ErrorBoundary>
+        <WhopSDKProvider>
+          <ErrorBoundary>
+            <AppRouter />
+          </ErrorBoundary>
+        </WhopSDKProvider>
+      </ErrorBoundary>
     </div>
   )
 }

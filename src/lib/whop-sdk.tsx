@@ -206,7 +206,7 @@ export class RealWhopSDK implements WhopSDK {
       // If no company data from Whop, use fallback
       if (!this.company) {
         console.log('🔄 [WHOP SDK] Using fallback company data')
-        this.company = {
+      this.company = {
           id: 'demo-company-1',
           name: 'Demo Brand Community',
           description: 'A sample community for testing brand-safe content approval',
@@ -444,10 +444,18 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let isMounted = true
+    let initializationStarted = false
+    
     console.log('🚀 [WHOP PROVIDER] WhopSDKProvider mounted')
     console.log('🔄 [WHOP PROVIDER] Initial state - loading:', loading, 'sdk:', !!sdk)
 
     const initSDK = async () => {
+      if (initializationStarted) {
+        console.log('⚠️ [WHOP PROVIDER] Initialization already started, skipping')
+        return
+      }
+      initializationStarted = true
+      
       try {
         console.log('🔄 [WHOP PROVIDER] Starting SDK initialization...')
         // Check if we're in Whop environment
@@ -481,26 +489,26 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
 
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      if (isMounted) {
-        console.log('SDK initialization timeout')
+      if (isMounted && !sdk) {
+        console.log('⏰ [WHOP PROVIDER] SDK initialization timeout, using fallback')
         if (isMounted) {
           setSdk(null)
           setLoading(false)
         }
       }
-    }, 3000) // Reduced timeout to 3 seconds
+    }, 2000) // Reduced timeout to 2 seconds
 
-    // Force load after 5 seconds if still loading (reduced for production)
+    // Force load after 3 seconds if still loading
     const forceTimeout = setTimeout(() => {
       if (isMounted && loading) {
-        console.log('Force loading app without SDK')
+        console.log('🔄 [WHOP PROVIDER] Force loading app without SDK')
         if (isMounted) {
           setSdk(null)
           setLoading(false)
           setForceLoad(true)
         }
       }
-    }, 5000) // Reduced to 5 seconds for production
+    }, 3000) // Reduced to 3 seconds
 
     initSDK()
 
@@ -509,7 +517,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timeout)
       clearTimeout(forceTimeout)
     }
-  }, []) // Remove loading dependency to prevent infinite loop
+  }, []) // Empty dependency array to prevent re-initialization
 
   if (loading) {
     return (

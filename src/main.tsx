@@ -9,6 +9,16 @@ console.log('🪟 [MAIN] Window location:', window.location.href)
 console.log('🪟 [MAIN] Document ready state:', document.readyState)
 console.log('🪟 [MAIN] User agent:', navigator.userAgent)
 
+// Global error handler to catch unhandled errors
+window.addEventListener('error', (event) => {
+  console.error('🚨 [GLOBAL ERROR]', event.error)
+  console.error('🚨 [GLOBAL ERROR] Stack:', event.error?.stack)
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('🚨 [UNHANDLED REJECTION]', event.reason)
+})
+
 // Check if root element exists
 const rootElement = document.getElementById('root')
 console.log('🎯 [MAIN] Root element found:', !!rootElement)
@@ -22,7 +32,7 @@ if (!rootElement) {
   try {
     const root = ReactDOM.createRoot(rootElement)
     console.log('✅ [MAIN] React root created successfully')
-    
+
     console.log('🔄 [MAIN] Rendering App component')
     root.render(
       <React.StrictMode>
