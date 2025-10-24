@@ -434,7 +434,13 @@ export class RealWhopSDK implements WhopSDK {
 }
 
 // Context and Provider
-const WhopSDKContext = createContext<WhopSDK | null>(null)
+interface WhopSDKContextType {
+  sdk: WhopSDK | null
+  loading: boolean
+  error: string | null
+}
+
+const WhopSDKContext = createContext<WhopSDKContextType | null>(null)
 
 export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
   const [sdk, setSdk] = useState<WhopSDK | null>(null)
@@ -546,18 +552,36 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <WhopSDKContext.Provider value={sdk}>
+    <WhopSDKContext.Provider value={{ sdk, loading, error }}>
       {children}
     </WhopSDKContext.Provider>
   )
 }
 
-export function useWhopSDK(): WhopSDK {
-  const sdk = useContext(WhopSDKContext)
-  if (!sdk) {
+export function useWhopSDKContext(): WhopSDKContextType {
+  const context = useContext(WhopSDKContext)
+  if (!context) {
     throw new Error('useWhopSDK must be used within a WhopSDKProvider')
   }
-  return sdk
+  return context
+}
+
+export function useWhopSDK(): WhopSDK {
+  const context = useWhopSDKContext()
+  
+  if (context.loading) {
+    throw new Error('WhopSDK is still loading')
+  }
+  
+  if (context.error) {
+    throw new Error(`WhopSDK error: ${context.error}`)
+  }
+  
+  if (!context.sdk) {
+    throw new Error('WhopSDK is not available')
+  }
+  
+  return context.sdk
 }
 
 // WhopApp component for Whop integration

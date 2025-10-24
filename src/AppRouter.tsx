@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useWhopSDK } from './lib/whop-sdk'
+import { useWhopSDKContext } from './lib/whop-sdk'
 import { ExperienceView } from './components/ExperienceView'
 import { DiscoverView } from './components/DiscoverView'
 import { MemberStatsView } from './components/MemberStatsView'
@@ -19,7 +19,7 @@ import OwnerDashboard from './pages/dashboard/[companyId]'
 import MemberExperience from './pages/experiences/[experienceId]'
 
 export function AppRouter() {
-  const sdk = useWhopSDK()
+  const { sdk, loading, error } = useWhopSDKContext()
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
   const [forceRender, setForceRender] = useState(false)
@@ -27,21 +27,65 @@ export function AppRouter() {
   // Force render after 10 seconds if SDK never loads
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (!sdk) {
+      if (loading && !sdk) {
         console.log('Force rendering app without SDK')
         setForceRender(true)
       }
     }, 10000)
     
     return () => clearTimeout(timeout)
-  }, [sdk])
+  }, [loading, sdk])
 
   // Debug logging
   console.log('AppRouter: SDK available:', !!sdk)
+  console.log('AppRouter: Loading:', loading)
+  console.log('AppRouter: Error:', error)
   console.log('AppRouter: Current path:', currentPath)
   console.log('AppRouter: SDK methods:', sdk ? Object.keys(sdk) : 'No SDK')
   console.log('AppRouter: Window location:', window.location.href)
   console.log('AppRouter: Parent window:', window.parent !== window)
+
+  // Show loading state
+  if (loading && !forceRender) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
+          <p className="text-gray-600">Loading application...</p>
+          <p className="text-sm text-gray-500 mt-2">Initializing Whop SDK...</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
+          <p className="text-red-600 mb-4">Error loading application</p>
+          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Fallback if SDK is not available
   if (!sdk && !forceRender) {
@@ -107,8 +151,8 @@ export function AppRouter() {
   // Route to appropriate component based on path and user role
   const renderCurrentView = () => {
     console.log('🎯 [APP ROUTER] Rendering view for path:', currentPath)
-    console.log('👤 [APP ROUTER] User role - isOwner:', sdk?.isOwner(), 'isMember:', sdk?.isMember())
-    console.log('🔐 [APP ROUTER] User authenticated:', sdk?.isAuthenticated())
+    console.log('👤 [APP ROUTER] User role - isOwner:', sdk?.isOwner?.(), 'isMember:', sdk?.isMember?.())
+    console.log('🔐 [APP ROUTER] User authenticated:', sdk?.isAuthenticated?.())
     console.log('👤 [APP ROUTER] User data:', sdk?.user)
     console.log('🏢 [APP ROUTER] Company data:', sdk?.company)
     console.log('🪟 [APP ROUTER] Window location:', window.location.href)
@@ -118,7 +162,7 @@ export function AppRouter() {
     if (currentPath.startsWith('/dashboard/')) {
       // Dashboard path - Owner view
       console.log('🏢 [APP ROUTER] Dashboard path detected - showing owner dashboard')
-      if (sdk?.isOwner()) {
+      if (sdk?.isOwner?.()) {
         console.log('✅ [APP ROUTER] User is owner, showing OwnerDashboard')
         return <OwnerDashboard />
       } else {
@@ -136,7 +180,7 @@ export function AppRouter() {
     if (currentPath.startsWith('/experiences/')) {
       // Experience path - Member view
       console.log('👥 [APP ROUTER] Experience path detected - showing member experience')
-      if (sdk?.isAuthenticated()) {
+      if (sdk?.isAuthenticated?.()) {
         console.log('✅ [APP ROUTER] User is authenticated, showing MemberExperience')
         return <MemberExperience />
       } else {
@@ -158,9 +202,9 @@ export function AppRouter() {
 
     // If no specific path, route based on user role
     if (currentPath === '/' || currentPath === '/dashboard') {
-      if (sdk?.isOwner()) {
+      if (sdk?.isOwner?.()) {
         return <ContentRewardsDashboard />
-      } else if (sdk?.isMember()) {
+      } else if (sdk?.isMember?.()) {
         return <ContentCreatorView />
       } else {
         // Default to member view if role is unclear
@@ -173,7 +217,7 @@ export function AppRouter() {
       case '/owner':
       case '/dashboard':
         // Only owners can access owner dashboard
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <ContentRewardsDashboard />
         } else {
           return <ContentCreatorView />
@@ -187,14 +231,14 @@ export function AppRouter() {
         return <ContentSubmissionView />
       case '/moderate':
         // Only owners can moderate content
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <BrandModerationView />
         } else {
           return <ContentCreatorView />
         }
       case '/payouts':
         // Only owners can access payouts
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <CPMPayoutView />
         } else {
           return <ContentCreatorView />
@@ -207,21 +251,21 @@ export function AppRouter() {
         return <DiscoverView />
       case '/dashboard/member-stats':
         // Only owners can access member stats
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <MemberStatsView />
         } else {
           return <ContentCreatorView />
         }
       case '/campaigns':
         // Only owners can manage campaigns
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <CampaignManagement />
         } else {
           return <ContentCreatorView />
         }
       case '/all-submissions':
         // Only owners can see all submissions
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <AllSubmissionsView />
         } else {
           return <ContentCreatorView />
@@ -231,16 +275,16 @@ export function AppRouter() {
         return <MySubmissionsView />
       case '/admin/review':
         // Only owners can access admin review
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <AdminReviewView />
         } else {
           return <ContentCreatorView />
         }
       default:
         // Default based on user role
-        if (sdk?.isOwner()) {
+        if (sdk?.isOwner?.()) {
           return <ContentRewardsDashboard />
-        } else if (sdk?.isMember()) {
+        } else if (sdk?.isMember?.()) {
           return <ContentCreatorView />
         } else {
           return <ContentCreatorView />
