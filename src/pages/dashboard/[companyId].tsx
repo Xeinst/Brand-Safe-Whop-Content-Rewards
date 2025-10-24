@@ -320,10 +320,12 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="review-note" className="block text-sm font-medium text-gray-300 mb-2">
                     Review Note (Optional)
                   </label>
                   <textarea
+                    id="review-note"
+                    name="reviewNote"
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"

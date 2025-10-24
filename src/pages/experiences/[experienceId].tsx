@@ -195,10 +195,12 @@ export default function MemberExperience() {
           <div className="bg-gray-800 rounded-lg p-6">
             <form onSubmit={handleUpload} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="content-title" className="block text-sm font-medium text-gray-300 mb-2">
                   Title *
                 </label>
                 <input
+                  id="content-title"
+                  name="title"
                   type="text"
                   value={uploadForm.title}
                   onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
@@ -209,10 +211,12 @@ export default function MemberExperience() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="content-description" className="block text-sm font-medium text-gray-300 mb-2">
                   Description
                 </label>
                 <textarea
+                  id="content-description"
+                  name="description"
                   value={uploadForm.description}
                   onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
@@ -222,10 +226,12 @@ export default function MemberExperience() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="content-file" className="block text-sm font-medium text-gray-300 mb-2">
                   Video File *
                 </label>
                 <input
+                  id="content-file"
+                  name="file"
                   type="file"
                   accept="video/*"
                   onChange={(e) => setUploadForm({ ...uploadForm, file: e.target.files?.[0] || null })}
@@ -316,10 +322,12 @@ export default function MemberExperience() {
           <h2 className="text-2xl font-bold mb-6">Earnings</h2>
           <div className="bg-gray-800 rounded-lg p-6">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="earnings-period" className="block text-sm font-medium text-gray-300 mb-2">
                 Select Period
               </label>
               <select
+                id="earnings-period"
+                name="period"
                 value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"

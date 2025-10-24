@@ -164,10 +164,12 @@ export function ContentSubmissionView() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Content Reward Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="content-reward" className="block text-sm font-medium text-gray-300 mb-2">
                 Content Reward
               </label>
               <select
+                id="content-reward"
+                name="contentRewardId"
                 value={formData.contentRewardId}
                 onChange={(e) => setFormData(prev => ({ ...prev, contentRewardId: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
@@ -184,10 +186,12 @@ export function ContentSubmissionView() {
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="content-title" className="block text-sm font-medium text-gray-300 mb-2">
                 Content Title *
               </label>
               <input
+                id="content-title"
+                name="title"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
@@ -199,10 +203,12 @@ export function ContentSubmissionView() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="content-description" className="block text-sm font-medium text-gray-300 mb-2">
                 Description
               </label>
               <textarea
+                id="content-description"
+                name="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
@@ -213,11 +219,13 @@ export function ContentSubmissionView() {
 
             {/* Video URL */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="video-url" className="block text-sm font-medium text-gray-300 mb-2">
                 Video URL *
               </label>
               <div className="relative">
                 <input
+                  id="video-url"
+                  name="videoUrl"
                   type="url"
                   value={formData.videoUrl}
                   onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
@@ -234,10 +242,12 @@ export function ContentSubmissionView() {
 
             {/* Platform */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="platform" className="block text-sm font-medium text-gray-300 mb-2">
                 Platform
               </label>
               <select
+                id="platform"
+                name="platform"
                 value={formData.platform}
                 onChange={(e) => setFormData(prev => ({ ...prev, platform: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
