@@ -391,6 +391,10 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
 
     const initSDK = async () => {
       try {
+        // Check if we're in Whop environment
+        const isWhopEnvironment = window.parent !== window || window.location.hostname.includes('whop.com')
+        console.log('Whop environment detected:', isWhopEnvironment)
+        
         const realSDK = new RealWhopSDK()
         await realSDK.init()
         if (isMounted) {
@@ -399,6 +403,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Failed to initialize Whop SDK:', error)
+        console.log('Falling back to mock data...')
         // Don't set error, just use mock data
         const mockSDK = new RealWhopSDK()
         await mockSDK.initializeMockData()
@@ -423,7 +428,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       }
     }, 3000) // Reduced timeout to 3 seconds
 
-    // Force load after 10 seconds if still loading
+    // Force load after 5 seconds if still loading (reduced for production)
     const forceTimeout = setTimeout(() => {
       if (isMounted && loading) {
         console.log('Force loading app with mock data')
@@ -436,7 +441,7 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
           }
         })
       }
-    }, 10000)
+    }, 5000) // Reduced to 5 seconds for production
 
     initSDK()
 

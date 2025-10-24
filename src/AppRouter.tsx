@@ -19,20 +19,73 @@ export function AppRouter() {
   const sdk = useWhopSDK()
   const [toastNotification, setToastNotification] = useState<any>(null)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
+  const [forceRender, setForceRender] = useState(false)
+
+  // Force render after 10 seconds if SDK never loads
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!sdk) {
+        console.log('Force rendering app without SDK')
+        setForceRender(true)
+      }
+    }, 10000)
+    
+    return () => clearTimeout(timeout)
+  }, [sdk])
 
   // Debug logging
   console.log('AppRouter: SDK available:', !!sdk)
   console.log('AppRouter: Current path:', currentPath)
   console.log('AppRouter: SDK methods:', sdk ? Object.keys(sdk) : 'No SDK')
+  console.log('AppRouter: Window location:', window.location.href)
+  console.log('AppRouter: Parent window:', window.parent !== window)
 
   // Fallback if SDK is not available
-  if (!sdk) {
+  if (!sdk && !forceRender) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
           <p className="text-gray-600">Loading application...</p>
           <p className="text-sm text-gray-500 mt-2">SDK not available yet</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Force render without SDK if timeout reached
+  if (!sdk && forceRender) {
+    console.log('Rendering app without SDK due to timeout')
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="p-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Brand Safe Content Rewards</h1>
+          <p className="text-gray-600 mb-4">App loaded in fallback mode</p>
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+            <p className="text-sm">SDK initialization failed. App is running in demo mode.</p>
+          </div>
+          <div className="space-y-4">
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
+            >
+              Retry
+            </button>
+            <button 
+              onClick={() => setForceRender(false)} 
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+            >
+              Back to Loading
+            </button>
+          </div>
         </div>
       </div>
     )
