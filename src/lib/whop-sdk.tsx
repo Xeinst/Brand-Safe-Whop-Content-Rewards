@@ -797,8 +797,11 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       if (isMounted && !sdk) {
         console.log('⏰ [WHOP PROVIDER] SDK initialization timeout, using fallback')
         if (isMounted) {
-          setSdk(null)
-          setLoading(false)
+          // Don't set SDK to null if it's already initialized
+          if (!sdk) {
+            setSdk(null)
+            setLoading(false)
+          }
         }
       }
     }, 500)
@@ -808,8 +811,11 @@ export function WhopSDKProvider({ children }: { children: React.ReactNode }) {
       if (isMounted && loading) {
         console.log('🔄 [WHOP PROVIDER] Force loading app without SDK')
         if (isMounted) {
-          setSdk(null)
-          setLoading(false)
+          // Only set to null if SDK is still not available
+          if (!sdk) {
+            setSdk(null)
+            setLoading(false)
+          }
         }
       }
     }, 1000)

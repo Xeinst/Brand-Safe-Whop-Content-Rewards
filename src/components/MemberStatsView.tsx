@@ -25,17 +25,23 @@ export function MemberStatsView() {
 
   useEffect(() => {
     const loadMemberStats = async () => {
-      if (!sdk) return
-      
       setLoading(true)
-      try {
-        const stats = await sdk.getMemberStatistics()
-        setMemberStats(stats)
-      } catch (error) {
-        console.error('Failed to load member statistics:', error)
-      } finally {
-        setLoading(false)
+      
+      if (sdk) {
+        try {
+          // Load real data from SDK
+          const stats = await sdk.getMemberStatistics()
+          setMemberStats(stats)
+        } catch (error) {
+          console.error('Failed to load member statistics:', error)
+          setMemberStats(null)
+        }
+      } else {
+        // No SDK available - show empty state
+        setMemberStats(null)
       }
+      
+      setLoading(false)
     }
 
     loadMemberStats()

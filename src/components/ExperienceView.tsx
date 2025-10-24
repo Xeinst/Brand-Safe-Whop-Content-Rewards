@@ -19,57 +19,32 @@ export function ExperienceView() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading user data and rewards
     const loadData = async () => {
       setLoading(true)
-      // In a real app, you would fetch this data from your backend
-      await new Promise(resolve => setTimeout(resolve, 1000))
       
-      const mockRewards: Reward[] = [
-        {
-          id: '1',
-          title: 'Create Quality Content',
-          description: 'Share engaging content that adds value to the community',
-          points: 50,
-          category: 'content',
-          isCompleted: false,
-          progress: 60
-        },
-        {
-          id: '2',
-          title: 'Engage with Community',
-          description: 'Like, comment, and share community posts to build engagement',
-          points: 30,
-          category: 'engagement',
-          isCompleted: true
-        },
-        {
-          id: '3',
-          title: 'Help Community Growth',
-          description: 'Invite friends and help grow the community',
-          points: 25,
-          category: 'community',
-          isCompleted: false,
-          progress: 20
-        },
-        {
-          id: '4',
-          title: 'Post Daily Content',
-          description: 'Maintain consistent posting schedule to build audience',
-          points: 100,
-          category: 'content',
-          isCompleted: false,
-          progress: 0
+      if (user && company) {
+        try {
+          // Load real data from SDK
+          // This would be replaced with actual SDK calls
+          // For now, show empty state until real data is available
+          setRewards([])
+          setUserPoints(0)
+        } catch (error) {
+          console.error('Failed to load user data:', error)
+          setRewards([])
+          setUserPoints(0)
         }
-      ]
+      } else {
+        // No SDK available - cannot load data
+        setRewards([])
+        setUserPoints(0)
+      }
       
-      setRewards(mockRewards)
-      setUserPoints(305) // Mock user points
       setLoading(false)
     }
 
     loadData()
-  }, [])
+  }, [user, company])
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -148,7 +123,21 @@ export function ExperienceView() {
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Available Rewards</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          {rewards.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Award className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No rewards available</h3>
+              <p className="text-gray-500">
+                {user && company 
+                  ? "Start creating content to earn rewards!" 
+                  : "Connect to your Whop account to see available rewards."
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
             {rewards.map((reward) => (
               <div
                 key={reward.id}
@@ -204,7 +193,8 @@ export function ExperienceView() {
                 )}
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
