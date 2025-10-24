@@ -19,6 +19,7 @@ export interface CampaignSubmission {
   campaignId: string
   userId: string
   contentUrl: string
+  fileUrl: string
   contentType: 'image' | 'video' | 'text'
   title: string
   description: string
@@ -27,6 +28,7 @@ export interface CampaignSubmission {
   reviewedAt?: Date
   reviewerId?: string
   feedback?: string
+  rejectionReason?: string | null
   rewardEarned?: number
 }
 

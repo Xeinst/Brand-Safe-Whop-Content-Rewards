@@ -330,11 +330,11 @@ export class ModernWhopSDK implements WhopSDK {
         description: campaign.description,
         cpm: campaign.rewardPerUpload / 10, // Convert points back to CPM
         status: campaign.status === 'active' ? 'active' : 'paused',
-        totalViews: Math.floor(Math.random() * 10000), // Mock data
-        totalPaid: Math.floor(Math.random() * 5000), // Mock data
-        approvedSubmissions: Math.floor(Math.random() * 100), // Mock data
-        totalSubmissions: Math.floor(Math.random() * 150), // Mock data
-        effectiveCPM: campaign.rewardPerUpload / 10 // Mock data
+        totalViews: 0, // Real data would come from analytics
+        totalPaid: 0, // Real data would come from payout system
+        approvedSubmissions: 0, // Real data would come from submissions
+        totalSubmissions: 0, // Real data would come from submissions
+        effectiveCPM: campaign.rewardPerUpload / 10 // Real data would be calculated
       }))
       
       return contentRewards
@@ -733,11 +733,11 @@ export class ModernWhopSDK implements WhopSDK {
         description: updatedCampaign.description,
         cpm: updates.cpm || (updatedCampaign.rewardPerUpload / 10),
         status: updatedCampaign.status === 'active' ? 'active' : 'paused',
-        totalViews: Math.floor(Math.random() * 10000), // Mock data
-        totalPaid: Math.floor(Math.random() * 5000), // Mock data
-        approvedSubmissions: Math.floor(Math.random() * 100), // Mock data
-        totalSubmissions: Math.floor(Math.random() * 150), // Mock data
-        effectiveCPM: updatedCampaign.rewardPerUpload / 10 // Mock data
+        totalViews: 0, // Real data would come from analytics
+        totalPaid: 0, // Real data would come from payout system
+        approvedSubmissions: 0, // Real data would come from submissions
+        totalSubmissions: 0, // Real data would come from submissions
+        effectiveCPM: updatedCampaign.rewardPerUpload / 10 // Real data would be calculated
       }
       
       return contentReward

@@ -9,62 +9,9 @@ export class CampaignService {
   }
 
   private initializeMockData() {
-    // Mock active campaigns
-    this.campaigns = [
-      {
-        id: 'campaign-1',
-        name: 'Summer Brand Safety Campaign',
-        description: 'Share your summer moments while maintaining brand safety standards',
-        status: 'active',
-        startDate: new Date('2024-06-01'),
-        endDate: new Date('2024-08-31'),
-        brandGuidelines: [
-          'No inappropriate content',
-          'Must align with brand values',
-          'High quality images/videos only'
-        ],
-        rewardPerUpload: 50,
-        maxUploadsPerUser: 10,
-        allowedContentTypes: ['image', 'video'],
-        companyId: 'demo-company-1',
-        createdAt: new Date('2024-05-15'),
-        updatedAt: new Date('2024-05-15')
-      },
-      {
-        id: 'campaign-2',
-        name: 'Holiday Content Drive',
-        description: 'Create festive content for the holiday season',
-        status: 'active',
-        startDate: new Date('2024-12-01'),
-        endDate: new Date('2024-12-31'),
-        brandGuidelines: [
-          'Holiday-themed content only',
-          'Family-friendly content',
-          'No copyrighted music'
-        ],
-        rewardPerUpload: 75,
-        maxUploadsPerUser: 5,
-        allowedContentTypes: ['image', 'video', 'text'],
-        companyId: 'demo-company-1',
-        createdAt: new Date('2024-11-15'),
-        updatedAt: new Date('2024-11-15')
-      },
-      {
-        id: 'campaign-3',
-        name: 'Completed Campaign',
-        description: 'This campaign has ended',
-        status: 'completed',
-        startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-03-31'),
-        brandGuidelines: ['Old guidelines'],
-        rewardPerUpload: 25,
-        maxUploadsPerUser: 20,
-        allowedContentTypes: ['image'],
-        companyId: 'demo-company-1',
-        createdAt: new Date('2023-12-15'),
-        updatedAt: new Date('2024-03-31')
-      }
-    ]
+    // No mock data - start with empty arrays
+    this.campaigns = []
+    this.submissions = []
   }
 
   // Add a new campaign
@@ -179,11 +126,46 @@ export class CampaignService {
     return newSubmission
   }
 
+  // Get all submissions across all campaigns
+  async getAllSubmissions(): Promise<CampaignSubmission[]> {
+    return [...this.submissions]
+  }
+
   // Get user's submissions for a campaign
   async getUserSubmissions(campaignId: string, userId: string): Promise<CampaignSubmission[]> {
     return this.submissions.filter(
       sub => sub.campaignId === campaignId && sub.userId === userId
     )
+  }
+
+  // Approve a submission
+  async approveSubmission(submissionId: string, data: { rewardEarned: number }): Promise<CampaignSubmission> {
+    const submission = this.submissions.find(sub => sub.id === submissionId)
+    if (!submission) {
+      throw new Error('Submission not found')
+    }
+
+    submission.status = 'approved'
+    submission.reviewedAt = new Date()
+    submission.rewardEarned = data.rewardEarned
+    submission.rejectionReason = null
+
+    return submission
+  }
+
+  // Reject a submission
+  async rejectSubmission(submissionId: string, reason: string): Promise<CampaignSubmission> {
+    const submission = this.submissions.find(sub => sub.id === submissionId)
+    if (!submission) {
+      throw new Error('Submission not found')
+    }
+
+    submission.status = 'rejected'
+    submission.reviewedAt = new Date()
+    submission.rejectionReason = reason
+    submission.rewardEarned = undefined
+
+    return submission
   }
 
   // Get campaign statistics

@@ -93,6 +93,7 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
         user.id,
         {
           contentUrl: formData.contentUrl,
+          fileUrl: formData.contentUrl, // Same as contentUrl for now
           contentType: formData.contentType,
           title: formData.title,
           description: formData.description

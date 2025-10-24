@@ -80,6 +80,20 @@ export function CampaignManagement() {
             
             <div className="flex items-center space-x-4">
               <button
+                onClick={() => window.location.href = '/approval'}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Review Content</span>
+              </button>
+              <button
+                onClick={() => window.location.href = '/campaigns/analytics'}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Analytics</span>
+              </button>
+              <button
                 onClick={() => setShowCreateForm(true)}
                 className="px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center space-x-2"
               >

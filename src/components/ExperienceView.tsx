@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useWhopSDK } from '../lib/whop-sdk'
-import { Star, Award, Users, TrendingUp, Shield, Target } from 'lucide-react'
+import { Star, Award, Users, TrendingUp, Shield, Target, Upload } from 'lucide-react'
+import { CampaignSelector } from './CampaignSelector'
+import { ContentUpload } from './ContentUpload'
+import { Campaign } from '../types/campaign'
+import { CampaignSubmission } from '../types/campaign'
 
 interface Reward {
   id: string
@@ -17,6 +21,10 @@ export function ExperienceView() {
   const [rewards, setRewards] = useState<Reward[]>([])
   const [userPoints, setUserPoints] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [showCampaignSelector, setShowCampaignSelector] = useState(false)
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+  const [showUpload, setShowUpload] = useState(false)
+  const [recentSubmissions, setRecentSubmissions] = useState<CampaignSubmission[]>([])
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +53,23 @@ export function ExperienceView() {
 
     loadData()
   }, [user, company])
+
+  const handleCampaignSelect = (campaign: Campaign) => {
+    setSelectedCampaign(campaign)
+    setShowCampaignSelector(false)
+    setShowUpload(true)
+  }
+
+  const handleUploadSuccess = (submission: CampaignSubmission) => {
+    setRecentSubmissions(prev => [submission, ...prev])
+    setShowUpload(false)
+    setSelectedCampaign(null)
+  }
+
+  const handleUploadClose = () => {
+    setShowUpload(false)
+    setSelectedCampaign(null)
+  }
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -203,21 +228,79 @@ export function ExperienceView() {
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <button 
+              onClick={() => setShowCampaignSelector(true)}
+              className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whop-primary"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Content
+            </button>
             <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whop-primary">
               <Target className="w-4 h-4 mr-2" />
               Report Content
             </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whop-primary">
+            <button 
+              onClick={() => window.location.href = '/my-submissions'}
+              className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whop-primary"
+            >
               <Star className="w-4 h-4 mr-2" />
-              Share Content
-            </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-whop-primary">
-              <Users className="w-4 h-4 mr-2" />
-              Engage Community
+              My Submissions
             </button>
           </div>
         </div>
       </div>
+
+      {/* Recent Submissions */}
+      {recentSubmissions.length > 0 && (
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Submissions</h2>
+            <div className="space-y-3">
+              {recentSubmissions.slice(0, 3).map((submission) => (
+                <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <Upload className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{submission.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {submission.status === 'pending' ? 'Under Review' : 
+                         submission.status === 'approved' ? 'Approved' : 'Rejected'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {submission.status === 'approved' ? `+${submission.rewardEarned || 0} pts` : 'Pending'}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(submission.submittedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Campaign Selector Modal */}
+      {showCampaignSelector && (
+        <CampaignSelector
+          onCampaignSelect={handleCampaignSelect}
+          onClose={() => setShowCampaignSelector(false)}
+        />
+      )}
+
+      {/* Content Upload Modal */}
+      {showUpload && selectedCampaign && (
+        <ContentUpload
+          campaign={selectedCampaign}
+          onClose={handleUploadClose}
+          onUploadSuccess={handleUploadSuccess}
+        />
+      )}
     </div>
   )
 }

@@ -10,11 +10,11 @@ import { BrandModerationView } from './components/BrandModerationView'
 import { CPMPayoutView } from './components/CPMPayoutView'
 import { CampaignManagement } from './components/CampaignManagement'
 import { AllSubmissionsView } from './components/AllSubmissionsView'
-import { MySubmissionsView } from './components/MySubmissionsView'
-import { AdminReviewView } from './components/AdminReviewView'
+import { CampaignAnalytics } from './components/CampaignAnalytics'
+import { ContentApprovalWorkflow } from './components/ContentApprovalWorkflow'
 import { ToastNotification } from './components/NotificationSystem'
 import { DebugInfo } from './components/DebugInfo'
-// Import the dedicated pages
+import { UserSubmissionTracking } from './components/UserSubmissionTracking'
 import OwnerDashboard from './pages/dashboard/[companyId]'
 import MemberExperience from './pages/experiences/[experienceId]'
 
@@ -290,6 +290,13 @@ export function AppRouter() {
         } else {
           return <ContentCreatorView />
         }
+      case '/campaigns/analytics':
+        // Only owners can access campaign analytics
+        if (sdk?.isOwner?.()) {
+          return <CampaignAnalytics />
+        } else {
+          return <ContentCreatorView />
+        }
       case '/all-submissions':
         // Only owners can see all submissions
         if (sdk?.isOwner?.()) {
@@ -299,11 +306,11 @@ export function AppRouter() {
         }
       case '/my-submissions':
         // Both owners and members can see their own submissions
-        return <MySubmissionsView />
-      case '/admin/review':
-        // Only owners can access admin review
+        return <UserSubmissionTracking />
+      case '/approval':
+        // Only owners can access approval workflow
         if (sdk?.isOwner?.()) {
-          return <AdminReviewView />
+          return <ContentApprovalWorkflow />
         } else {
           return <ContentCreatorView />
         }
