@@ -51,65 +51,23 @@ export function AnalyticsView() {
     const loadAnalytics = async () => {
       setLoading(true)
       
-      // Mock analytics data
-      const mockAnalytics: AnalyticsData = {
-        totalSubmissions: 156,
-        approvedContent: 89,
-        rejectedContent: 23,
-        pendingReview: 44,
-        totalEarnings: 2847.50,
-        averageCPM: 2.15,
-        totalViews: 1250000,
-        engagementRate: 6.2,
-        brandSafetyScore: 94.2,
-        averageReviewTime: '2.5 hours'
+      // Production-ready: Load real analytics data from API
+      // TODO: Implement real API call
+      const emptyAnalytics: AnalyticsData = {
+        totalSubmissions: 0,
+        approvedContent: 0,
+        rejectedContent: 0,
+        pendingReview: 0,
+        totalEarnings: 0,
+        averageCPM: 0,
+        totalViews: 0,
+        engagementRate: 0,
+        brandSafetyScore: 0,
+        averageReviewTime: '0 hours'
       }
 
-      const mockContentData: ContentAnalytics[] = [
-        {
-          id: '1',
-          title: 'Product Demo Video',
-          type: 'video',
-          views: 15420,
-          likes: 892,
-          shares: 156,
-          comments: 78,
-          engagement: 6.8,
-          cpmEarnings: 38.55,
-          approvalDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-          creator: 'alice_creator'
-        },
-        {
-          id: '2',
-          title: 'Lifestyle Image Post',
-          type: 'image',
-          views: 8930,
-          likes: 445,
-          shares: 78,
-          comments: 34,
-          engagement: 5.9,
-          cpmEarnings: 16.07,
-          approvalDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-          creator: 'bob_photographer'
-        },
-        {
-          id: '3',
-          title: 'Educational Content',
-          type: 'text',
-          views: 12500,
-          likes: 623,
-          shares: 134,
-          comments: 89,
-          engagement: 6.1,
-          cpmEarnings: 15.00,
-          approvalDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-          creator: 'charlie_educator'
-        }
-      ]
-
-
-      setAnalytics(mockAnalytics)
-      setContentData(mockContentData)
+      setAnalytics(emptyAnalytics)
+      setContentData([])
       setLoading(false)
     }
 

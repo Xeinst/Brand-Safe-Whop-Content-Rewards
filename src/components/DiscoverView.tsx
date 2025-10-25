@@ -17,22 +17,22 @@ export function DiscoverView() {
   const [stats] = useState<Stat[]>([
     {
       label: 'Active Users',
-      value: '2,847',
+      value: '0',
       icon: <Users className="w-6 h-6" />
     },
     {
       label: 'Rewards Earned',
-      value: '15,420',
+      value: '0',
       icon: <Award className="w-6 h-6" />
     },
     {
       label: 'Content Reports',
-      value: '1,203',
+      value: '0',
       icon: <Shield className="w-6 h-6" />
     },
     {
       label: 'Community Score',
-      value: '98.5%',
+      value: '0%',
       icon: <TrendingUp className="w-6 h-6" />
     }
   ])

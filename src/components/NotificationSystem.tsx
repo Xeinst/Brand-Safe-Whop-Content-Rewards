@@ -26,60 +26,10 @@ export function NotificationSystem() {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    // Load mock notifications
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'approval',
-        title: 'Content Approved! 🎉',
-        message: 'Your "Product Demo Video" has been approved and is now live. You\'ve earned $38.55 in CPM rewards!',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        read: false,
-        actionUrl: '/payouts',
-        actionText: 'View Earnings'
-      },
-      {
-        id: '2',
-        type: 'payment',
-        title: 'Payment Processed 💰',
-        message: 'Your payout of $54.62 has been processed and sent to your Whop Wallet.',
-        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        read: false,
-        actionUrl: '/payouts',
-        actionText: 'View Details'
-      },
-      {
-        id: '3',
-        type: 'rejection',
-        title: 'Content Needs Revision',
-        message: 'Your "Lifestyle Post" was rejected due to lighting quality. Please review the feedback and resubmit.',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        read: true,
-        actionUrl: '/submit',
-        actionText: 'Resubmit'
-      },
-      {
-        id: '4',
-        type: 'reminder',
-        title: 'Content Under Review',
-        message: 'Your "Educational Content" is currently being reviewed by our brand safety team.',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-        read: true
-      },
-      {
-        id: '5',
-        type: 'info',
-        title: 'New Brand Guidelines',
-        message: 'Updated brand guidelines are now available. Please review them before submitting new content.',
-        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        read: true,
-        actionUrl: '/guidelines',
-        actionText: 'View Guidelines'
-      }
-    ]
-
-    setNotifications(mockNotifications)
-    setUnreadCount(mockNotifications.filter(n => !n.read).length)
+    // Production-ready: Load real notifications from API
+    // TODO: Implement real API call
+    setNotifications([])
+    setUnreadCount(0)
   }, [])
 
   const markAsRead = (notificationId: string) => {

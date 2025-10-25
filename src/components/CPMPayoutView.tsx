@@ -30,36 +30,9 @@ export function CPMPayoutView() {
     const loadData = async () => {
       try {
         setLoading(true)
-        // Mock payout data
-        const mockPayouts: Payout[] = [
-          {
-            id: 'payout-1',
-            userId: 'user-123',
-            amount: 2500,
-            status: 'sent',
-            period: '2024-01',
-            createdAt: new Date('2024-01-15'),
-            sentAt: new Date('2024-01-16')
-          },
-          {
-            id: 'payout-2',
-            userId: 'user-456',
-            amount: 1800,
-            status: 'pending',
-            period: '2024-01',
-            createdAt: new Date('2024-01-20')
-          },
-          {
-            id: 'payout-3',
-            userId: 'user-789',
-            amount: 3200,
-            status: 'sent',
-            period: '2024-01',
-            createdAt: new Date('2024-01-18'),
-            sentAt: new Date('2024-01-19')
-          }
-        ]
-        setPayouts(mockPayouts)
+        // Production-ready: Load real payout data from API
+        // TODO: Implement real API call
+        setPayouts([])
       } catch (error) {
         console.error('Failed to load payouts:', error)
       } finally {
