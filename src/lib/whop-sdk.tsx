@@ -320,8 +320,8 @@ export class ModernWhopSDK implements WhopSDK {
   async getContentRewards(): Promise<ContentReward[]> {
     try {
       // Use the campaign service instead of API call
-      const campaignServiceModule = await import('../services/campaignService')
-      const campaigns = await campaignServiceModule.campaignService.getCampaigns()
+      const { campaignService } = await import('../services/campaignService')
+      const campaigns = await campaignService.getCampaigns()
       
       // Convert Campaign[] to ContentReward[]
       const contentRewards: ContentReward[] = campaigns.map(campaign => ({
@@ -661,7 +661,7 @@ export class ModernWhopSDK implements WhopSDK {
   async createContentReward(reward: Partial<ContentReward>): Promise<ContentReward> {
     try {
       // Use the campaign service instead of API call
-      const campaignServiceModule = await import('../services/campaignService')
+      const { campaignService } = await import('../services/campaignService')
       
       // Convert ContentReward to Campaign format
       const campaignData = {
@@ -686,7 +686,7 @@ export class ModernWhopSDK implements WhopSDK {
       }
       
       // Add to campaigns array using the service
-      campaignServiceModule.campaignService.addCampaign(newCampaign)
+      campaignService.addCampaign(newCampaign)
       
       // Convert back to ContentReward format
       const contentReward: ContentReward = {
@@ -712,10 +712,10 @@ export class ModernWhopSDK implements WhopSDK {
   async updateContentReward(id: string, updates: Partial<ContentReward>): Promise<ContentReward> {
     try {
       // Use the campaign service instead of API call
-      const campaignServiceModule = await import('../services/campaignService')
+      const { campaignService } = await import('../services/campaignService')
       
       // Find and update the campaign
-      const updatedCampaign = campaignServiceModule.campaignService.updateCampaign(id, {
+      const updatedCampaign = campaignService.updateCampaign(id, {
         name: updates.name,
         description: updates.description,
         status: updates.status === 'active' ? 'active' : 'inactive',

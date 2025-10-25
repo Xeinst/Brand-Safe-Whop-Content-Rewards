@@ -9,9 +9,98 @@ export class CampaignService {
   }
 
   private initializeMockData() {
-    // No mock data - start with empty arrays
-    this.campaigns = []
-    this.submissions = []
+    // Initialize with sample data for demonstration
+    this.campaigns = [
+      {
+        id: 'campaign-1',
+        name: 'Brand Safe Content',
+        description: 'Submit brand-safe content for approval and earn rewards',
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        brandGuidelines: [
+          'No inappropriate content',
+          'Must align with brand values',
+          'High quality production',
+          'Original content only'
+        ],
+        rewardPerUpload: 50,
+        maxUploadsPerUser: 10,
+        allowedContentTypes: ['image', 'video'],
+        companyId: 'demo-company-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 'campaign-2',
+        name: 'Educational Content',
+        description: 'Create educational content about our products and services',
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days from now
+        brandGuidelines: [
+          'Educational and informative',
+          'Professional presentation',
+          'Accurate information',
+          'Engaging content'
+        ],
+        rewardPerUpload: 75,
+        maxUploadsPerUser: 5,
+        allowedContentTypes: ['video', 'text'],
+        companyId: 'demo-company-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ]
+    
+    this.submissions = [
+      {
+        id: 'submission-1',
+        campaignId: 'campaign-1',
+        userId: 'current-user-id',
+        contentUrl: 'https://example.com/video1',
+        fileUrl: 'https://example.com/video1',
+        contentType: 'video',
+        title: 'Product Demo Video',
+        description: 'A comprehensive demo of our latest product features',
+        status: 'approved',
+        submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        reviewedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+        reviewerId: 'admin-1',
+        feedback: 'Great content! Approved for publication.',
+        rewardEarned: 50
+      },
+      {
+        id: 'submission-2',
+        campaignId: 'campaign-1',
+        userId: 'current-user-id',
+        contentUrl: 'https://example.com/image1',
+        fileUrl: 'https://example.com/image1',
+        contentType: 'image',
+        title: 'Brand Lifestyle Image',
+        description: 'Lifestyle image showcasing our brand values',
+        status: 'pending',
+        submittedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+        rewardEarned: undefined
+      },
+      {
+        id: 'submission-3',
+        campaignId: 'campaign-2',
+        userId: 'current-user-id',
+        contentUrl: 'https://example.com/educational',
+        fileUrl: 'https://example.com/educational',
+        contentType: 'video',
+        title: 'How-to Guide',
+        description: 'Step-by-step guide on using our platform',
+        status: 'rejected',
+        submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        reviewedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        reviewerId: 'admin-1',
+        feedback: 'Content needs better lighting and clearer audio.',
+        rejectionReason: 'Quality issues - poor lighting and audio',
+        rewardEarned: undefined
+      }
+    ]
   }
 
   // Add a new campaign
