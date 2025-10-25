@@ -318,6 +318,27 @@ export class ModernWhopSDK implements WhopSDK {
     return []
   }
 
+  // Real API call for content rewards
+  async getContentRewardsFromAPI(): Promise<ContentReward[]> {
+    try {
+      const response = await fetch('/api/content-rewards', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch content rewards: ${response.status}`)
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching content rewards from API:', error)
+      return []
+    }
+  }
+
   async getSubmissions(filters?: { status?: string; creator_id?: string; public_only?: boolean }): Promise<Submission[]> {
     try {
       if (this.fallbackMode) {
@@ -578,7 +599,7 @@ export class ModernWhopSDK implements WhopSDK {
       const { campaignService } = await import('../services/campaignService')
       
       // Find and update the campaign
-      const updatedCampaign = campaignService.updateCampaign(id, {
+      const updatedCampaign = await campaignService.updateCampaign(id, {
         name: updates.name,
         description: updates.description,
         status: updates.status === 'active' ? 'active' : 'inactive',

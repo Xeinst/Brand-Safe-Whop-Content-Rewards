@@ -27,20 +27,56 @@ export function NotificationSystem() {
 
   useEffect(() => {
     // Production-ready: Load real notifications from API
-    // TODO: Implement real API call
-    setNotifications([])
-    setUnreadCount(0)
+    const loadNotifications = async () => {
+      try {
+        const response = await fetch('/api/notifications', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch notifications: ${response.status}`)
+        }
+        
+        const notifications = await response.json()
+        setNotifications(notifications)
+        setUnreadCount(notifications.filter((n: Notification) => !n.read).length)
+      } catch (error) {
+        console.error('Failed to load notifications:', error)
+        setNotifications([])
+        setUnreadCount(0)
+      }
+    }
+    
+    loadNotifications()
   }, [])
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
+  const markAsRead = async (notificationId: string) => {
+    try {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to mark notification as read: ${response.status}`)
+      }
+      
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === notificationId 
+            ? { ...notification, read: true }
+            : notification
+        )
       )
-    )
-    setUnreadCount(prev => Math.max(0, prev - 1))
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error)
+    }
   }
 
   const markAllAsRead = () => {

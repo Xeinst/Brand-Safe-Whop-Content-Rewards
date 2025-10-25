@@ -52,22 +52,20 @@ export function AnalyticsView() {
       setLoading(true)
       
       // Production-ready: Load real analytics data from API
-      // TODO: Implement real API call
-      const emptyAnalytics: AnalyticsData = {
-        totalSubmissions: 0,
-        approvedContent: 0,
-        rejectedContent: 0,
-        pendingReview: 0,
-        totalEarnings: 0,
-        averageCPM: 0,
-        totalViews: 0,
-        engagementRate: 0,
-        brandSafetyScore: 0,
-        averageReviewTime: '0 hours'
+      const response = await fetch(`/api/analytics?timeRange=${timeRange}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch analytics: ${response.status}`)
       }
-
-      setAnalytics(emptyAnalytics)
-      setContentData([])
+      
+      const data = await response.json()
+      setAnalytics(data.analytics)
+      setContentData(data.contentData)
       setLoading(false)
     }
 

@@ -31,8 +31,19 @@ export function CPMPayoutView() {
       try {
         setLoading(true)
         // Production-ready: Load real payout data from API
-        // TODO: Implement real API call
-        setPayouts([])
+        const response = await fetch('/api/payouts', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch payouts: ${response.status}`)
+        }
+        
+        const payouts = await response.json()
+        setPayouts(payouts)
       } catch (error) {
         console.error('Failed to load payouts:', error)
       } finally {
@@ -45,11 +56,20 @@ export function CPMPayoutView() {
 
   const handleSendPayout = async (payoutId: string) => {
     try {
-      // Mock sending payout
+      const response = await fetch(`/api/payouts/${payoutId}/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to send payout: ${response.status}`)
+      }
+      
+      const updatedPayout = await response.json()
       setPayouts(prev => prev.map(payout => 
-        payout.id === payoutId 
-          ? { ...payout, status: 'sent', sentAt: new Date() }
-          : payout
+        payout.id === payoutId ? updatedPayout : payout
       ))
     } catch (error) {
       console.error('Failed to send payout:', error)
