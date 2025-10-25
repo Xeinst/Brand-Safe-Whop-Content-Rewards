@@ -176,7 +176,7 @@ export class CampaignService {
   async submitToCampaign(
     campaignId: string,
     userId: string,
-    submission: Omit<CampaignSubmission, 'id' | 'campaignId' | 'userId' | 'submittedAt' | 'status'>
+    submission: Omit<CampaignSubmission, 'id' | 'campaignId' | 'userId' | 'submittedAt' | 'status'> & { uploadType?: 'file' | 'link' }
   ): Promise<CampaignSubmission> {
     const { canUpload, reason, campaign } = await this.canUploadToCampaign(campaignId)
     

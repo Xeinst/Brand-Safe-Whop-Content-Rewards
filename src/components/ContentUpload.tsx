@@ -22,7 +22,8 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
     title: '',
     description: '',
     contentType: 'image' as 'image' | 'video' | 'text',
-    contentUrl: ''
+    contentUrl: '',
+    uploadType: 'file' as 'file' | 'link' // New field for upload type
   })
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,9 +50,35 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
     setFormData(prev => ({
       ...prev,
       contentType: fileType,
-      contentUrl: URL.createObjectURL(file) // In real app, upload to server
+      contentUrl: URL.createObjectURL(file), // In real app, upload to server
+      uploadType: 'file'
     }))
     setError(null)
+  }
+
+  const handleLinkInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const url = event.target.value
+    setFormData(prev => ({
+      ...prev,
+      contentUrl: url,
+      uploadType: 'link'
+    }))
+    
+    // Basic URL validation
+    if (url && !isValidUrl(url)) {
+      setError('Please enter a valid URL')
+    } else {
+      setError(null)
+    }
+  }
+
+  const isValidUrl = (string: string) => {
+    try {
+      new URL(string)
+      return true
+    } catch (_) {
+      return false
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +95,7 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
     }
 
     if (!formData.contentUrl) {
-      setError('Please select a file to upload')
+      setError(formData.uploadType === 'file' ? 'Please select a file to upload' : 'Please enter a video link')
       return
     }
 
@@ -96,7 +123,8 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
           fileUrl: formData.contentUrl, // Same as contentUrl for now
           contentType: formData.contentType,
           title: formData.title,
-          description: formData.description
+          description: formData.description,
+          uploadType: formData.uploadType
         }
       )
 
@@ -133,7 +161,7 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Upload Successful!</h3>
             <p className="text-gray-600 mb-4">
-              Your content has been submitted to <strong>{campaign.name}</strong> and is now under review.
+              Your {formData.uploadType === 'file' ? 'content' : 'video link'} has been submitted to <strong>{campaign.name}</strong> and is now under review.
             </p>
             <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-green-800">
@@ -190,50 +218,123 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
 
         {/* Upload Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* File Upload */}
+          {/* Upload Type Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select File
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Upload Method
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileSelect}
-                accept={campaign.allowedContentTypes.includes('image') ? 'image/*' : '' + 
-                       campaign.allowedContentTypes.includes('video') ? 'video/*' : ''}
-                className="hidden"
-              />
-              {formData.contentUrl ? (
-                <div className="space-y-2">
-                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
-                  <p className="text-sm text-gray-600">File selected</p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-sm text-whop-primary hover:text-whop-primary/80"
-                  >
-                    Change file
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                  <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-sm text-whop-primary hover:text-whop-primary/80"
-                  >
-                    Browse files
-                  </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, uploadType: 'file', contentUrl: '' }))}
+                className={`p-3 rounded-lg border-2 transition-colors ${
+                  formData.uploadType === 'file'
+                    ? 'border-whop-primary bg-whop-primary/5 text-whop-primary'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <Upload className="w-5 h-5 mx-auto mb-2" />
+                <div className="text-sm font-medium">Upload File</div>
+                <div className="text-xs text-gray-500">MP4, Image files</div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, uploadType: 'link', contentUrl: '' }))}
+                className={`p-3 rounded-lg border-2 transition-colors ${
+                  formData.uploadType === 'link'
+                    ? 'border-whop-primary bg-whop-primary/5 text-whop-primary'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <svg className="w-5 h-5 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <div className="text-sm font-medium">Video Link</div>
+                <div className="text-xs text-gray-500">Unlisted YouTube, Vimeo</div>
+              </button>
+            </div>
+          </div>
+
+          {/* File Upload */}
+          {formData.uploadType === 'file' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select File
+              </label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  onChange={handleFileSelect}
+                  accept={campaign.allowedContentTypes.includes('image') ? 'image/*' : '' + 
+                         campaign.allowedContentTypes.includes('video') ? 'video/*' : ''}
+                  className="hidden"
+                />
+                {formData.contentUrl ? (
+                  <div className="space-y-2">
+                    <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
+                    <p className="text-sm text-gray-600">File selected</p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-sm text-whop-primary hover:text-whop-primary/80"
+                    >
+                      Change file
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                    <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-sm text-whop-primary hover:text-whop-primary/80"
+                    >
+                      Browse files
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Allowed types: {campaign.allowedContentTypes.join(', ')} • Max size: 10MB
+              </p>
+            </div>
+          )}
+
+          {/* Video Link Input */}
+          {formData.uploadType === 'link' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Video Link
+              </label>
+              <div className="relative">
+                <input
+                  type="url"
+                  value={formData.contentUrl}
+                  onChange={handleLinkInput}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
+                  placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                />
+                {formData.contentUrl && isValidUrl(formData.contentUrl) && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Enter an unlisted YouTube or Vimeo video link
+              </p>
+              {formData.contentUrl && isValidUrl(formData.contentUrl) && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-xs text-green-800">
+                    ✓ Valid video link detected
+                  </p>
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Allowed types: {campaign.allowedContentTypes.join(', ')} • Max size: 10MB
-            </p>
-          </div>
+          )}
 
           {/* Title */}
           <div>
@@ -305,7 +406,7 @@ export function ContentUpload({ campaign, onClose, onUploadSuccess }: ContentUpl
               disabled={uploading || !formData.title.trim() || !formData.contentUrl}
               className="flex-1 px-4 py-2 bg-whop-primary text-white rounded-md hover:bg-whop-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading ? 'Uploading...' : 'Upload Content'}
+              {uploading ? 'Submitting...' : formData.uploadType === 'file' ? 'Upload Content' : 'Submit Link'}
             </button>
           </div>
         </form>
