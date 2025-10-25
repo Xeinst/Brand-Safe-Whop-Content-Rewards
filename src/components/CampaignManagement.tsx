@@ -1,105 +1,125 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Pause, Play, Eye, DollarSign, Users, TrendingUp } from 'lucide-react'
-import { useWhopSDK, ContentReward } from '../lib/whop-sdk'
+import { useWhopSDK } from '../lib/whop-sdk'
+import { campaignService } from '../services/campaignService'
+import { Campaign } from '../types/campaign'
+import { 
+  Button,
+  EmptyState
+} from '@whop/frosted-ui'
+import { 
+  Plus, 
+  Calendar,
+  DollarSign,
+  Users,
+  Eye,
+  Edit
+} from 'lucide-react'
 
 export function CampaignManagement() {
-  const sdk = useWhopSDK()
-  const [campaigns, setCampaigns] = useState<ContentReward[]>([])
+  const { company } = useWhopSDK()
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [editingCampaign, setEditingCampaign] = useState<ContentReward | null>(null)
+  const [showCreateCampaign, setShowCreateCampaign] = useState(false)
 
   useEffect(() => {
-    const loadCampaigns = async () => {
-      if (!sdk) return
-      
-      setLoading(true)
+    const loadData = async () => {
       try {
-        const data = await sdk.getContentRewards()
-        setCampaigns(data)
+        setLoading(true)
+        const campaignsData = await campaignService.getCampaigns()
+        setCampaigns(campaignsData)
       } catch (error) {
-        console.error('Error loading campaigns:', error)
-        setCampaigns([])
+        console.error('Failed to load campaigns:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadCampaigns()
-  }, [sdk])
+    loadData()
+  }, [])
 
   const handleCreateCampaign = async (campaignData: any) => {
-    if (!sdk) return
-    
     try {
-      const newCampaign = await sdk.createContentReward(campaignData)
+      const newCampaign: Campaign = {
+        id: `campaign-${Date.now()}`,
+        name: campaignData.name,
+        description: campaignData.description,
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        brandGuidelines: campaignData.brandGuidelines || ['No inappropriate content', 'Must align with brand values'],
+        rewardPerUpload: campaignData.rewardPerUpload || 50,
+        maxUploadsPerUser: campaignData.maxUploadsPerUser || 10,
+        allowedContentTypes: campaignData.allowedContentTypes || ['image', 'video'],
+        companyId: company?.id || 'current-company',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+
+      campaignService.addCampaign(newCampaign)
       setCampaigns(prev => [newCampaign, ...prev])
-      setShowCreateForm(false)
+      setShowCreateCampaign(false)
     } catch (error) {
-      console.error('Error creating campaign:', error)
+      console.error('Failed to create campaign:', error)
     }
   }
 
-  const handleUpdateCampaign = async (id: string, updates: any) => {
-    if (!sdk) return
-    
-    try {
-      const updatedCampaign = await sdk.updateContentReward(id, updates)
-      setCampaigns(prev => prev.map(c => c.id === id ? updatedCampaign : c))
-      setEditingCampaign(null)
-    } catch (error) {
-      console.error('Error updating campaign:', error)
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800'
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800'
+      case 'completed':
+        return 'bg-blue-100 text-blue-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const handleToggleCampaign = async (campaign: ContentReward) => {
-    const newStatus = campaign.status === 'active' ? 'paused' : 'active'
-    await handleUpdateCampaign(campaign.id, { status: newStatus })
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date)
+  }
+
+  const stats = {
+    totalCampaigns: campaigns.length,
+    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
+    totalRewards: campaigns.reduce((sum, c) => sum + c.rewardPerUpload, 0)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading campaigns...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-whop-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-primary">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
-              <h1 className="text-xl font-semibold">Campaign Management</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Campaign Management</h1>
             </div>
             
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => window.location.href = '/approval'}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center space-x-2"
+              <Button
+                onClick={() => setShowCreateCampaign(true)}
+                variant="primary"
+                size="md"
               >
-                <Eye className="w-4 h-4" />
-                <span>Review Content</span>
-              </button>
-              <button
-                onClick={() => window.location.href = '/campaigns/analytics'}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>Analytics</span>
-              </button>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Create Campaign</span>
-              </button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
             </div>
           </div>
         </div>
@@ -107,105 +127,123 @@ export function CampaignManagement() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Campaigns Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map(campaign => (
-            <div key={campaign.id} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-2">{campaign.name}</h3>
-                  <p className="text-gray-400 text-sm mb-3">{campaign.description}</p>
-                  
-                  <div className="flex items-center space-x-4 text-sm">
-                    <div className="flex items-center space-x-1">
-                      <DollarSign className="w-4 h-4 text-green-500" />
-                      <span className="text-white">${campaign.cpm}/CPM</span>
-                    </div>
-                    <div className={`px-2 py-1 rounded-full text-xs ${
-                      campaign.status === 'active' 
-                        ? 'bg-green-900/20 text-green-400' 
-                        : 'bg-yellow-900/20 text-yellow-400'
-                    }`}>
-                      {campaign.status}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setEditingCampaign(campaign)}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleToggleCampaign(campaign)}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                  >
-                    {campaign.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </button>
-                </div>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Calendar className="w-6 h-6 text-blue-600" />
               </div>
-              
-              {/* Campaign Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{campaign.totalViews.toLocaleString()}</div>
-                  <div className="text-xs text-gray-400">Total Views</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{campaign.approvedSubmissions}</div>
-                  <div className="text-xs text-gray-400">Approved</div>
-                </div>
-              </div>
-              
-              {/* Campaign Actions */}
-              <div className="flex space-x-2">
-                <button className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center space-x-2">
-                  <Eye className="w-4 h-4" />
-                  <span>View Stats</span>
-                </button>
-                <button className="flex-1 px-3 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center justify-center space-x-2">
-                  <Users className="w-4 h-4" />
-                  <span>View Submissions</span>
-                </button>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</p>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeCampaigns}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <DollarSign className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Rewards</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalRewards} pts</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Empty State */}
-        {campaigns.length === 0 && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-white mb-2">No campaigns yet</h3>
-            <p className="text-gray-400 mb-4">Create your first campaign to start rewarding content creators.</p>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="px-6 py-3 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors"
-            >
-              Create Campaign
-            </button>
+        {/* Campaigns List */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Campaigns</h2>
           </div>
-        )}
+          <div className="p-6">
+            {campaigns.length === 0 ? (
+              <EmptyState
+                title="No campaigns yet"
+                description="Create your first campaign to start rewarding content creators."
+                primaryButton={{
+                  children: 'Create Campaign',
+                  onClick: () => setShowCreateCampaign(true),
+                  variant: 'primary'
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {campaigns.map((campaign) => (
+                  <div key={campaign.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.name}</h3>
+                        <p className="text-gray-600 text-sm mb-3">{campaign.description}</p>
+                        <div className="flex items-center space-x-4 text-sm">
+                          <div className="flex items-center space-x-1">
+                            <DollarSign className="w-4 h-4 text-green-500" />
+                            <span className="text-gray-900">{campaign.rewardPerUpload} pts</span>
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(campaign.status)}`}>
+                            {campaign.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        <span>{formatDate(campaign.startDate)} - {formatDate(campaign.endDate)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-gray-900 text-sm">Brand Guidelines:</h4>
+                      <ul className="text-xs text-gray-600 space-y-1">
+                        {campaign.brandGuidelines.slice(0, 2).map((guideline, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="text-green-500 mr-2">•</span>
+                            <span>{guideline}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="flex space-x-2 mt-4">
+                      <button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                        <Eye className="w-4 h-4" />
+                        <span>View</span>
+                      </button>
+                      <button className="flex-1 px-3 py-2 bg-whop-primary hover:bg-whop-secondary text-white rounded-lg transition-colors flex items-center justify-center space-x-2">
+                        <Edit className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Create Campaign Modal */}
-      {showCreateForm && (
+      {showCreateCampaign && (
         <CreateCampaignModal
-          onClose={() => setShowCreateForm(false)}
+          onClose={() => setShowCreateCampaign(false)}
           onSubmit={handleCreateCampaign}
-        />
-      )}
-
-      {/* Edit Campaign Modal */}
-      {editingCampaign && (
-        <EditCampaignModal
-          campaign={editingCampaign}
-          onClose={() => setEditingCampaign(null)}
-          onSubmit={(updates) => handleUpdateCampaign(editingCampaign.id, updates)}
         />
       )}
     </div>
@@ -217,7 +255,10 @@ function CreateCampaignModal({ onClose, onSubmit }: { onClose: () => void; onSub
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    cpm: 0
+    rewardPerUpload: 50,
+    maxUploadsPerUser: 10,
+    allowedContentTypes: ['image', 'video'],
+    brandGuidelines: ['No inappropriate content', 'Must align with brand values']
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -227,143 +268,65 @@ function CreateCampaignModal({ onClose, onSubmit }: { onClose: () => void; onSub
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Create Campaign</h3>
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Create Campaign</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Campaign Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
+              placeholder="Enter campaign name"
               required
             />
           </div>
           
           <div>
-            <label className="block text-sm text-gray-400 mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
               rows={3}
+              placeholder="Enter campaign description"
             />
           </div>
           
           <div>
-            <label className="block text-sm text-gray-400 mb-2">CPM Rate ($)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Reward Per Upload (points)</label>
             <input
               type="number"
-              step="0.01"
-              value={formData.cpm}
-              onChange={(e) => setFormData(prev => ({ ...prev, cpm: parseFloat(e.target.value) }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
+              value={formData.rewardPerUpload}
+              onChange={(e) => setFormData(prev => ({ ...prev, rewardPerUpload: parseInt(e.target.value) }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whop-primary"
               required
             />
           </div>
           
-          <div className="flex space-x-3">
+          <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 bg-whop-primary text-white rounded-md hover:bg-whop-primary/90"
             >
               Create Campaign
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// Edit Campaign Modal Component
-function EditCampaignModal({ campaign, onClose, onSubmit }: { campaign: ContentReward; onClose: () => void; onSubmit: (data: any) => void }) {
-  const [formData, setFormData] = useState({
-    name: campaign.name,
-    description: campaign.description,
-    cpm: campaign.cpm,
-    status: campaign.status
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(formData)
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <h3 className="text-lg font-semibold mb-4">Edit Campaign</h3>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Campaign Name</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
-              rows={3}
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">CPM Rate ($)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={formData.cpm}
-              onChange={(e) => setFormData(prev => ({ ...prev, cpm: parseFloat(e.target.value) }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">Status</label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-whop-dragon-fire focus:border-transparent"
-            >
-              <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
-          
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors"
-            >
-              Update Campaign
             </button>
           </div>
         </form>

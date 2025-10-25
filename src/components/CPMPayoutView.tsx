@@ -1,279 +1,313 @@
 import { useState, useEffect } from 'react'
-import { DollarSign, TrendingUp, CheckCircle, Clock } from 'lucide-react'
-import { useWhopSDK, Submission } from '../lib/whop-sdk'
+import { useWhopSDK } from '../lib/whop-sdk'
+import { 
+  DollarSign, 
+  Clock,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  User,
+  TrendingUp
+} from 'lucide-react'
 
-interface PayoutData {
-  totalEarnings: number
-  pendingPayouts: number
-  completedPayouts: number
-  averageCPM: number
-  totalViews: number
-  topEarners: Array<{
-    user: string
-    earnings: number
-    views: number
-    submissions: number
-  }>
+interface Payout {
+  id: string
+  userId: string
+  amount: number
+  status: 'pending' | 'sent' | 'failed'
+  period: string
+  createdAt: Date
+  sentAt?: Date
 }
 
 export function CPMPayoutView() {
-  const sdk = useWhopSDK()
-  const [payoutData, setPayoutData] = useState<PayoutData | null>(null)
-  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const { } = useWhopSDK()
+  const [payouts, setPayouts] = useState<Payout[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'pending' | 'paid'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'sent' | 'failed'>('all')
 
   useEffect(() => {
     const loadData = async () => {
-      if (!sdk) return
-      
-      setLoading(true)
       try {
-        const submissionsData = await sdk.getSubmissions()
-        setSubmissions(submissionsData)
-        
-        // Calculate payout data
-        const approvedSubmissions = submissionsData.filter(s => s.status === 'approved')
-        const totalViews = approvedSubmissions.reduce((sum, s) => sum + s.views, 0)
-        const totalEarnings = approvedSubmissions.reduce((sum, s) => sum + (s.views * 4.00 / 1000), 0) // Assuming $4 CPM
-        const pendingPayouts = approvedSubmissions.filter(s => !s.paid).length
-        const completedPayouts = approvedSubmissions.filter(s => s.paid).length
-        
-        // Calculate top earners
-        const userEarnings = approvedSubmissions.reduce((acc, submission) => {
-          const earnings = submission.views * 4.00 / 1000
-          const userKey = submission.username || submission.display_name || submission.creator_id
-          if (!acc[userKey]) {
-            acc[userKey] = { earnings: 0, views: 0, submissions: 0 }
+        setLoading(true)
+        // Mock payout data
+        const mockPayouts: Payout[] = [
+          {
+            id: 'payout-1',
+            userId: 'user-123',
+            amount: 2500,
+            status: 'sent',
+            period: '2024-01',
+            createdAt: new Date('2024-01-15'),
+            sentAt: new Date('2024-01-16')
+          },
+          {
+            id: 'payout-2',
+            userId: 'user-456',
+            amount: 1800,
+            status: 'pending',
+            period: '2024-01',
+            createdAt: new Date('2024-01-20')
+          },
+          {
+            id: 'payout-3',
+            userId: 'user-789',
+            amount: 3200,
+            status: 'sent',
+            period: '2024-01',
+            createdAt: new Date('2024-01-18'),
+            sentAt: new Date('2024-01-19')
           }
-          acc[userKey].earnings += earnings
-          acc[userKey].views += submission.views
-          acc[userKey].submissions += 1
-          return acc
-        }, {} as Record<string, { earnings: number; views: number; submissions: number }>)
-        
-        const topEarners = Object.entries(userEarnings)
-          .map(([user, data]) => ({ user, ...data }))
-          .sort((a, b) => b.earnings - a.earnings)
-          .slice(0, 10)
-        
-        setPayoutData({
-          totalEarnings,
-          pendingPayouts,
-          completedPayouts,
-          averageCPM: 4.00,
-          totalViews,
-          topEarners
-        })
+        ]
+        setPayouts(mockPayouts)
       } catch (error) {
-        console.error('Error loading payout data:', error)
-        setPayoutData(null)
+        console.error('Failed to load payouts:', error)
       } finally {
         setLoading(false)
       }
     }
 
     loadData()
-  }, [sdk])
+  }, [])
 
-  const filteredSubmissions = submissions.filter(submission => {
-    if (filter === 'all') return submission.status === 'approved'
-    if (filter === 'pending') return submission.status === 'approved' && !submission.paid
-    if (filter === 'paid') return submission.status === 'approved' && submission.paid
-    return true
-  })
-
-  const handleProcessPayout = async (submission: Submission) => {
-    if (!sdk) return
-    
+  const handleSendPayout = async (payoutId: string) => {
     try {
-      // In a real implementation, this would process the actual payout
-      console.log(`Processing payout for submission ${submission.id}`)
-      
-      // Update submission status
-      setSubmissions(prev => prev.map(s => 
-        s.id === submission.id ? { ...s, paid: true } : s
+      // Mock sending payout
+      setPayouts(prev => prev.map(payout => 
+        payout.id === payoutId 
+          ? { ...payout, status: 'sent', sentAt: new Date() }
+          : payout
       ))
     } catch (error) {
-      console.error('Error processing payout:', error)
+      console.error('Failed to send payout:', error)
     }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'sent':
+        return 'bg-green-100 text-green-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />
+      case 'sent':
+        return <CheckCircle className="w-4 h-4" />
+      case 'failed':
+        return <XCircle className="w-4 h-4" />
+      default:
+        return <Clock className="w-4 h-4" />
+    }
+  }
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date)
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount / 100)
+  }
+
+  const filteredPayouts = payouts.filter(payout => {
+    if (filter === 'all') return true
+    return payout.status === filter
+  })
+
+  const stats = {
+    total: payouts.length,
+    pending: payouts.filter(p => p.status === 'pending').length,
+    sent: payouts.filter(p => p.status === 'sent').length,
+    failed: payouts.filter(p => p.status === 'failed').length,
+    totalAmount: payouts.reduce((sum, p) => sum + p.amount, 0)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading payout data...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-whop-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-dragon-fire">
+              <div className="w-8 h-8 rounded flex items-center justify-center bg-whop-primary">
                 <span className="text-white font-bold text-sm">W</span>
               </div>
-              <h1 className="text-xl font-semibold">CPM Payouts</h1>
+              <h1 className="text-xl font-semibold text-gray-900">CPM Payouts</h1>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
-            {[
-              { key: 'all', label: 'All Approved', count: submissions.filter(s => s.status === 'approved').length },
-              { key: 'pending', label: 'Pending Payout', count: submissions.filter(s => s.status === 'approved' && !s.paid).length },
-              { key: 'paid', label: 'Paid Out', count: submissions.filter(s => s.status === 'approved' && s.paid).length }
-            ].map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key as any)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  filter === tab.key
-                    ? 'text-white border-whop-dragon-fire'
-                    : 'text-gray-400 border-transparent hover:text-white hover:border-gray-300'
-                }`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {payoutData && (
-          <>
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Total Earnings</p>
-                    <p className="text-2xl font-bold text-white">${payoutData.totalEarnings.toFixed(2)}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-whop-dragon-fire" />
-                </div>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
-              
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Pending Payouts</p>
-                    <p className="text-2xl font-bold text-white">{payoutData.pendingPayouts}</p>
-                  </div>
-                  <Clock className="w-8 h-8 text-yellow-500" />
-                </div>
-              </div>
-              
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Completed Payouts</p>
-                    <p className="text-2xl font-bold text-white">{payoutData.completedPayouts}</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-green-500" />
-                </div>
-              </div>
-              
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Total Views</p>
-                    <p className="text-2xl font-bold text-white">{payoutData.totalViews.toLocaleString()}</p>
-                  </div>
-                  <TrendingUp className="w-8 h-8 text-blue-500" />
-                </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Payouts</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Submissions List */}
-              <div className="lg:col-span-2">
-                <div className="bg-gray-800 rounded-lg border border-gray-700">
-                  <div className="p-4 border-b border-gray-700">
-                    <h3 className="text-lg font-semibold">Approved Submissions</h3>
-                  </div>
-                  
-                  <div className="divide-y divide-gray-700">
-                    {filteredSubmissions.map(submission => {
-                      const earnings = submission.views * payoutData.averageCPM / 1000
-                      return (
-                        <div key={submission.id} className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="text-white font-medium">{submission.title}</h4>
-                              <p className="text-gray-400 text-sm">{submission.username || submission.display_name}</p>
-                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
-                                <span>{submission.views.toLocaleString()} views</span>
-                                <span>${earnings.toFixed(2)} earnings</span>
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  submission.paid 
-                                    ? 'bg-green-900/20 text-green-400' 
-                                    : 'bg-yellow-900/20 text-yellow-400'
-                                }`}>
-                                  {submission.paid ? 'Paid' : 'Pending'}
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {!submission.paid && (
-                              <button
-                                onClick={() => handleProcessPayout(submission)}
-                                className="px-4 py-2 bg-whop-dragon-fire hover:bg-orange-600 text-white rounded-lg transition-colors"
-                              >
-                                Process Payout
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <Clock className="w-6 h-6 text-yellow-600" />
               </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pending}</p>
+              </div>
+            </div>
+          </div>
 
-              {/* Top Earners */}
-              <div className="lg:col-span-1">
-                <div className="bg-gray-800 rounded-lg border border-gray-700">
-                  <div className="p-4 border-b border-gray-700">
-                    <h3 className="text-lg font-semibold">Top Earners</h3>
-                  </div>
-                  
-                  <div className="p-4">
-                    <div className="space-y-4">
-                      {payoutData.topEarners.map((earner, index) => (
-                        <div key={earner.user} className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-bold">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="text-white font-medium">{earner.user}</p>
-                              <p className="text-gray-400 text-sm">{earner.submissions} submissions</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-white font-bold">${earner.earnings.toFixed(2)}</p>
-                            <p className="text-gray-400 text-sm">{earner.views.toLocaleString()} views</p>
-                          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Sent</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.sent}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Amount</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalAmount)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex space-x-8">
+              {[
+                { id: 'all', label: 'All', count: stats.total },
+                { id: 'pending', label: 'Pending', count: stats.pending },
+                { id: 'sent', label: 'Sent', count: stats.sent },
+                { id: 'failed', label: 'Failed', count: stats.failed }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilter(tab.id as any)}
+                  className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
+                    filter === tab.id
+                      ? 'border-whop-primary text-whop-primary'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Payouts List */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Payout History</h2>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {filteredPayouts.length === 0 ? (
+              <div className="p-12 text-center">
+                <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No payouts found</h3>
+                <p className="text-gray-600">No payouts match the current filter.</p>
+              </div>
+            ) : (
+              filteredPayouts.map((payout) => (
+                <div key={payout.id} className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-lg font-medium text-gray-900">
+                          Payout #{payout.id.slice(-6)}
+                        </h3>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(payout.status)}`}>
+                          {getStatusIcon(payout.status)}
+                          <span className="ml-1 capitalize">{payout.status}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-6 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <User className="w-4 h-4 mr-1" />
+                          <span>User {payout.userId.slice(-4)}</span>
                         </div>
-                      ))}
+                        <div className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          <span>Period: {payout.period}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <DollarSign className="w-4 h-4 mr-1" />
+                          <span className="font-medium text-gray-900">{formatCurrency(payout.amount)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 ml-4">
+                      {payout.status === 'pending' && (
+                        <button
+                          onClick={() => handleSendPayout(payout.id)}
+                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                        >
+                          Send Payout
+                        </button>
+                      )}
+                      {payout.status === 'sent' && payout.sentAt && (
+                        <div className="text-sm text-gray-500">
+                          Sent {formatDate(payout.sentAt)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </>
-        )}
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
